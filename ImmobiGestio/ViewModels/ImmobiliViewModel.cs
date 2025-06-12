@@ -10,6 +10,7 @@ using System.IO;
 using System;
 using Microsoft.EntityFrameworkCore;
 using System.Windows;
+using System.Collections.Generic;
 
 namespace ImmobiGestio.ViewModels
 {
@@ -528,17 +529,8 @@ namespace ImmobiGestio.ViewModels
         {
             try
             {
-                var documentsFolder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Documenti", immobile.Id.ToString());
-                if (Directory.Exists(documentsFolder))
-                {
-                    Directory.Delete(documentsFolder, true);
-                }
-
-                var fotoFolder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Foto", immobile.Id.ToString());
-                if (Directory.Exists(fotoFolder))
-                {
-                    Directory.Delete(fotoFolder, true);
-                }
+                FileManagerService.DeleteDirectory(immobile.Id, "Documenti");
+                FileManagerService.DeleteDirectory(immobile.Id, "Foto");
             }
             catch (Exception ex)
             {
@@ -553,7 +545,7 @@ namespace ImmobiGestio.ViewModels
 
             var openFileDialog = new OpenFileDialog
             {
-                Filter = "PDF files (*.pdf)|*.pdf|Image files (*.jpg;*.jpeg;*.png)|*.jpg;*.jpeg;*.png|All files (*.*)|*.*",
+                Filter = "PDF files (*.pdf)|*.pdf|Word files (*.doc;*.docx)|*.doc;*.docx|Image files (*.jpg;*.jpeg;*.png)|*.jpg;*.jpeg;*.png|All files (*.*)|*.*",
                 Multiselect = false,
                 Title = "Seleziona documento da aggiungere"
             };
@@ -564,34 +556,56 @@ namespace ImmobiGestio.ViewModels
                 {
                     var tipoDocumento = parameter?.ToString() ?? "Altro";
                     var sourceFile = openFileDialog.FileName;
-                    var fileName = Path.GetFileName(sourceFile);
 
-                    var documentsFolder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Documenti", SelectedImmobile.Id.ToString());
-                    Directory.CreateDirectory(documentsFolder);
-
-                    var destinationFile = Path.Combine(documentsFolder, fileName);
-                    File.Copy(sourceFile, destinationFile, true);
-
-                    var documento = new DocumentoImmobile
+                    // Valida il file
+                    if (!FileManagerService.IsValidDocumentFile(sourceFile))
                     {
-                        ImmobileId = SelectedImmobile.Id,
-                        TipoDocumento = tipoDocumento,
-                        NomeFile = fileName,
-                        PercorsoFile = destinationFile,
-                        Descrizione = $"{tipoDocumento} - {fileName}"
-                    };
+                        MessageBox.Show("Tipo di file non supportato per i documenti.", "Errore",
+                            MessageBoxButton.OK, MessageBoxImage.Warning);
+                        return;
+                    }
 
-                    _context.Documenti.Add(documento);
-                    _context.SaveChanges();
+                    // Controlla la dimensione del file (max 50MB)
+                    var fileSize = FileManagerService.GetFileSize(sourceFile);
+                    if (fileSize > 50 * 1024 * 1024) // 50MB
+                    {
+                        MessageBox.Show($"Il file è troppo grande ({FileManagerService.FormatFileSize(fileSize)}). Dimensione massima: 50MB",
+                            "File troppo grande", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        return;
+                    }
 
-                    DocumentiCorrente.Add(documento);
+                    var documentsPath = FileManagerService.GetDocumentsPath(SelectedImmobile.Id);
 
-                    MessageBox.Show($"Documento '{fileName}' aggiunto con successo!", "Successo",
-                        MessageBoxButton.OK, MessageBoxImage.Information);
+                    if (FileManagerService.CopyFileToDestination(sourceFile, documentsPath, out string newFileName, out string errorMessage))
+                    {
+                        var destinationFile = Path.Combine(documentsPath, newFileName);
+
+                        var documento = new DocumentoImmobile
+                        {
+                            ImmobileId = SelectedImmobile.Id,
+                            TipoDocumento = tipoDocumento,
+                            NomeFile = newFileName,
+                            PercorsoFile = destinationFile,
+                            Descrizione = $"{tipoDocumento} - {newFileName}"
+                        };
+
+                        _context.Documenti.Add(documento);
+                        _context.SaveChanges();
+
+                        DocumentiCorrente.Add(documento);
+
+                        MessageBox.Show($"Documento '{newFileName}' aggiunto con successo!", "Successo",
+                            MessageBoxButton.OK, MessageBoxImage.Information);
+                    }
+                    else
+                    {
+                        MessageBox.Show($"Errore nell'aggiunta del documento: {errorMessage}", "Errore",
+                            MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"Errore nell'aggiunta del documento: {ex.Message}", "Errore",
+                    MessageBox.Show($"Errore imprevisto: {ex.Message}", "Errore",
                         MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
@@ -603,7 +617,7 @@ namespace ImmobiGestio.ViewModels
 
             var openFileDialog = new OpenFileDialog
             {
-                Filter = "Image files (*.jpg;*.jpeg;*.png;*.bmp)|*.jpg;*.jpeg;*.png;*.bmp",
+                Filter = "Image files (*.jpg;*.jpeg;*.png;*.bmp;*.tiff;*.gif)|*.jpg;*.jpeg;*.png;*.bmp;*.tiff;*.gif",
                 Multiselect = true,
                 Title = "Seleziona foto da aggiungere"
             };
@@ -612,39 +626,80 @@ namespace ImmobiGestio.ViewModels
             {
                 try
                 {
-                    var fotoFolder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Foto", SelectedImmobile.Id.ToString());
-                    Directory.CreateDirectory(fotoFolder);
-
+                    var photosPath = FileManagerService.GetPhotosPath(SelectedImmobile.Id);
                     int fotoAggiunte = 0;
+                    var errori = new List<string>();
 
                     foreach (var sourceFile in openFileDialog.FileNames)
                     {
-                        var fileName = Path.GetFileName(sourceFile);
-                        var destinationFile = Path.Combine(fotoFolder, fileName);
-                        File.Copy(sourceFile, destinationFile, true);
-
-                        var foto = new FotoImmobile
+                        try
                         {
-                            ImmobileId = SelectedImmobile.Id,
-                            NomeFile = fileName,
-                            PercorsoFile = destinationFile,
-                            IsPrincipale = FotoCorrente.Count == 0,
-                            Descrizione = $"Foto {fileName}"
-                        };
+                            // Valida il file
+                            if (!FileManagerService.IsValidImageFile(sourceFile))
+                            {
+                                errori.Add($"{Path.GetFileName(sourceFile)}: Tipo di file non supportato");
+                                continue;
+                            }
 
-                        _context.Foto.Add(foto);
-                        FotoCorrente.Add(foto);
-                        fotoAggiunte++;
+                            // Controlla la dimensione del file (max 10MB per le foto)
+                            var fileSize = FileManagerService.GetFileSize(sourceFile);
+                            if (fileSize > 10 * 1024 * 1024) // 10MB
+                            {
+                                errori.Add($"{Path.GetFileName(sourceFile)}: File troppo grande ({FileManagerService.FormatFileSize(fileSize)})");
+                                continue;
+                            }
+
+                            if (FileManagerService.CopyFileToDestination(sourceFile, photosPath, out string newFileName, out string errorMessage))
+                            {
+                                var destinationFile = Path.Combine(photosPath, newFileName);
+
+                                var foto = new FotoImmobile
+                                {
+                                    ImmobileId = SelectedImmobile.Id,
+                                    NomeFile = newFileName,
+                                    PercorsoFile = destinationFile,
+                                    IsPrincipale = FotoCorrente.Count == 0, // Prima foto = principale
+                                    Descrizione = $"Foto {newFileName}"
+                                };
+
+                                _context.Foto.Add(foto);
+                                FotoCorrente.Add(foto);
+                                fotoAggiunte++;
+                            }
+                            else
+                            {
+                                errori.Add($"{Path.GetFileName(sourceFile)}: {errorMessage}");
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            errori.Add($"{Path.GetFileName(sourceFile)}: {ex.Message}");
+                        }
                     }
 
-                    _context.SaveChanges();
+                    // Salva le modifiche al database solo se ci sono foto aggiunte
+                    if (fotoAggiunte > 0)
+                    {
+                        _context.SaveChanges();
+                    }
 
-                    MessageBox.Show($"{fotoAggiunte} foto aggiunte con successo!", "Successo",
-                        MessageBoxButton.OK, MessageBoxImage.Information);
+                    // Mostra risultato
+                    var messaggio = $"{fotoAggiunte} foto aggiunte con successo!";
+                    if (errori.Any())
+                    {
+                        messaggio += $"\n\nErrori riscontrati:\n{string.Join("\n", errori.Take(5))}";
+                        if (errori.Count > 5)
+                            messaggio += $"\n... e altri {errori.Count - 5} errori";
+                    }
+
+                    MessageBox.Show(messaggio,
+                        errori.Any() ? "Completato con avvisi" : "Successo",
+                        MessageBoxButton.OK,
+                        errori.Any() ? MessageBoxImage.Warning : MessageBoxImage.Information);
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"Errore nell'aggiunta delle foto: {ex.Message}", "Errore",
+                    MessageBox.Show($"Errore imprevisto: {ex.Message}", "Errore",
                         MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
@@ -656,6 +711,7 @@ namespace ImmobiGestio.ViewModels
             {
                 try
                 {
+                    // Prima controlla se il file esiste nel percorso salvato
                     if (File.Exists(documento.PercorsoFile))
                     {
                         System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
@@ -663,12 +719,47 @@ namespace ImmobiGestio.ViewModels
                             FileName = documento.PercorsoFile,
                             UseShellExecute = true
                         });
+                        return;
+                    }
+
+                    // Se non esiste, prova a cercarlo
+                    var foundPath = FileManagerService.FindFile(documento.NomeFile, documento.ImmobileId, "Documenti");
+
+                    if (!string.IsNullOrEmpty(foundPath))
+                    {
+                        // Aggiorna il percorso nel database
+                        var docToUpdate = _context.Documenti.Find(documento.Id);
+                        if (docToUpdate != null)
+                        {
+                            docToUpdate.PercorsoFile = foundPath;
+                            _context.SaveChanges();
+                            documento.PercorsoFile = foundPath; // Aggiorna anche l'oggetto UI
+                        }
+
+                        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                        {
+                            FileName = foundPath,
+                            UseShellExecute = true
+                        });
                     }
                     else
                     {
-                        MessageBox.Show("File non trovato!", "Errore",
-                            MessageBoxButton.OK, MessageBoxImage.Error);
+                        var result = MessageBox.Show(
+                            $"File '{documento.NomeFile}' non trovato!\n\nVuoi rimuovere questo documento dall'elenco?",
+                            "File non trovato",
+                            MessageBoxButton.YesNo,
+                            MessageBoxImage.Question);
+
+                        if (result == MessageBoxResult.Yes)
+                        {
+                            DeleteDocument(documento);
+                        }
                     }
+                }
+                catch (System.ComponentModel.Win32Exception)
+                {
+                    MessageBox.Show("Impossibile aprire il file. Assicurati di avere un'applicazione associata per questo tipo di file.",
+                        "Errore apertura file", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
                 catch (Exception ex)
                 {

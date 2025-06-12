@@ -108,6 +108,10 @@ namespace ImmobiGestio.ViewModels
             set => SetProperty(ref _isOutlookConnected, value);
         }
 
+        // Proprietà calcolate per statistiche
+        public int AppuntamentiCompletati => Appuntamenti?.Count(a => a.StatoAppuntamento == "Completato") ?? 0;
+        public int AppuntamentiOggi => Appuntamenti?.Count(a => a.DataInizio.Date == DateTime.Today) ?? 0;
+
         // Commands
         public ICommand? AddAppuntamentoCommand { get; set; }
         public ICommand? SaveAppuntamentoCommand { get; set; }
@@ -122,6 +126,8 @@ namespace ImmobiGestio.ViewModels
         public ICommand? NextPeriodCommand { get; set; }
         public ICommand? TodayCommand { get; set; }
         public ICommand? EsportaCalendarioCommand { get; set; }
+        public ICommand? SelectAppuntamentoCommand { get; set; }
+        public ICommand? ClearFiltriCommand { get; set; }
 
         public AppuntamentiViewModel(ImmobiliContext context)
         {
@@ -183,6 +189,16 @@ namespace ImmobiGestio.ViewModels
             NextPeriodCommand = new RelayCommand(NextPeriod);
             TodayCommand = new RelayCommand(_ => SelectedDate = DateTime.Today);
             EsportaCalendarioCommand = new RelayCommand(EsportaCalendario);
+
+            // Nuovi comandi aggiunti
+            SelectAppuntamentoCommand = new RelayCommand(param => {
+                if (param is Appuntamento app)
+                {
+                    SelectedAppuntamento = app;
+                }
+            });
+
+            ClearFiltriCommand = new RelayCommand(_ => ClearFiltri());
         }
 
         public void LoadAppuntamenti()
@@ -201,6 +217,10 @@ namespace ImmobiGestio.ViewModels
                 {
                     Appuntamenti.Add(appuntamento);
                 }
+
+                // Notifica le proprietà calcolate
+                OnPropertyChanged(nameof(AppuntamentiCompletati));
+                OnPropertyChanged(nameof(AppuntamentiOggi));
             }
             catch (Exception ex)
             {
@@ -250,6 +270,10 @@ namespace ImmobiGestio.ViewModels
                 {
                     Appuntamenti.Add(appuntamento);
                 }
+
+                // Notifica le proprietà calcolate
+                OnPropertyChanged(nameof(AppuntamentiCompletati));
+                OnPropertyChanged(nameof(AppuntamentiOggi));
             }
             catch (Exception ex)
             {
@@ -452,6 +476,10 @@ namespace ImmobiGestio.ViewModels
                         SelectedAppuntamento = Appuntamenti.FirstOrDefault();
                         LoadEventiCalendario();
 
+                        // Notifica le proprietà calcolate
+                        OnPropertyChanged(nameof(AppuntamentiCompletati));
+                        OnPropertyChanged(nameof(AppuntamentiOggi));
+
                         MessageBox.Show("Appuntamento eliminato con successo!",
                             "Successo", MessageBoxButton.OK, MessageBoxImage.Information);
                     }
@@ -503,6 +531,10 @@ namespace ImmobiGestio.ViewModels
                 SelectedAppuntamento.Completa(esito);
                 SaveCurrentAppuntamento();
                 LoadEventiCalendario();
+
+                // Notifica le proprietà calcolate
+                OnPropertyChanged(nameof(AppuntamentiCompletati));
+                OnPropertyChanged(nameof(AppuntamentiOggi));
 
                 MessageBox.Show("Appuntamento completato con successo!",
                     "Successo", MessageBoxButton.OK, MessageBoxImage.Information);
@@ -662,6 +694,15 @@ namespace ImmobiGestio.ViewModels
                 MessageBox.Show($"Errore nell'esportazione: {ex.Message}",
                     "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
             }
+        }
+
+        // Nuovo metodo per pulire i filtri
+        private void ClearFiltri()
+        {
+            SearchText = string.Empty;
+            FiltroStato = "Tutti";
+            FiltroTipo = "Tutti";
+            SelectedDate = DateTime.Today;
         }
 
         // Proprietà per la vista calendario

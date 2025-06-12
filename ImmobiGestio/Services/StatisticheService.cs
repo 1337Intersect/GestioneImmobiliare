@@ -65,9 +65,14 @@ namespace ImmobiGestio.Services
         {
             var ultimi12Mesi = DateTime.Today.AddMonths(-12);
 
-            return _context.Immobili
+            // Prima otteniamo i dati dal database
+            var venditeRaw = _context.Immobili
                 .Where(i => i.StatoVendita == "Venduto" &&
                            i.DataUltimaModifica >= ultimi12Mesi)
+                .ToList(); // Materializza la query
+
+            // Poi elaboriamo in memoria
+            return venditeRaw
                 .GroupBy(i => new {
                     Anno = i.DataUltimaModifica!.Value.Year,
                     Mese = i.DataUltimaModifica!.Value.Month
@@ -75,7 +80,7 @@ namespace ImmobiGestio.Services
                 .Select(g => new VenditeMensili
                 {
                     Anno = g.Key.Anno,
-                    Mese = GetNomeMese(g.Key.Mese),
+                    Mese = GetNomeMese(g.Key.Mese), // Ora funziona perché siamo in memoria
                     DataMese = new DateTime(g.Key.Anno, g.Key.Mese, 1),
                     Valore = g.Sum(i => i.Prezzo),
                     NumeroVendite = g.Count()
@@ -108,83 +113,95 @@ namespace ImmobiGestio.Services
             var attivita = new List<AttivitaRecente>();
             var ultimi7Giorni = DateTime.Today.AddDays(-7);
 
-            // Nuovi clienti
-            var nuoviClienti = _context.Clienti
-                .Where(c => c.DataInserimento >= ultimi7Giorni)
-                .OrderByDescending(c => c.DataInserimento)
-                .Take(5)
-                .Select(c => new AttivitaRecente
-                {
-                    Data = c.DataInserimento,
-                    Tipo = "Nuovo Cliente",
-                    Descrizione = $"Nuovo cliente: {c.NomeCompleto}",
-                    Icona = "👤",
-                    Colore = "#4CAF50",
-                    RelatedId = c.Id
-                })
-                .ToList();
+            try
+            {
+                // Nuovi clienti
+                var nuoviClienti = _context.Clienti
+                    .Where(c => c.DataInserimento >= ultimi7Giorni)
+                    .OrderByDescending(c => c.DataInserimento)
+                    .Take(5)
+                    .ToList() // Materializza prima
+                    .Select(c => new AttivitaRecente
+                    {
+                        Data = c.DataInserimento,
+                        Tipo = "Nuovo Cliente",
+                        Descrizione = $"Nuovo cliente: {c.Nome} {c.Cognome}",
+                        Icona = "👤",
+                        Colore = "#4CAF50",
+                        RelatedId = c.Id
+                    })
+                    .ToList();
 
-            // Nuovi immobili
-            var nuoviImmobili = _context.Immobili
-                .Where(i => i.DataInserimento >= ultimi7Giorni)
-                .OrderByDescending(i => i.DataInserimento)
-                .Take(5)
-                .Select(i => new AttivitaRecente
-                {
-                    Data = i.DataInserimento,
-                    Tipo = "Nuovo Immobile",
-                    Descrizione = $"Nuovo immobile: {i.Titolo}",
-                    Icona = "🏠",
-                    Colore = "#2196F3",
-                    RelatedId = i.Id
-                })
-                .ToList();
+                // Nuovi immobili
+                var nuoviImmobili = _context.Immobili
+                    .Where(i => i.DataInserimento >= ultimi7Giorni)
+                    .OrderByDescending(i => i.DataInserimento)
+                    .Take(5)
+                    .ToList() // Materializza prima
+                    .Select(i => new AttivitaRecente
+                    {
+                        Data = i.DataInserimento,
+                        Tipo = "Nuovo Immobile",
+                        Descrizione = $"Nuovo immobile: {i.Titolo}",
+                        Icona = "🏠",
+                        Colore = "#2196F3",
+                        RelatedId = i.Id
+                    })
+                    .ToList();
 
-            // Appuntamenti completati
-            var appuntamentiCompletati = _context.Appuntamenti
-                .Include(a => a.Cliente)
-                .Where(a => a.StatoAppuntamento == "Completato" &&
-                           a.DataUltimaModifica >= ultimi7Giorni)
-                .OrderByDescending(a => a.DataUltimaModifica)
-                .Take(5)
-                .Select(a => new AttivitaRecente
-                {
-                    Data = a.DataUltimaModifica ?? a.DataCreazione,
-                    Tipo = "Appuntamento Completato",
-                    Descrizione = $"Completato: {a.Titolo}" +
-                                 (a.Cliente != null ? $" con {a.Cliente.NomeCompleto}" : ""),
-                    Icona = "✅",
-                    Colore = "#FF9800",
-                    RelatedId = a.Id
-                })
-                .ToList();
+                // Appuntamenti completati
+                var appuntamentiCompletati = _context.Appuntamenti
+                    .Include(a => a.Cliente)
+                    .Where(a => a.StatoAppuntamento == "Completato" &&
+                               a.DataUltimaModifica >= ultimi7Giorni)
+                    .OrderByDescending(a => a.DataUltimaModifica)
+                    .Take(5)
+                    .ToList() // Materializza prima
+                    .Select(a => new AttivitaRecente
+                    {
+                        Data = a.DataUltimaModifica ?? a.DataCreazione,
+                        Tipo = "Appuntamento Completato",
+                        Descrizione = $"Completato: {a.Titolo}" +
+                                     (a.Cliente != null ? $" con {a.Cliente.Nome} {a.Cliente.Cognome}" : ""),
+                        Icona = "✅",
+                        Colore = "#FF9800",
+                        RelatedId = a.Id
+                    })
+                    .ToList();
 
-            // Vendite
-            var venditeRecenti = _context.Immobili
-                .Where(i => i.StatoVendita == "Venduto" &&
-                           i.DataUltimaModifica >= ultimi7Giorni)
-                .OrderByDescending(i => i.DataUltimaModifica)
-                .Take(3)
-                .Select(i => new AttivitaRecente
-                {
-                    Data = i.DataUltimaModifica ?? i.DataInserimento,
-                    Tipo = "Vendita",
-                    Descrizione = $"Venduto: {i.Titolo} - € {i.Prezzo:N0}",
-                    Icona = "💰",
-                    Colore = "#4CAF50",
-                    RelatedId = i.Id
-                })
-                .ToList();
+                // Vendite
+                var venditeRecenti = _context.Immobili
+                    .Where(i => i.StatoVendita == "Venduto" &&
+                               i.DataUltimaModifica >= ultimi7Giorni)
+                    .OrderByDescending(i => i.DataUltimaModifica)
+                    .Take(3)
+                    .ToList() // Materializza prima
+                    .Select(i => new AttivitaRecente
+                    {
+                        Data = i.DataUltimaModifica ?? i.DataInserimento,
+                        Tipo = "Vendita",
+                        Descrizione = $"Venduto: {i.Titolo} - € {i.Prezzo:N0}",
+                        Icona = "💰",
+                        Colore = "#4CAF50",
+                        RelatedId = i.Id
+                    })
+                    .ToList();
 
-            attivita.AddRange(nuoviClienti);
-            attivita.AddRange(nuoviImmobili);
-            attivita.AddRange(appuntamentiCompletati);
-            attivita.AddRange(venditeRecenti);
+                attivita.AddRange(nuoviClienti);
+                attivita.AddRange(nuoviImmobili);
+                attivita.AddRange(appuntamentiCompletati);
+                attivita.AddRange(venditeRecenti);
 
-            return attivita
-                .OrderByDescending(a => a.Data)
-                .Take(10)
-                .ToList();
+                return attivita
+                    .OrderByDescending(a => a.Data)
+                    .Take(10)
+                    .ToList();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Errore GetAttivitaRecenti: {ex.Message}");
+                return new List<AttivitaRecente>();
+            }
         }
 
         private List<ClientiPerTipologia> GetClientiPerTipologie()
@@ -226,23 +243,46 @@ namespace ImmobiGestio.Services
 
         public List<EventoCalendario> GetEventiCalendario(DateTime start, DateTime end)
         {
-            return _context.Appuntamenti
-                .Include(a => a.Cliente)
-                .Include(a => a.Immobile)
-                .Where(a => a.DataInizio >= start && a.DataInizio <= end)
-                .Select(a => new EventoCalendario
-                {
-                    Id = a.Id,
-                    Titolo = a.Titolo,
-                    Inizio = a.DataInizio,
-                    Fine = a.DataFine,
-                    Colore = a.StatoColore,
-                    Tipo = a.TipoAppuntamento,
-                    TuttoIlGiorno = false,
-                    ClienteNome = a.Cliente != null ? a.Cliente.NomeCompleto : null,
-                    ImmobileTitolo = a.Immobile != null ? a.Immobile.Titolo : null
-                })
-                .ToList();
+            try
+            {
+                var eventi = _context.Appuntamenti
+                    .Include(a => a.Cliente)
+                    .Include(a => a.Immobile)
+                    .Where(a => a.DataInizio >= start && a.DataInizio <= end)
+                    .ToList() // Materializza prima
+                    .Select(a => new EventoCalendario
+                    {
+                        Id = a.Id,
+                        Titolo = a.Titolo,
+                        Inizio = a.DataInizio,
+                        Fine = a.DataFine,
+                        Colore = GetColorForStatus(a.StatoAppuntamento),
+                        Tipo = a.TipoAppuntamento,
+                        TuttoIlGiorno = false,
+                        ClienteNome = a.Cliente != null ? $"{a.Cliente.Nome} {a.Cliente.Cognome}" : null,
+                        ImmobileTitolo = a.Immobile != null ? a.Immobile.Titolo : null
+                    })
+                    .ToList();
+
+                return eventi;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Errore GetEventiCalendario: {ex.Message}");
+                return new List<EventoCalendario>();
+            }
+        }
+
+        private string GetColorForStatus(string stato)
+        {
+            return stato switch
+            {
+                "Programmato" => "#FF2196F3", // Blu
+                "Confermato" => "#FF4CAF50",  // Verde
+                "Completato" => "#FF9E9E9E",  // Grigio
+                "Annullato" => "#FFF44336",   // Rosso
+                _ => "#FF2196F3"
+            };
         }
 
         public AnalisiMercato GetAnalisiMercato(string? zona = null)

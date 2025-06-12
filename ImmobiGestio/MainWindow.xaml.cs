@@ -60,7 +60,7 @@ namespace ImmobiGestio
         {
             try
             {
-                _viewModel?.RefreshStatusMessage();
+                _viewModel?.RefreshAllData();
                 MessageBox.Show("Dati aggiornati con successo!", "Aggiornamento",
                     MessageBoxButton.OK, MessageBoxImage.Information);
             }
