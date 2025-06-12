@@ -1,0 +1,9 @@
+﻿<Application x:Class="ImmobiGestio.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             StartupUri="MainWindow.xaml">
+    <Application.Resources>
+        <!-- Converter per visibilità -->
+        <BooleanToVisibilityConverter x:Key="BoolToVisConverter"/>
+    </Application.Resources>
+</Application>
