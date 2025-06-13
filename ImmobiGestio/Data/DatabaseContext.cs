@@ -18,184 +18,297 @@ namespace ImmobiGestio.Data
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            // Database SQLite nella cartella del progetto
-            optionsBuilder.UseSqlite("Data Source=immobili.db");
+            if (!optionsBuilder.IsConfigured)
+            {
+                // Database SQLite nella cartella del progetto
+                var connectionString = "Data Source=immobili.db";
+                optionsBuilder.UseSqlite(connectionString);
+
+                // Abilita logging per debug
+#if DEBUG
+                optionsBuilder.EnableSensitiveDataLogging();
+                optionsBuilder.LogTo(message => System.Diagnostics.Debug.WriteLine(message));
+#endif
+            }
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             // Configurazione Immobile
-            modelBuilder.Entity<Immobile>()
-                .HasMany(i => i.Documenti)
-                .WithOne(d => d.Immobile)
-                .HasForeignKey(d => d.ImmobileId)
-                .OnDelete(DeleteBehavior.Cascade);
+            modelBuilder.Entity<Immobile>(entity =>
+            {
+                entity.HasKey(e => e.Id);
 
-            modelBuilder.Entity<Immobile>()
-                .HasMany(i => i.Foto)
-                .WithOne(f => f.Immobile)
-                .HasForeignKey(f => f.ImmobileId)
-                .OnDelete(DeleteBehavior.Cascade);
+                // Campi obbligatori
+                entity.Property(e => e.Titolo).IsRequired().HasMaxLength(200);
+                entity.Property(e => e.Indirizzo).IsRequired().HasMaxLength(500);
+                entity.Property(e => e.TipoImmobile).IsRequired().HasMaxLength(50).HasDefaultValue("Appartamento");
+                entity.Property(e => e.StatoConservazione).IsRequired().HasMaxLength(50).HasDefaultValue("Buono");
+                entity.Property(e => e.ClasseEnergetica).IsRequired().HasMaxLength(50).HasDefaultValue("G");
+                entity.Property(e => e.StatoVendita).IsRequired().HasMaxLength(50).HasDefaultValue("Disponibile");
+                entity.Property(e => e.DataInserimento).IsRequired();
+
+                // Campi opzionali
+                entity.Property(e => e.Citta).HasMaxLength(100).IsRequired(false);
+                entity.Property(e => e.CAP).HasMaxLength(10).IsRequired(false);
+                entity.Property(e => e.Provincia).HasMaxLength(50).IsRequired(false);
+                entity.Property(e => e.Descrizione).HasMaxLength(2000).IsRequired(false);
+
+                // Campi numerici
+                entity.Property(e => e.Prezzo).HasPrecision(18, 2).IsRequired().HasDefaultValue(0);
+                entity.Property(e => e.Superficie).IsRequired(false);
+                entity.Property(e => e.NumeroLocali).IsRequired(false);
+                entity.Property(e => e.NumeroBagni).IsRequired(false);
+                entity.Property(e => e.Piano).IsRequired(false);
+                entity.Property(e => e.DataUltimaModifica).IsRequired(false);
+
+                // Relazioni
+                entity.HasMany(i => i.Documenti)
+                      .WithOne(d => d.Immobile)
+                      .HasForeignKey(d => d.ImmobileId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasMany(i => i.Foto)
+                      .WithOne(f => f.Immobile)
+                      .HasForeignKey(f => f.ImmobileId)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
 
             // Configurazione Cliente
-            modelBuilder.Entity<Cliente>()
-                .HasMany(c => c.Appuntamenti)
-                .WithOne(a => a.Cliente)
-                .HasForeignKey(a => a.ClienteId)
-                .OnDelete(DeleteBehavior.Cascade);
+            modelBuilder.Entity<Cliente>(entity =>
+            {
+                entity.HasKey(e => e.Id);
 
-            modelBuilder.Entity<Cliente>()
-                .HasMany(c => c.ImmobiliDiInteresse)
-                .WithOne(ci => ci.Cliente)
-                .HasForeignKey(ci => ci.ClienteId)
-                .OnDelete(DeleteBehavior.Cascade);
+                // Campi obbligatori
+                entity.Property(e => e.Nome).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.Cognome).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.TipoCliente).IsRequired().HasMaxLength(50).HasDefaultValue("Acquirente");
+                entity.Property(e => e.StatoCliente).IsRequired().HasMaxLength(50).HasDefaultValue("Attivo");
+                entity.Property(e => e.DataInserimento).IsRequired();
 
-            // Configurazione Appuntamento
-            modelBuilder.Entity<Appuntamento>()
-                .HasOne(a => a.Cliente)
-                .WithMany(c => c.Appuntamenti)
-                .HasForeignKey(a => a.ClienteId)
-                .OnDelete(DeleteBehavior.SetNull);
+                // Campi opzionali
+                entity.Property(e => e.CodiceFiscale).HasMaxLength(16).IsRequired(false);
+                entity.Property(e => e.Email).HasMaxLength(200).IsRequired(false);
+                entity.Property(e => e.Telefono).HasMaxLength(20).IsRequired(false);
+                entity.Property(e => e.Cellulare).HasMaxLength(20).IsRequired(false);
+                entity.Property(e => e.Indirizzo).HasMaxLength(500).IsRequired(false);
+                entity.Property(e => e.Citta).HasMaxLength(100).IsRequired(false);
+                entity.Property(e => e.CAP).HasMaxLength(10).IsRequired(false);
+                entity.Property(e => e.Provincia).HasMaxLength(50).IsRequired(false);
+                entity.Property(e => e.Note).HasMaxLength(2000).IsRequired(false);
+                entity.Property(e => e.FonteContatto).HasMaxLength(100).IsRequired(false);
+                entity.Property(e => e.PreferenzeTipologia).HasMaxLength(500).IsRequired(false);
+                entity.Property(e => e.PreferenzeZone).HasMaxLength(500).IsRequired(false);
 
-            modelBuilder.Entity<Appuntamento>()
-                .HasOne(a => a.Immobile)
-                .WithMany()
-                .HasForeignKey(a => a.ImmobileId)
-                .OnDelete(DeleteBehavior.SetNull);
+                // Campi numerici e date
+                entity.Property(e => e.BudgetMin).HasPrecision(18, 2).HasDefaultValue(0);
+                entity.Property(e => e.BudgetMax).HasPrecision(18, 2).HasDefaultValue(0);
+                entity.Property(e => e.DataNascita).IsRequired();
+                entity.Property(e => e.DataUltimaModifica).IsRequired(false);
+                entity.Property(e => e.DataUltimoContatto).IsRequired(false);
+                entity.Property(e => e.ImmobileDiInteresseId).IsRequired(false);
 
-            // Configurazione ClienteImmobile (tabella di collegamento)
-            modelBuilder.Entity<ClienteImmobile>()
-                .HasOne(ci => ci.Cliente)
-                .WithMany(c => c.ImmobiliDiInteresse)
-                .HasForeignKey(ci => ci.ClienteId)
-                .OnDelete(DeleteBehavior.Cascade);
+                // Indici (non unici per permettere valori vuoti/duplicati)
+                entity.HasIndex(e => e.Email).IsUnique(false);
+                entity.HasIndex(e => e.CodiceFiscale).IsUnique(false);
+                entity.HasIndex(e => new { e.Nome, e.Cognome });
 
-            modelBuilder.Entity<ClienteImmobile>()
-                .HasOne(ci => ci.Immobile)
-                .WithMany()
-                .HasForeignKey(ci => ci.ImmobileId)
-                .OnDelete(DeleteBehavior.Cascade);
+                // Relazioni
+                entity.HasMany(c => c.Appuntamenti)
+                      .WithOne(a => a.Cliente)
+                      .HasForeignKey(a => a.ClienteId)
+                      .OnDelete(DeleteBehavior.SetNull);
 
-            // Indici per performance
-            modelBuilder.Entity<Cliente>()
-                .HasIndex(c => c.Email)
-                .IsUnique();
+                entity.HasMany(c => c.ImmobiliDiInteresse)
+                      .WithOne(ci => ci.Cliente)
+                      .HasForeignKey(ci => ci.ClienteId)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
 
-            modelBuilder.Entity<Cliente>()
-                .HasIndex(c => c.CodiceFiscale)
-                .IsUnique();
+            // Configurazione Appuntamento - CRITICA!
+            modelBuilder.Entity<Appuntamento>(entity =>
+            {
+                entity.HasKey(e => e.Id);
 
-            modelBuilder.Entity<Cliente>()
-                .HasIndex(c => new { c.Nome, c.Cognome });
+                // Campi obbligatori con valori di default
+                entity.Property(e => e.Titolo).IsRequired().HasMaxLength(200).HasDefaultValue("Nuovo Appuntamento");
+                entity.Property(e => e.DataInizio).IsRequired();
+                entity.Property(e => e.DataFine).IsRequired();
+                entity.Property(e => e.DataCreazione).IsRequired();
+                entity.Property(e => e.CreatoDa).IsRequired().HasMaxLength(100).HasDefaultValue("Sistema");
+                entity.Property(e => e.Luogo).IsRequired().HasMaxLength(500).HasDefaultValue("Ufficio");
 
-            modelBuilder.Entity<Appuntamento>()
-                .HasIndex(a => a.DataInizio);
+                // Campi con valori di default espliciti - IMPORTANTE!
+                entity.Property(e => e.TipoAppuntamento).IsRequired().HasMaxLength(50).HasDefaultValue("Visita");
+                entity.Property(e => e.StatoAppuntamento).IsRequired().HasMaxLength(50).HasDefaultValue("Programmato");
+                entity.Property(e => e.Priorita).IsRequired().HasMaxLength(20).HasDefaultValue("Media");
 
-            modelBuilder.Entity<Appuntamento>()
-                .HasIndex(a => a.StatoAppuntamento);
+                // Campi booleani con default
+                entity.Property(e => e.RichiedeConferma).IsRequired().HasDefaultValue(true);
+                entity.Property(e => e.NotificaInviata).IsRequired().HasDefaultValue(false);
+                entity.Property(e => e.SincronizzatoOutlook).IsRequired().HasDefaultValue(false);
 
-            modelBuilder.Entity<Immobile>()
-                .HasIndex(i => i.StatoVendita);
+                // Campi opzionali
+                entity.Property(e => e.Descrizione).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.NotePrivate).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.EsitoIncontro).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.OutlookEventId).HasMaxLength(255).IsRequired(false);
+                entity.Property(e => e.DataUltimaModifica).IsRequired(false);
+                entity.Property(e => e.DataConferma).IsRequired(false);
+                entity.Property(e => e.DataNotifica).IsRequired(false);
 
-            modelBuilder.Entity<Immobile>()
-                .HasIndex(i => i.TipoImmobile);
+                // Foreign Keys nullable
+                entity.Property(e => e.ClienteId).IsRequired(false);
+                entity.Property(e => e.ImmobileId).IsRequired(false);
 
-            modelBuilder.Entity<Immobile>()
-                .HasIndex(i => i.Citta);
+                // Relazioni
+                entity.HasOne(a => a.Cliente)
+                      .WithMany(c => c.Appuntamenti)
+                      .HasForeignKey(a => a.ClienteId)
+                      .OnDelete(DeleteBehavior.SetNull);
 
-            // Configurazioni di precisione per decimali
-            modelBuilder.Entity<Cliente>()
-                .Property(c => c.BudgetMin)
-                .HasPrecision(18, 2);
+                entity.HasOne(a => a.Immobile)
+                      .WithMany()
+                      .HasForeignKey(a => a.ImmobileId)
+                      .OnDelete(DeleteBehavior.SetNull);
 
-            modelBuilder.Entity<Cliente>()
-                .Property(c => c.BudgetMax)
-                .HasPrecision(18, 2);
+                // Indici per performance
+                entity.HasIndex(a => a.DataInizio);
+                entity.HasIndex(a => a.StatoAppuntamento);
+                entity.HasIndex(a => a.TipoAppuntamento);
+            });
 
-            modelBuilder.Entity<Immobile>()
-                .Property(i => i.Prezzo)
-                .HasPrecision(18, 2);
+            // Configurazione DocumentoImmobile
+            modelBuilder.Entity<DocumentoImmobile>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.TipoDocumento).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.NomeFile).IsRequired().HasMaxLength(255);
+                entity.Property(e => e.PercorsoFile).IsRequired().HasMaxLength(500);
+                entity.Property(e => e.DataCaricamento).IsRequired();
+                entity.Property(e => e.Descrizione).HasMaxLength(255).IsRequired(false);
+            });
 
-            modelBuilder.Entity<ClienteImmobile>()
-                .Property(ci => ci.OffertaProposta)
-                .HasPrecision(18, 2);
+            // Configurazione FotoImmobile
+            modelBuilder.Entity<FotoImmobile>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.NomeFile).IsRequired().HasMaxLength(255);
+                entity.Property(e => e.PercorsoFile).IsRequired().HasMaxLength(500);
+                entity.Property(e => e.DataCaricamento).IsRequired();
+                entity.Property(e => e.IsPrincipale).IsRequired().HasDefaultValue(false);
+                entity.Property(e => e.Descrizione).HasMaxLength(255).IsRequired(false);
+            });
 
-            // Seed data (dati di esempio)
-            SeedData(modelBuilder);
-        }
+            // Configurazione ClienteImmobile
+            modelBuilder.Entity<ClienteImmobile>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.DataInteresse).IsRequired();
+                entity.Property(e => e.StatoInteresse).IsRequired().HasMaxLength(50).HasDefaultValue("Interessato");
+                entity.Property(e => e.Note).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.OffertaProposta).HasPrecision(18, 2).IsRequired(false);
+                entity.Property(e => e.DataOfferta).IsRequired(false);
+                entity.Property(e => e.EsitoOfferta).HasMaxLength(50).IsRequired(false);
 
-        private void SeedData(ModelBuilder modelBuilder)
-        {
-            // Seed per tipologie immobili (se necessario per lookup tables future)
+                entity.HasOne(ci => ci.Cliente)
+                      .WithMany(c => c.ImmobiliDiInteresse)
+                      .HasForeignKey(ci => ci.ClienteId)
+                      .OnDelete(DeleteBehavior.Cascade);
 
-            // Esempio di cliente di test (opzionale)
-            /*
-            modelBuilder.Entity<Cliente>().HasData(
-                new Cliente
-                {
-                    Id = 1,
-                    Nome = "Mario",
-                    Cognome = "Rossi",
-                    Email = "mario.rossi@email.com",
-                    Telefono = "0123456789",
-                    TipoCliente = "Acquirente",
-                    BudgetMin = 150000,
-                    BudgetMax = 250000,
-                    StatoCliente = "Attivo",
-                    DataInserimento = DateTime.Now.AddDays(-30)
-                }
-            );
-            */
+                entity.HasOne(ci => ci.Immobile)
+                      .WithMany()
+                      .HasForeignKey(ci => ci.ImmobileId)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
         }
 
         public override int SaveChanges()
         {
-            // Aggiorna automaticamente DataUltimaModifica
-            var entries = ChangeTracker.Entries()
-                .Where(e => e.State == EntityState.Modified);
-
-            foreach (var entry in entries)
+            try
             {
-                if (entry.Entity is Cliente cliente)
-                {
-                    cliente.DataUltimaModifica = DateTime.Now;
-                }
-                else if (entry.Entity is Immobile immobile)
-                {
-                    immobile.DataUltimaModifica = DateTime.Now;
-                }
-                else if (entry.Entity is Appuntamento appuntamento)
-                {
-                    appuntamento.DataUltimaModifica = DateTime.Now;
-                }
-            }
+                // Log delle entità che stanno per essere salvate
+                var addedEntities = ChangeTracker.Entries()
+                    .Where(e => e.State == EntityState.Added)
+                    .ToList();
 
-            return base.SaveChanges();
+                foreach (var entry in addedEntities)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Salvando entità: {entry.Entity.GetType().Name}");
+
+                    // Per gli Appuntamenti, verifica i campi obbligatori
+                    if (entry.Entity is Appuntamento app)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"  TipoAppuntamento: '{app.TipoAppuntamento}'");
+                        System.Diagnostics.Debug.WriteLine($"  StatoAppuntamento: '{app.StatoAppuntamento}'");
+                        System.Diagnostics.Debug.WriteLine($"  Priorita: '{app.Priorita}'");
+                        System.Diagnostics.Debug.WriteLine($"  Titolo: '{app.Titolo}'");
+                        System.Diagnostics.Debug.WriteLine($"  Luogo: '{app.Luogo}'");
+                    }
+                }
+
+                // Aggiorna automaticamente DataUltimaModifica per le entità modificate
+                var modifiedEntries = ChangeTracker.Entries()
+                    .Where(e => e.State == EntityState.Modified);
+
+                foreach (var entry in modifiedEntries)
+                {
+                    if (entry.Entity is Cliente cliente)
+                    {
+                        cliente.DataUltimaModifica = DateTime.Now;
+                    }
+                    else if (entry.Entity is Immobile immobile)
+                    {
+                        immobile.DataUltimaModifica = DateTime.Now;
+                    }
+                    else if (entry.Entity is Appuntamento appuntamento)
+                    {
+                        appuntamento.DataUltimaModifica = DateTime.Now;
+                    }
+                }
+
+                var result = base.SaveChanges();
+                System.Diagnostics.Debug.WriteLine($"SaveChanges completato: {result} record interessati");
+                return result;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Errore in SaveChanges: {ex}");
+                throw;
+            }
         }
 
         public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
-            // Stessa logica per l'async
-            var entries = ChangeTracker.Entries()
-                .Where(e => e.State == EntityState.Modified);
-
-            foreach (var entry in entries)
+            try
             {
-                if (entry.Entity is Cliente cliente)
-                {
-                    cliente.DataUltimaModifica = DateTime.Now;
-                }
-                else if (entry.Entity is Immobile immobile)
-                {
-                    immobile.DataUltimaModifica = DateTime.Now;
-                }
-                else if (entry.Entity is Appuntamento appuntamento)
-                {
-                    appuntamento.DataUltimaModifica = DateTime.Now;
-                }
-            }
+                // Stessa logica per l'async
+                var entries = ChangeTracker.Entries()
+                    .Where(e => e.State == EntityState.Modified);
 
-            return await base.SaveChangesAsync(cancellationToken);
+                foreach (var entry in entries)
+                {
+                    if (entry.Entity is Cliente cliente)
+                    {
+                        cliente.DataUltimaModifica = DateTime.Now;
+                    }
+                    else if (entry.Entity is Immobile immobile)
+                    {
+                        immobile.DataUltimaModifica = DateTime.Now;
+                    }
+                    else if (entry.Entity is Appuntamento appuntamento)
+                    {
+                        appuntamento.DataUltimaModifica = DateTime.Now;
+                    }
+                }
+
+                return await base.SaveChangesAsync(cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Errore in SaveChangesAsync: {ex}");
+                throw;
+            }
         }
     }
 }

@@ -23,12 +23,15 @@ namespace ImmobiGestio.ViewModels
         public ObservableCollection<Appuntamento> AppuntamentiCliente { get; set; } = new();
         public ObservableCollection<ClienteImmobile> ImmobiliInteresse { get; set; } = new();
 
-        // Combo boxes data
+        // Combo boxes data SOLO per i clienti (NON per appuntamenti)
         public ObservableCollection<string> TipiCliente { get; set; } = new();
         public ObservableCollection<string> StatiCliente { get; set; } = new();
         public ObservableCollection<string> FontiContatto { get; set; } = new();
         public ObservableCollection<string> TipiClienteFiltro { get; set; } = new();
         public ObservableCollection<string> StatiClienteFiltro { get; set; } = new();
+
+        // Eventi per comunicare con altri ViewModels
+        public event Action? AppuntamentoCreated;
 
         public Cliente? SelectedCliente
         {
@@ -96,7 +99,7 @@ namespace ImmobiGestio.ViewModels
 
         private void InitializeCollections()
         {
-            // Tipi cliente
+            // Tipi cliente (SOLO per clienti, NON appuntamenti)
             TipiCliente.Clear();
             TipiClienteFiltro.Clear();
             TipiClienteFiltro.Add("Tutti");
@@ -107,7 +110,7 @@ namespace ImmobiGestio.ViewModels
                 TipiClienteFiltro.Add(tipo);
             }
 
-            // Stati cliente
+            // Stati cliente (SOLO per clienti, NON appuntamenti)
             StatiCliente.Clear();
             StatiClienteFiltro.Clear();
             StatiClienteFiltro.Add("Tutti");
@@ -214,7 +217,7 @@ namespace ImmobiGestio.ViewModels
             }
         }
 
-        private void RefreshCurrentCollections()
+        public void RefreshCurrentCollections()
         {
             AppuntamentiCliente.Clear();
             ImmobiliInteresse.Clear();
@@ -265,7 +268,22 @@ namespace ImmobiGestio.ViewModels
                 Cognome = "Cliente",
                 TipoCliente = "Acquirente",
                 StatoCliente = "Prospect",
-                FonteContatto = "Web"
+                FonteContatto = "Web",
+                Email = "",
+                Telefono = "",
+                Cellulare = "",
+                CodiceFiscale = "",
+                Indirizzo = "",
+                Citta = "",
+                CAP = "",
+                Provincia = "",
+                Note = "",
+                PreferenzeTipologia = "",
+                PreferenzeZone = "",
+                BudgetMin = 0,
+                BudgetMax = 0,
+                DataNascita = DateTime.Today.AddYears(-30),
+                DataInserimento = DateTime.Now
             };
 
             try
@@ -297,6 +315,7 @@ namespace ImmobiGestio.ViewModels
 
                     SelectedCliente.DataUltimaModifica = DateTime.Now;
 
+                    // Detach eventuali entità già tracciate
                     var tracked = _context.ChangeTracker.Entries<Cliente>()
                         .FirstOrDefault(e => e.Entity.Id == SelectedCliente.Id);
                     if (tracked != null)
@@ -379,43 +398,90 @@ namespace ImmobiGestio.ViewModels
             }
         }
 
+        // METODO FIX: AddAppuntamento corretto per ClientiViewModel
         private void AddAppuntamento(object? parameter)
         {
-            if (SelectedCliente == null) return;
-
-            // Crea un nuovo appuntamento per il cliente selezionato
-            var newAppuntamento = new Appuntamento
+            if (SelectedCliente == null)
             {
-                ClienteId = SelectedCliente.Id,
-                Titolo = $"Appuntamento con {SelectedCliente.NomeCompleto}",
-                DataInizio = DateTime.Now.AddDays(1),
-                DataFine = DateTime.Now.AddDays(1).AddHours(1),
-                TipoAppuntamento = "Incontro",
-                Luogo = "Ufficio"
-            };
+                MessageBox.Show("Nessun cliente selezionato per creare l'appuntamento.",
+                    "Attenzione", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
 
             try
             {
-                _context.Appuntamenti.Add(newAppuntamento);
-                _context.SaveChanges();
+                // Salva prima il cliente corrente
+                SaveCurrentCliente();
 
-                // Ricarica gli appuntamenti
+                // Crea l'appuntamento con valori diretti
+                var newAppuntamento = new Appuntamento
+                {
+                    ClienteId = SelectedCliente.Id,
+                    Titolo = $"Appuntamento con {SelectedCliente.NomeCompleto}",
+                    Descrizione = $"Incontro con il cliente {SelectedCliente.NomeCompleto}",
+                    DataInizio = DateTime.Now.AddDays(1),
+                    DataFine = DateTime.Now.AddDays(1).AddHours(1),
+                    TipoAppuntamento = "Incontro",
+                    StatoAppuntamento = "Programmato",
+                    Priorita = "Media",
+                    Luogo = "Ufficio",
+                    NotePrivate = $"Appuntamento creato dalla scheda cliente: {SelectedCliente.NomeCompleto}",
+                    EsitoIncontro = "",
+                    OutlookEventId = "",
+                    CreatoDa = "Sistema",
+                    DataCreazione = DateTime.Now,
+                    SincronizzatoOutlook = false,
+                    NotificaInviata = false,
+                    RichiedeConferma = true
+                };
+
+                // Log per debug
+                System.Diagnostics.Debug.WriteLine($"=== CREAZIONE APPUNTAMENTO DA CLIENTE ===");
+                System.Diagnostics.Debug.WriteLine($"ClienteId: {newAppuntamento.ClienteId}");
+                System.Diagnostics.Debug.WriteLine($"Cliente: {SelectedCliente.NomeCompleto}");
+
+                // Usa un nuovo contesto per evitare conflitti
+                using (var newContext = new ImmobiliContext())
+                {
+                    var clienteExists = newContext.Clienti.Any(c => c.Id == SelectedCliente.Id);
+                    if (!clienteExists)
+                    {
+                        MessageBox.Show("Errore: Il cliente selezionato non esiste nel database!",
+                            "Errore Database", MessageBoxButton.OK, MessageBoxImage.Error);
+                        return;
+                    }
+
+                    newContext.Appuntamenti.Add(newAppuntamento);
+                    newContext.SaveChanges();
+
+                    System.Diagnostics.Debug.WriteLine($"Appuntamento salvato con ID: {newAppuntamento.Id}");
+                }
+
+                // Ricarica gli appuntamenti del cliente
                 RefreshCurrentCollections();
 
-                MessageBox.Show("Nuovo appuntamento creato con successo!",
+                // Notifica agli altri ViewModels
+                AppuntamentoCreated?.Invoke();
+
+                MessageBox.Show($"Appuntamento creato con successo per {SelectedCliente.NomeCompleto}!\n\n" +
+                               $"Data: {newAppuntamento.DataInizio:dd/MM/yyyy HH:mm}",
                     "Successo", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Errore nella creazione dell'appuntamento: {ex.Message}",
-                    "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
+                var message = $"Errore nella creazione dell'appuntamento:\n\n{ex.Message}";
+                if (ex.InnerException != null)
+                {
+                    message += $"\n\nDettagli: {ex.InnerException.Message}";
+                }
+
+                MessageBox.Show(message, "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
+                System.Diagnostics.Debug.WriteLine($"Errore AddAppuntamento: {ex}");
             }
         }
 
         private void AddInteresseImmobile(object? parameter)
         {
-            // Apri finestra di selezione immobile
-            // Per ora creiamo un interesse di esempio
             if (SelectedCliente == null) return;
 
             try
@@ -431,7 +497,8 @@ namespace ImmobiGestio.ViewModels
                         ClienteId = SelectedCliente.Id,
                         ImmobileId = immobile.Id,
                         StatoInteresse = "Interessato",
-                        Note = "Interesse aggiunto manualmente"
+                        Note = "Interesse aggiunto manualmente",
+                        DataInteresse = DateTime.Now
                     };
 
                     _context.ClientiImmobili.Add(interesse);
@@ -476,6 +543,9 @@ namespace ImmobiGestio.ViewModels
                             _context.SaveChanges();
 
                             AppuntamentiCliente.Remove(appuntamento);
+
+                            // Notifica agli altri ViewModels
+                            AppuntamentoCreated?.Invoke();
 
                             MessageBox.Show("Appuntamento eliminato con successo!",
                                 "Successo", MessageBoxButton.OK, MessageBoxImage.Information);
@@ -565,9 +635,8 @@ namespace ImmobiGestio.ViewModels
                             UseShellExecute = true
                         });
                     }
-                    catch (Exception ex)
+                    catch
                     {
-                        // Se tel: non funziona, mostra il numero
                         MessageBox.Show($"Numero di telefono: {telefono}",
                             "Chiama Cliente", MessageBoxButton.OK, MessageBoxImage.Information);
                     }

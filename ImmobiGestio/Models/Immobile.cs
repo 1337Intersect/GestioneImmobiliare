@@ -1,5 +1,4 @@
-﻿// ===== MODELLI DATI - Models/Immobile.cs =====
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -29,11 +28,12 @@ namespace ImmobiGestio.Models
         public string Provincia { get; set; } = string.Empty;
 
         [Column(TypeName = "decimal(18,2)")]
-        public decimal Prezzo { get; set; }
+        public decimal Prezzo { get; set; } = 0;
 
         [StringLength(2000)]
         public string Descrizione { get; set; } = string.Empty;
 
+        // Rende nullable le proprietà che possono essere vuote
         public int? Superficie { get; set; }
         public int? NumeroLocali { get; set; }
         public int? NumeroBagni { get; set; }
@@ -54,6 +54,22 @@ namespace ImmobiGestio.Models
         [StringLength(50)]
         public string StatoVendita { get; set; } = "Disponibile";
 
+        // Proprietà calcolate per display
+        [NotMapped]
+        public string SuperficieDisplay => Superficie?.ToString() ?? "N/D";
+
+        [NotMapped]
+        public string NumeroLocaliDisplay => NumeroLocali?.ToString() ?? "N/D";
+
+        [NotMapped]
+        public string NumeroBagniDisplay => NumeroBagni?.ToString() ?? "N/D";
+
+        [NotMapped]
+        public string PianoDisplay => Piano?.ToString() ?? "N/D";
+
+        [NotMapped]
+        public string PrezzoFormattato => Prezzo > 0 ? $"€ {Prezzo:N0}" : "Prezzo da definire";
+
         // Documenti e file
         public virtual ICollection<DocumentoImmobile> Documenti { get; set; }
         public virtual ICollection<FotoImmobile> Foto { get; set; }
@@ -64,6 +80,17 @@ namespace ImmobiGestio.Models
             Foto = new HashSet<FotoImmobile>();
             DataInserimento = DateTime.Now;
             StatoVendita = "Disponibile";
+            TipoImmobile = "Appartamento";
+            StatoConservazione = "Buono";
+            ClasseEnergetica = "G";
+
+            // Inizializza le stringhe per evitare null
+            Titolo = string.Empty;
+            Indirizzo = string.Empty;
+            Citta = string.Empty;
+            CAP = string.Empty;
+            Provincia = string.Empty;
+            Descrizione = string.Empty;
         }
     }
 
@@ -97,6 +124,10 @@ namespace ImmobiGestio.Models
         public DocumentoImmobile()
         {
             DataCaricamento = DateTime.Now;
+            TipoDocumento = string.Empty;
+            NomeFile = string.Empty;
+            PercorsoFile = string.Empty;
+            Descrizione = string.Empty;
         }
     }
 
@@ -129,6 +160,9 @@ namespace ImmobiGestio.Models
         {
             DataCaricamento = DateTime.Now;
             IsPrincipale = false;
+            NomeFile = string.Empty;
+            PercorsoFile = string.Empty;
+            Descrizione = string.Empty;
         }
     }
 }

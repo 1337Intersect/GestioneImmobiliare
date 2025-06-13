@@ -144,7 +144,7 @@ namespace ImmobiGestio.ViewModels
 
         private void InitializeCollections()
         {
-            // Tipi appuntamento
+            // Tipi appuntamento - Usa le ObservableCollection esistenti
             TipiAppuntamento.Clear();
             TipiAppuntamentoFiltro.Clear();
             TipiAppuntamentoFiltro.Add("Tutti");
@@ -155,7 +155,7 @@ namespace ImmobiGestio.ViewModels
                 TipiAppuntamentoFiltro.Add(tipo);
             }
 
-            // Stati appuntamento
+            // Stati appuntamento - Usa le ObservableCollection esistenti
             StatiAppuntamento.Clear();
             StatiAppuntamentoFiltro.Clear();
             StatiAppuntamentoFiltro.Add("Tutti");
@@ -166,12 +166,17 @@ namespace ImmobiGestio.ViewModels
                 StatiAppuntamentoFiltro.Add(stato);
             }
 
-            // Priorità
+            // Priorità - Usa le ObservableCollection esistenti
             PrioritaAppuntamento.Clear();
             foreach (var priorita in Models.PrioritaAppuntamento.GetAll())
             {
                 PrioritaAppuntamento.Add(priorita);
             }
+
+            // Debug: Verifica che le collezioni siano popolate
+            System.Diagnostics.Debug.WriteLine($"TipiAppuntamento popolati: {TipiAppuntamento.Count}");
+            System.Diagnostics.Debug.WriteLine($"StatiAppuntamento popolati: {StatiAppuntamento.Count}");
+            System.Diagnostics.Debug.WriteLine($"PrioritaAppuntamento popolati: {PrioritaAppuntamento.Count}");
         }
 
         private void InitializeCommands()
@@ -360,34 +365,119 @@ namespace ImmobiGestio.ViewModels
             }
         }
 
+        // Sostituisci SOLO il metodo AddAppuntamento nel tuo AppuntamentiViewModel esistente
+
         private void AddAppuntamento(object? parameter)
         {
-            var newAppuntamento = new Appuntamento
-            {
-                Titolo = "Nuovo Appuntamento",
-                DataInizio = DateTime.Now.AddHours(1),
-                DataFine = DateTime.Now.AddHours(2),
-                TipoAppuntamento = "Visita",
-                StatoAppuntamento = "Programmato",
-                Priorita = "Media",
-                Luogo = "Ufficio"
-            };
-
             try
             {
-                _context.Appuntamenti.Add(newAppuntamento);
-                _context.SaveChanges();
+                // Crea l'appuntamento con TUTTI i valori richiesti impostati correttamente
+                var newAppuntamento = new Appuntamento
+                {
+                    Titolo = "Nuovo Appuntamento",
+                    Descrizione = "",
+                    DataInizio = DateTime.Now.AddHours(1),
+                    DataFine = DateTime.Now.AddHours(2),
+                    TipoAppuntamento = Models.TipiAppuntamento.Visita, // USA LA COSTANTE
+                    StatoAppuntamento = Models.StatiAppuntamento.Programmato, // USA LA COSTANTE
+                    Priorita = Models.PrioritaAppuntamento.Media, // USA LA COSTANTE
+                    Luogo = "Ufficio",
+                    NotePrivate = "",
+                    EsitoIncontro = "",
+                    OutlookEventId = "",
+                    CreatoDa = "Sistema",
+                    DataCreazione = DateTime.Now,
+                    SincronizzatoOutlook = false,
+                    NotificaInviata = false,
+                    RichiedeConferma = true,
+                    ClienteId = null, // Nessun cliente inizialmente
+                    ImmobileId = null // Nessun immobile inizialmente
+                };
 
+                // Verifica che il contesto sia valido
+                if (_context == null)
+                {
+                    MessageBox.Show("Errore: Database non inizializzato correttamente.",
+                        "Errore Database", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+
+                // Log per debug - verifica che tutti i campi siano impostati
+                System.Diagnostics.Debug.WriteLine($"=== CREAZIONE APPUNTAMENTO DIRETTO ===");
+                System.Diagnostics.Debug.WriteLine($"Titolo: {newAppuntamento.Titolo}");
+                System.Diagnostics.Debug.WriteLine($"TipoAppuntamento: '{newAppuntamento.TipoAppuntamento}'");
+                System.Diagnostics.Debug.WriteLine($"StatoAppuntamento: '{newAppuntamento.StatoAppuntamento}'");
+                System.Diagnostics.Debug.WriteLine($"Priorita: '{newAppuntamento.Priorita}'");
+                System.Diagnostics.Debug.WriteLine($"Luogo: '{newAppuntamento.Luogo}'");
+
+                // Verifica che tutti i campi obbligatori siano valorizzati
+                if (string.IsNullOrEmpty(newAppuntamento.TipoAppuntamento))
+                {
+                    MessageBox.Show("Errore: TipoAppuntamento è vuoto!", "Errore Validazione",
+                        MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+
+                if (string.IsNullOrEmpty(newAppuntamento.StatoAppuntamento))
+                {
+                    MessageBox.Show("Errore: StatoAppuntamento è vuoto!", "Errore Validazione",
+                        MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+
+                if (string.IsNullOrEmpty(newAppuntamento.Priorita))
+                {
+                    MessageBox.Show("Errore: Priorita è vuoto!", "Errore Validazione",
+                        MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+
+                // Usa un nuovo contesto per evitare conflitti di tracking
+                using (var newContext = new ImmobiliContext())
+                {
+                    newContext.Appuntamenti.Add(newAppuntamento);
+                    newContext.SaveChanges();
+
+                    System.Diagnostics.Debug.WriteLine($"Appuntamento creato con ID: {newAppuntamento.Id}");
+                }
+
+                // Ricarica tutti gli appuntamenti per aggiornare la UI
                 LoadAppuntamenti();
-                SelectedAppuntamento = newAppuntamento;
+
+                // Seleziona il nuovo appuntamento creato
+                var createdAppuntamento = Appuntamenti.FirstOrDefault(a => a.Id == newAppuntamento.Id);
+                if (createdAppuntamento != null)
+                {
+                    SelectedAppuntamento = createdAppuntamento;
+                    System.Diagnostics.Debug.WriteLine($"Appuntamento selezionato: ID {createdAppuntamento.Id}");
+                }
 
                 MessageBox.Show("Nuovo appuntamento creato con successo!",
                     "Successo", MessageBoxButton.OK, MessageBoxImage.Information);
             }
+            catch (Microsoft.EntityFrameworkCore.DbUpdateException dbEx)
+            {
+                var innerException = dbEx.InnerException?.Message ?? "Nessun dettaglio disponibile";
+                var message = $"Errore di database nella creazione dell'appuntamento:\n\n" +
+                             $"Errore principale: {dbEx.Message}\n\n" +
+                             $"Dettagli: {innerException}";
+
+                MessageBox.Show(message, "Errore Database", MessageBoxButton.OK, MessageBoxImage.Error);
+                System.Diagnostics.Debug.WriteLine($"DbUpdateException: {dbEx}");
+            }
             catch (Exception ex)
             {
-                MessageBox.Show($"Errore nella creazione dell'appuntamento: {ex.Message}",
-                    "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
+                var message = $"Errore imprevisto nella creazione dell'appuntamento:\n\n" +
+                             $"Tipo: {ex.GetType().Name}\n" +
+                             $"Messaggio: {ex.Message}";
+
+                if (ex.InnerException != null)
+                {
+                    message += $"\n\nErrore interno: {ex.InnerException.Message}";
+                }
+
+                MessageBox.Show(message, "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
+                System.Diagnostics.Debug.WriteLine($"Exception completa: {ex}");
             }
         }
 

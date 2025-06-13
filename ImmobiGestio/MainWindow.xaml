@@ -3,1150 +3,226 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:viewmodels="clr-namespace:ImmobiGestio.ViewModels"
         xmlns:views="clr-namespace:ImmobiGestio.Views"
-        Title="{Binding WindowTitle}" Height="900" Width="1400"
-        WindowStartupLocation="CenterScreen"
+        Title="{Binding WindowTitle}" 
+        Height="800" Width="1200"
         WindowState="Maximized"
-        Closing="Window_Closing">
+        Background="{StaticResource BackgroundBrush}">
 
     <Window.Resources>
-        <BooleanToVisibilityConverter x:Key="BoolToVisConverter"/>
-
-        <!-- Data Templates per i diversi ViewModels -->
-        <!-- Dashboard Semplificata -->
+        <!-- Data Templates -->
         <DataTemplate DataType="{x:Type viewmodels:DashboardViewModel}">
-            <ScrollViewer VerticalScrollBarVisibility="Auto" Background="#FFF8F9FA">
-                <Grid Margin="30">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
-                    </Grid.RowDefinitions>
-
-                    <!-- Header semplificato -->
-                    <StackPanel Grid.Row="0" Margin="0,0,0,30">
-                        <TextBlock Text="Benvenuto in ImmobiGestio" FontSize="28" FontWeight="Light" 
-                                   Foreground="#FF2C3E50" HorizontalAlignment="Left"/>
-                        <TextBlock Text="La tua dashboard per la gestione immobiliare" 
-                                   FontSize="14" Foreground="#FF7F8C8D" Margin="0,5,0,0"/>
-                    </StackPanel>
-
-                    <!-- Statistiche essenziali -->
-                    <Grid Grid.Row="1" Margin="0,0,0,30">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-
-                        <!-- Card Immobili -->
-                        <Border Grid.Column="0" Background="White" CornerRadius="12" Margin="0,0,15,0" 
-                                Padding="25,20" BorderBrush="#FFECF0F1" BorderThickness="1">
-                            <Border.Effect>
-                                <DropShadowEffect Color="#FFBDC3C7" Direction="270" ShadowDepth="1" BlurRadius="10" Opacity="0.3"/>
-                            </Border.Effect>
-                            <StackPanel>
-                                <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                                    <Border Background="#FF3498DB" CornerRadius="8" Padding="8">
-                                        <TextBlock Text="🏠" FontSize="18" Foreground="White"/>
-                                    </Border>
-                                    <TextBlock Text="IMMOBILI" FontSize="11" FontWeight="Bold" 
-                                               Foreground="#FF7F8C8D" VerticalAlignment="Center" Margin="10,0,0,0"/>
-                                </StackPanel>
-                                <TextBlock Text="{Binding Statistiche.TotaleImmobili}" FontSize="32" FontWeight="Bold" 
-                                           Foreground="#FF2C3E50"/>
-                                <TextBlock Text="{Binding Statistiche.ImmobiliDisponibili, StringFormat='{}{0} disponibili'}" 
-                                           FontSize="12" Foreground="#FF27AE60" Margin="0,5,0,0"/>
-                            </StackPanel>
-                        </Border>
-
-                        <!-- Card Clienti -->
-                        <Border Grid.Column="1" Background="White" CornerRadius="12" Margin="0,0,15,0" 
-                                Padding="25,20" BorderBrush="#FFECF0F1" BorderThickness="1">
-                            <Border.Effect>
-                                <DropShadowEffect Color="#FFBDC3C7" Direction="270" ShadowDepth="1" BlurRadius="10" Opacity="0.3"/>
-                            </Border.Effect>
-                            <StackPanel>
-                                <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                                    <Border Background="#FF2ECC71" CornerRadius="8" Padding="8">
-                                        <TextBlock Text="👥" FontSize="18" Foreground="White"/>
-                                    </Border>
-                                    <TextBlock Text="CLIENTI" FontSize="11" FontWeight="Bold" 
-                                               Foreground="#FF7F8C8D" VerticalAlignment="Center" Margin="10,0,0,0"/>
-                                </StackPanel>
-                                <TextBlock Text="{Binding Statistiche.TotaleClienti}" FontSize="32" FontWeight="Bold" 
-                                           Foreground="#FF2C3E50"/>
-                                <TextBlock Text="{Binding Statistiche.ClientiAttivi, StringFormat='{}{0} attivi'}" 
-                                           FontSize="12" Foreground="#FF27AE60" Margin="0,5,0,0"/>
-                            </StackPanel>
-                        </Border>
-
-                        <!-- Card Appuntamenti -->
-                        <Border Grid.Column="2" Background="White" CornerRadius="12" Margin="0,0,15,0" 
-                                Padding="25,20" BorderBrush="#FFECF0F1" BorderThickness="1">
-                            <Border.Effect>
-                                <DropShadowEffect Color="#FFBDC3C7" Direction="270" ShadowDepth="1" BlurRadius="10" Opacity="0.3"/>
-                            </Border.Effect>
-                            <StackPanel>
-                                <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                                    <Border Background="#FFF39C12" CornerRadius="8" Padding="8">
-                                        <TextBlock Text="📅" FontSize="18" Foreground="White"/>
-                                    </Border>
-                                    <TextBlock Text="OGGI" FontSize="11" FontWeight="Bold" 
-                                               Foreground="#FF7F8C8D" VerticalAlignment="Center" Margin="10,0,0,0"/>
-                                </StackPanel>
-                                <TextBlock Text="{Binding Statistiche.AppuntamentiOggi}" FontSize="32" FontWeight="Bold" 
-                                           Foreground="#FF2C3E50"/>
-                                <TextBlock Text="appuntamenti" FontSize="12" Foreground="#FFF39C12" Margin="0,5,0,0"/>
-                            </StackPanel>
-                        </Border>
-
-                        <!-- Card Valore -->
-                        <Border Grid.Column="3" Background="White" CornerRadius="12" 
-                                Padding="25,20" BorderBrush="#FFECF0F1" BorderThickness="1">
-                            <Border.Effect>
-                                <DropShadowEffect Color="#FFBDC3C7" Direction="270" ShadowDepth="1" BlurRadius="10" Opacity="0.3"/>
-                            </Border.Effect>
-                            <StackPanel>
-                                <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                                    <Border Background="#FF9B59B6" CornerRadius="8" Padding="8">
-                                        <TextBlock Text="💰" FontSize="18" Foreground="White"/>
-                                    </Border>
-                                    <TextBlock Text="VALORE" FontSize="11" FontWeight="Bold" 
-                                               Foreground="#FF7F8C8D" VerticalAlignment="Center" Margin="10,0,0,0"/>
-                                </StackPanel>
-                                <TextBlock Text="{Binding Statistiche.ValoreTotalePortafoglio, StringFormat='€ {0:N0}'}" 
-                                           FontSize="26" FontWeight="Bold" Foreground="#FF2C3E50"/>
-                                <TextBlock Text="portafoglio" FontSize="12" Foreground="#FF9B59B6" Margin="0,5,0,0"/>
-                            </StackPanel>
-                        </Border>
-                    </Grid>
-
-                    <!-- Azioni rapide -->
-                    <Border Grid.Row="2" Background="White" CornerRadius="12" Padding="30,25" 
-                            BorderBrush="#FFECF0F1" BorderThickness="1" Margin="0,0,0,30">
-                        <Border.Effect>
-                            <DropShadowEffect Color="#FFBDC3C7" Direction="270" ShadowDepth="1" BlurRadius="10" Opacity="0.3"/>
-                        </Border.Effect>
-                        <StackPanel>
-                            <TextBlock Text="Azioni Rapide" FontSize="18" FontWeight="SemiBold" 
-                                       Foreground="#FF2C3E50" Margin="0,0,0,20"/>
-
-                            <UniformGrid Columns="4" Margin="0">
-                                <Button Command="{Binding NuovoImmobileCommand}" Margin="0,0,15,0" 
-                                        Background="#FF3498DB" Foreground="White" BorderThickness="0" 
-                                        Padding="20,15" Cursor="Hand">
-                                    <Button.Template>
-                                        <ControlTemplate TargetType="Button">
-                                            <Border Background="{TemplateBinding Background}" CornerRadius="8" 
-                                                    Padding="{TemplateBinding Padding}">
-                                                <StackPanel HorizontalAlignment="Center">
-                                                    <TextBlock Text="🏠" FontSize="24" HorizontalAlignment="Center" Margin="0,0,0,8"/>
-                                                    <TextBlock Text="Nuovo Immobile" FontSize="12" FontWeight="Medium" 
-                                                               HorizontalAlignment="Center" TextAlignment="Center"/>
-                                                </StackPanel>
-                                            </Border>
-                                            <ControlTemplate.Triggers>
-                                                <Trigger Property="IsMouseOver" Value="True">
-                                                    <Setter Property="Background" Value="#FF2980B9"/>
-                                                </Trigger>
-                                            </ControlTemplate.Triggers>
-                                        </ControlTemplate>
-                                    </Button.Template>
-                                </Button>
-
-                                <Button Command="{Binding NuovoClienteCommand}" Margin="0,0,15,0" 
-                                        Background="#FF2ECC71" Foreground="White" BorderThickness="0" 
-                                        Padding="20,15" Cursor="Hand">
-                                    <Button.Template>
-                                        <ControlTemplate TargetType="Button">
-                                            <Border Background="{TemplateBinding Background}" CornerRadius="8" 
-                                                    Padding="{TemplateBinding Padding}">
-                                                <StackPanel HorizontalAlignment="Center">
-                                                    <TextBlock Text="👤" FontSize="24" HorizontalAlignment="Center" Margin="0,0,0,8"/>
-                                                    <TextBlock Text="Nuovo Cliente" FontSize="12" FontWeight="Medium" 
-                                                               HorizontalAlignment="Center" TextAlignment="Center"/>
-                                                </StackPanel>
-                                            </Border>
-                                            <ControlTemplate.Triggers>
-                                                <Trigger Property="IsMouseOver" Value="True">
-                                                    <Setter Property="Background" Value="#FF27AE60"/>
-                                                </Trigger>
-                                            </ControlTemplate.Triggers>
-                                        </ControlTemplate>
-                                    </Button.Template>
-                                </Button>
-
-                                <Button Command="{Binding NuovoAppuntamentoCommand}" Margin="0,0,15,0" 
-                                        Background="#FFF39C12" Foreground="White" BorderThickness="0" 
-                                        Padding="20,15" Cursor="Hand">
-                                    <Button.Template>
-                                        <ControlTemplate TargetType="Button">
-                                            <Border Background="{TemplateBinding Background}" CornerRadius="8" 
-                                                    Padding="{TemplateBinding Padding}">
-                                                <StackPanel HorizontalAlignment="Center">
-                                                    <TextBlock Text="📅" FontSize="24" HorizontalAlignment="Center" Margin="0,0,0,8"/>
-                                                    <TextBlock Text="Appuntamento" FontSize="12" FontWeight="Medium" 
-                                                               HorizontalAlignment="Center" TextAlignment="Center"/>
-                                                </StackPanel>
-                                            </Border>
-                                            <ControlTemplate.Triggers>
-                                                <Trigger Property="IsMouseOver" Value="True">
-                                                    <Setter Property="Background" Value="#FFE67E22"/>
-                                                </Trigger>
-                                            </ControlTemplate.Triggers>
-                                        </ControlTemplate>
-                                    </Button.Template>
-                                </Button>
-
-                                <Button Command="{Binding RefreshCommand}" 
-                                        Background="#FF95A5A6" Foreground="White" BorderThickness="0" 
-                                        Padding="20,15" Cursor="Hand">
-                                    <Button.Template>
-                                        <ControlTemplate TargetType="Button">
-                                            <Border Background="{TemplateBinding Background}" CornerRadius="8" 
-                                                    Padding="{TemplateBinding Padding}">
-                                                <StackPanel HorizontalAlignment="Center">
-                                                    <TextBlock Text="🔄" FontSize="24" HorizontalAlignment="Center" Margin="0,0,0,8"/>
-                                                    <TextBlock Text="Aggiorna" FontSize="12" FontWeight="Medium" 
-                                                               HorizontalAlignment="Center" TextAlignment="Center"/>
-                                                </StackPanel>
-                                            </Border>
-                                            <ControlTemplate.Triggers>
-                                                <Trigger Property="IsMouseOver" Value="True">
-                                                    <Setter Property="Background" Value="#FF7F8C8D"/>
-                                                </Trigger>
-                                            </ControlTemplate.Triggers>
-                                        </ControlTemplate>
-                                    </Button.Template>
-                                </Button>
-                            </UniformGrid>
-                        </StackPanel>
-                    </Border>
-
-                    <!-- Area attività recenti -->
-                    <Grid Grid.Row="3">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="2*"/>
-                            <ColumnDefinition Width="15"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-
-                        <!-- Attività Recenti -->
-                        <Border Grid.Column="0" Background="White" CornerRadius="12" Padding="30,25" 
-                                BorderBrush="#FFECF0F1" BorderThickness="1">
-                            <Border.Effect>
-                                <DropShadowEffect Color="#FFBDC3C7" Direction="270" ShadowDepth="1" BlurRadius="10" Opacity="0.3"/>
-                            </Border.Effect>
-                            <StackPanel>
-                                <TextBlock Text="Attività Recenti" FontSize="18" FontWeight="SemiBold" 
-                                           Foreground="#FF2C3E50" Margin="0,0,0,20"/>
-
-                                <ListBox ItemsSource="{Binding AttivitaRecenti}" BorderThickness="0" 
-                                         Background="Transparent" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
-                                    <ListBox.ItemTemplate>
-                                        <DataTemplate>
-                                            <Border Padding="0,12" BorderBrush="#FFECF0F1" BorderThickness="0,0,0,1">
-                                                <StackPanel Orientation="Horizontal">
-                                                    <Border Background="{Binding Colore}" CornerRadius="6" 
-                                                            Width="32" Height="32" Margin="0,0,15,0">
-                                                        <TextBlock Text="{Binding Icona}" FontSize="14" 
-                                                                   HorizontalAlignment="Center" VerticalAlignment="Center" 
-                                                                   Foreground="White"/>
-                                                    </Border>
-                                                    <StackPanel VerticalAlignment="Center">
-                                                        <TextBlock Text="{Binding Descrizione}" FontSize="13" 
-                                                                   FontWeight="Medium" Foreground="#FF2C3E50"/>
-                                                        <TextBlock Text="{Binding Data, StringFormat='{}{0:dd/MM/yyyy HH:mm}'}" 
-                                                                   FontSize="11" Foreground="#FF7F8C8D" Margin="0,2,0,0"/>
-                                                    </StackPanel>
-                                                </StackPanel>
-                                            </Border>
-                                        </DataTemplate>
-                                    </ListBox.ItemTemplate>
-                                    <ListBox.ItemContainerStyle>
-                                        <Style TargetType="ListBoxItem">
-                                            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
-                                            <Setter Property="Background" Value="Transparent"/>
-                                            <Setter Property="BorderThickness" Value="0"/>
-                                            <Setter Property="Padding" Value="0"/>
-                                            <Setter Property="Margin" Value="0"/>
-                                        </Style>
-                                    </ListBox.ItemContainerStyle>
-                                </ListBox>
-                            </StackPanel>
-                        </Border>
-
-                        <!-- Navigazione rapida -->
-                        <Border Grid.Column="2" Background="White" CornerRadius="12" Padding="25,25" 
-                                BorderBrush="#FFECF0F1" BorderThickness="1">
-                            <Border.Effect>
-                                <DropShadowEffect Color="#FFBDC3C7" Direction="270" ShadowDepth="1" BlurRadius="10" Opacity="0.3"/>
-                            </Border.Effect>
-                            <StackPanel>
-                                <TextBlock Text="Vai a..." FontSize="18" FontWeight="SemiBold" 
-                                           Foreground="#FF2C3E50" Margin="0,0,0,20"/>
-
-                                <Button Command="{Binding VaiAImmobiliCommand}" 
-                                        Background="Transparent" BorderBrush="#FF3498DB" BorderThickness="1" 
-                                        Padding="15,12" Margin="0,0,0,10" Cursor="Hand">
-                                    <Button.Template>
-                                        <ControlTemplate TargetType="Button">
-                                            <Border Background="{TemplateBinding Background}" 
-                                                    BorderBrush="{TemplateBinding BorderBrush}" 
-                                                    BorderThickness="{TemplateBinding BorderThickness}" 
-                                                    CornerRadius="6" Padding="{TemplateBinding Padding}">
-                                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
-                                                    <TextBlock Text="🏠" FontSize="16" Margin="0,0,10,0" 
-                                                               VerticalAlignment="Center"/>
-                                                    <TextBlock Text="Gestione Immobili" FontSize="13" 
-                                                               VerticalAlignment="Center" Foreground="#FF3498DB"/>
-                                                </StackPanel>
-                                            </Border>
-                                            <ControlTemplate.Triggers>
-                                                <Trigger Property="IsMouseOver" Value="True">
-                                                    <Setter Property="Background" Value="#FFF8F9FA"/>
-                                                </Trigger>
-                                            </ControlTemplate.Triggers>
-                                        </ControlTemplate>
-                                    </Button.Template>
-                                </Button>
-
-                                <Button Command="{Binding VaiAClientiCommand}" 
-                                        Background="Transparent" BorderBrush="#FF2ECC71" BorderThickness="1" 
-                                        Padding="15,12" Margin="0,0,0,10" Cursor="Hand">
-                                    <Button.Template>
-                                        <ControlTemplate TargetType="Button">
-                                            <Border Background="{TemplateBinding Background}" 
-                                                    BorderBrush="{TemplateBinding BorderBrush}" 
-                                                    BorderThickness="{TemplateBinding BorderThickness}" 
-                                                    CornerRadius="6" Padding="{TemplateBinding Padding}">
-                                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
-                                                    <TextBlock Text="👥" FontSize="16" Margin="0,0,10,0" 
-                                                               VerticalAlignment="Center"/>
-                                                    <TextBlock Text="Gestione Clienti" FontSize="13" 
-                                                               VerticalAlignment="Center" Foreground="#FF2ECC71"/>
-                                                </StackPanel>
-                                            </Border>
-                                            <ControlTemplate.Triggers>
-                                                <Trigger Property="IsMouseOver" Value="True">
-                                                    <Setter Property="Background" Value="#FFF8F9FA"/>
-                                                </Trigger>
-                                            </ControlTemplate.Triggers>
-                                        </ControlTemplate>
-                                    </Button.Template>
-                                </Button>
-
-                                <Button Command="{Binding VaiAAppuntamentiCommand}" 
-                                        Background="Transparent" BorderBrush="#FFF39C12" BorderThickness="1" 
-                                        Padding="15,12" Cursor="Hand">
-                                    <Button.Template>
-                                        <ControlTemplate TargetType="Button">
-                                            <Border Background="{TemplateBinding Background}" 
-                                                    BorderBrush="{TemplateBinding BorderBrush}" 
-                                                    BorderThickness="{TemplateBinding BorderThickness}" 
-                                                    CornerRadius="6" Padding="{TemplateBinding Padding}">
-                                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
-                                                    <TextBlock Text="📅" FontSize="16" Margin="0,0,10,0" 
-                                                               VerticalAlignment="Center"/>
-                                                    <TextBlock Text="Calendario" FontSize="13" 
-                                                               VerticalAlignment="Center" Foreground="#FFF39C12"/>
-                                                </StackPanel>
-                                            </Border>
-                                            <ControlTemplate.Triggers>
-                                                <Trigger Property="IsMouseOver" Value="True">
-                                                    <Setter Property="Background" Value="#FFF8F9FA"/>
-                                                </Trigger>
-                                            </ControlTemplate.Triggers>
-                                        </ControlTemplate>
-                                    </Button.Template>
-                                </Button>
-                            </StackPanel>
-                        </Border>
-                    </Grid>
-                </Grid>
-            </ScrollViewer>
+            <views:DashboardView Style="{StaticResource AnimatedContentControl}"/>
         </DataTemplate>
-
-        <!-- Data Template Immobili -->
         <DataTemplate DataType="{x:Type viewmodels:ImmobiliViewModel}">
+            <views:ImmobiliView Style="{StaticResource AnimatedContentControl}"/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type viewmodels:ClientiViewModel}">
+            <views:ClientiView Style="{StaticResource AnimatedContentControl}"/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type viewmodels:AppuntamentiViewModel}">
+            <views:AppuntamentiView Style="{StaticResource AnimatedContentControl}"/>
+        </DataTemplate>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="240"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- SIDEBAR MINIMAL -->
+        <Border Grid.Column="0" 
+                Background="{StaticResource SurfaceBrush}" 
+                BorderBrush="{StaticResource BorderBrush}" 
+                BorderThickness="0,0,1,0">
+
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
-                <!-- Toolbar -->
-                <StackPanel Grid.Row="0" Orientation="Horizontal" Background="#FFF5F5F5" Margin="5">
-                    <Button Content="➕ Nuovo Immobile" Command="{Binding AddImmobileCommand}" 
-                            Background="#FF4CAF50" Foreground="White" Margin="5" Padding="10,5"/>
-                    <Button Content="💾 Salva" Command="{Binding SaveImmobileCommand}" 
-                            Background="#FFFF9800" Foreground="White" Margin="5" Padding="10,5"/>
-                    <Button Content="🗑️ Elimina" Command="{Binding DeleteImmobileCommand}" 
-                            Background="#FFF44336" Foreground="White" Margin="5" Padding="10,5"/>
-                    <Separator Margin="10,0"/>
-
-                    <Label Content="🔍" VerticalAlignment="Center"/>
-                    <TextBox Width="200" Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" 
-                             VerticalAlignment="Center" Margin="5" Padding="5"
-                             ToolTip="Cerca immobili"/>
-                </StackPanel>
-
-                <!-- Content -->
-                <Grid Grid.Row="1">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="350"/>
-                        <ColumnDefinition Width="5"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-
-                    <!-- Lista Immobili -->
-                    <GroupBox Grid.Column="0" Header="📋 Lista Immobili" Margin="5">
-                        <Grid>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="*"/>
-                                <RowDefinition Height="Auto"/>
-                            </Grid.RowDefinitions>
-
-                            <ListBox Grid.Row="0" ItemsSource="{Binding Immobili}" 
-                                     SelectedItem="{Binding SelectedImmobile}">
-                                <ListBox.ItemTemplate>
-                                    <DataTemplate>
-                                        <Border BorderBrush="#FFEEEEEE" BorderThickness="0,0,0,1" Padding="5">
-                                            <StackPanel>
-                                                <TextBlock Text="{Binding Titolo}" FontWeight="Bold" FontSize="14"/>
-                                                <TextBlock Text="{Binding Indirizzo}" FontSize="11" Foreground="Gray"/>
-                                                <StackPanel Orientation="Horizontal" Margin="0,2">
-                                                    <TextBlock Text="{Binding Prezzo, StringFormat=€ {0:N0}}" 
-                                                               FontWeight="Bold" Foreground="Green"/>
-                                                    <TextBlock Text=" • " Foreground="Gray"/>
-                                                    <TextBlock Text="{Binding TipoImmobile}" FontSize="10" Foreground="Blue"/>
-                                                </StackPanel>
-                                            </StackPanel>
-                                        </Border>
-                                    </DataTemplate>
-                                </ListBox.ItemTemplate>
-                            </ListBox>
-
-                            <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="5">
-                                <TextBlock Text="{Binding TotaleImmobili, StringFormat=Totale: {0}}" 
-                                           FontSize="10" Foreground="Gray"/>
-                            </StackPanel>
-                        </Grid>
-                    </GroupBox>
-
-                    <GridSplitter Grid.Column="1" HorizontalAlignment="Stretch" Background="LightGray"/>
-
-                    <!-- Dettagli Immobile -->
-                    <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto">
-                        <StackPanel>
-                            <!-- Placeholder quando nessun immobile è selezionato -->
-                            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Margin="50">
-                                <StackPanel.Style>
-                                    <Style TargetType="StackPanel">
-                                        <Setter Property="Visibility" Value="Collapsed"/>
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding SelectedImmobile}" Value="{x:Null}">
-                                                <Setter Property="Visibility" Value="Visible"/>
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </StackPanel.Style>
-                                <TextBlock Text="🏠" FontSize="48" HorizontalAlignment="Center" Foreground="#FFCCCCCC"/>
-                                <TextBlock Text="Seleziona un immobile dalla lista" FontSize="16" HorizontalAlignment="Center" 
-                                           Foreground="#FF666666" Margin="0,10"/>
-                            </StackPanel>
-
-                            <!-- Form quando immobile è selezionato -->
-                            <StackPanel DataContext="{Binding SelectedImmobile}" Margin="10">
-                                <StackPanel.Style>
-                                    <Style TargetType="StackPanel">
-                                        <Setter Property="Visibility" Value="Visible"/>
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding}" Value="{x:Null}">
-                                                <Setter Property="Visibility" Value="Collapsed"/>
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </StackPanel.Style>
-
-                                <GroupBox Header="🏠 Informazioni Generali" Margin="5">
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="Auto"/>
-                                            <ColumnDefinition Width="*"/>
-                                        </Grid.ColumnDefinitions>
-                                        <Grid.RowDefinitions>
-                                            <RowDefinition Height="Auto"/>
-                                            <RowDefinition Height="Auto"/>
-                                            <RowDefinition Height="Auto"/>
-                                            <RowDefinition Height="Auto"/>
-                                            <RowDefinition Height="Auto"/>
-                                            <RowDefinition Height="Auto"/>
-                                            <RowDefinition Height="Auto"/>
-                                        </Grid.RowDefinitions>
-
-                                        <Label Grid.Row="0" Grid.Column="0" Content="Titolo:" FontWeight="Bold" Margin="5"/>
-                                        <TextBox Grid.Row="0" Grid.Column="1" 
-                                                 Text="{Binding Titolo, UpdateSourceTrigger=PropertyChanged}" 
-                                                 Margin="5" Padding="5"/>
-
-                                        <Label Grid.Row="1" Grid.Column="0" Content="Indirizzo:" FontWeight="Bold" Margin="5"/>
-                                        <TextBox Grid.Row="1" Grid.Column="1" 
-                                                 Text="{Binding Indirizzo, UpdateSourceTrigger=PropertyChanged}" 
-                                                 Margin="5" Padding="5"/>
-
-                                        <Label Grid.Row="2" Grid.Column="0" Content="Città:" FontWeight="Bold" Margin="5"/>
-                                        <TextBox Grid.Row="2" Grid.Column="1" 
-                                                 Text="{Binding Citta, UpdateSourceTrigger=PropertyChanged}" 
-                                                 Margin="5" Padding="5"/>
-
-                                        <Label Grid.Row="3" Grid.Column="0" Content="Prezzo (€):" FontWeight="Bold" Margin="5"/>
-                                        <TextBox Grid.Row="3" Grid.Column="1" 
-                                                 Text="{Binding Prezzo, UpdateSourceTrigger=PropertyChanged, StringFormat=N0}" 
-                                                 Margin="5" Padding="5"/>
-
-                                        <Label Grid.Row="4" Grid.Column="0" Content="Tipo:" FontWeight="Bold" Margin="5"/>
-                                        <ComboBox Grid.Row="4" Grid.Column="1" 
-                                                  ItemsSource="{Binding DataContext.TipiImmobile, RelativeSource={RelativeSource AncestorType=Grid, AncestorLevel=3}}" 
-                                                  SelectedItem="{Binding TipoImmobile}" 
-                                                  Margin="5" Padding="5"/>
-
-                                        <Label Grid.Row="5" Grid.Column="0" Content="Superficie (mq):" FontWeight="Bold" Margin="5"/>
-                                        <TextBox Grid.Row="5" Grid.Column="1" 
-                                                 Text="{Binding Superficie, UpdateSourceTrigger=PropertyChanged}" 
-                                                 Margin="5" Padding="5"/>
-
-                                        <Label Grid.Row="6" Grid.Column="0" Content="Descrizione:" FontWeight="Bold" Margin="5"/>
-                                        <TextBox Grid.Row="6" Grid.Column="1" 
-                                                 Text="{Binding Descrizione, UpdateSourceTrigger=PropertyChanged}" 
-                                                 Height="60" TextWrapping="Wrap" AcceptsReturn="True"
-                                                 Margin="5" Padding="5"/>
-                                    </Grid>
-                                </GroupBox>
-
-                                <GroupBox Header="📄 Documenti" Margin="5">
-                                    <StackPanel>
-                                        <StackPanel Orientation="Horizontal" Margin="5">
-                                            <Button Content="📋 Planimetria" 
-                                                    Command="{Binding DataContext.AddDocumentCommand, RelativeSource={RelativeSource AncestorType=Grid, AncestorLevel=4}}" 
-                                                    CommandParameter="Planimetria" 
-                                                    Background="#FF9C27B0" Foreground="White" Margin="2" Padding="8,4"/>
-                                            <Button Content="📜 Visura" 
-                                                    Command="{Binding DataContext.AddDocumentCommand, RelativeSource={RelativeSource AncestorType=Grid, AncestorLevel=4}}" 
-                                                    CommandParameter="Visura" 
-                                                    Background="#FF673AB7" Foreground="White" Margin="2" Padding="8,4"/>
-                                            <Button Content="⚡ APE" 
-                                                    Command="{Binding DataContext.AddDocumentCommand, RelativeSource={RelativeSource AncestorType=Grid, AncestorLevel=4}}" 
-                                                    CommandParameter="APE" 
-                                                    Background="#FF3F51B5" Foreground="White" Margin="2" Padding="8,4"/>
-                                        </StackPanel>
-
-                                        <ListBox ItemsSource="{Binding DataContext.DocumentiCorrente, RelativeSource={RelativeSource AncestorType=Grid, AncestorLevel=4}}" 
-                                                 Height="100" Margin="5">
-                                            <ListBox.ItemTemplate>
-                                                <DataTemplate>
-                                                    <StackPanel Orientation="Horizontal">
-                                                        <TextBlock Text="{Binding TipoDocumento}" FontWeight="Bold" Width="100"/>
-                                                        <TextBlock Text="{Binding NomeFile}" Margin="10,0"/>
-                                                        <Button Content="👁️" ToolTip="Apri"
-                                                                Command="{Binding DataContext.OpenDocumentCommand, RelativeSource={RelativeSource AncestorType=ListBox}}" 
-                                                                CommandParameter="{Binding}"
-                                                                Background="#FF4CAF50" Foreground="White" Padding="5,2" Margin="5,0"/>
-                                                    </StackPanel>
-                                                </DataTemplate>
-                                            </ListBox.ItemTemplate>
-                                        </ListBox>
-                                    </StackPanel>
-                                </GroupBox>
-
-                                <GroupBox Header="📸 Foto" Margin="5">
-                                    <StackPanel>
-                                        <Button Content="📸 Aggiungi Foto" 
-                                                Command="{Binding DataContext.AddPhotoCommand, RelativeSource={RelativeSource AncestorType=Grid, AncestorLevel=4}}" 
-                                                HorizontalAlignment="Left" Margin="5" 
-                                                Background="#FFFF5722" Foreground="White" Padding="10,5"/>
-
-                                        <ListBox ItemsSource="{Binding DataContext.FotoCorrente, RelativeSource={RelativeSource AncestorType=Grid, AncestorLevel=4}}" 
-                                                 Height="80" Margin="5">
-                                            <ListBox.ItemTemplate>
-                                                <DataTemplate>
-                                                    <StackPanel Orientation="Horizontal">
-                                                        <TextBlock Text="📷" FontSize="16" Margin="5"/>
-                                                        <TextBlock Text="{Binding NomeFile}" VerticalAlignment="Center"/>
-                                                        <Button Content="🗑️" ToolTip="Elimina"
-                                                                Command="{Binding DataContext.DeletePhotoCommand, RelativeSource={RelativeSource AncestorType=ListBox}}" 
-                                                                CommandParameter="{Binding}"
-                                                                Background="#FFF44336" Foreground="White" Padding="5,2" Margin="10,0"/>
-                                                    </StackPanel>
-                                                </DataTemplate>
-                                            </ListBox.ItemTemplate>
-                                        </ListBox>
-                                    </StackPanel>
-                                </GroupBox>
-                            </StackPanel>
-                        </StackPanel>
-                    </ScrollViewer>
-                </Grid>
-            </Grid>
-        </DataTemplate>
-
-        <!-- Data Template Clienti -->
-        <DataTemplate DataType="{x:Type viewmodels:ClientiViewModel}">
-            <TextBlock Text="Gestione Clienti - In Development" FontSize="24" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-        </DataTemplate>
-
-        <!-- Data Template Appuntamenti - Versione Completa -->
-        <DataTemplate DataType="{x:Type viewmodels:AppuntamentiViewModel}">
-            <Grid Background="#FFF8F9FA">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
-                </Grid.RowDefinitions>
-
-                <!-- Header e Toolbar -->
-                <Border Grid.Row="0" Background="White" BorderBrush="#FFECF0F1" BorderThickness="0,0,0,1">
-                    <Grid Margin="20,15">
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                        </Grid.RowDefinitions>
-
-                        <!-- Titolo -->
-                        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,15">
-                            <TextBlock Text="📅" FontSize="24" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                            <TextBlock Text="Gestione Appuntamenti" FontSize="24" FontWeight="Bold" 
-                                       Foreground="#FF2C3E50" VerticalAlignment="Center"/>
-                            <TextBlock Text="{Binding TitoloVista}" FontSize="14" Foreground="#FF7F8C8D" 
-                                       VerticalAlignment="Center" Margin="20,0,0,0"/>
-                        </StackPanel>
-
-                        <!-- Toolbar Azioni -->
-                        <StackPanel Grid.Row="1" Orientation="Horizontal">
-                            <Button Content="➕ Nuovo Appuntamento" Command="{Binding AddAppuntamentoCommand}" 
-                                    Background="#FF4CAF50" Foreground="White" BorderThickness="0" 
-                                    Padding="12,8" Margin="5" Cursor="Hand"/>
-
-                            <Button Content="💾 Salva" Command="{Binding SaveAppuntamentoCommand}" 
-                                    Background="#FFFF9800" Foreground="White" BorderThickness="0" 
-                                    Padding="12,8" Margin="5" Cursor="Hand"/>
-
-                            <Button Content="🗑️ Elimina" Command="{Binding DeleteAppuntamentoCommand}" 
-                                    Background="#FFF44336" Foreground="White" BorderThickness="0" 
-                                    Padding="12,8" Margin="5" Cursor="Hand"/>
-
-                            <Separator Margin="10,0"/>
-
-                            <Button Content="✅ Conferma" Command="{Binding ConfermaAppuntamentoCommand}" 
-                                    Background="#FF2ECC71" Foreground="White" BorderThickness="0" 
-                                    Padding="12,8" Margin="5" Cursor="Hand"/>
-
-                            <Button Content="🏁 Completa" Command="{Binding CompletaAppuntamentoCommand}" 
-                                    Background="#FF9C27B0" Foreground="White" BorderThickness="0" 
-                                    Padding="12,8" Margin="5" Cursor="Hand"/>
-
-                            <Button Content="❌ Annulla" Command="{Binding AnnullaAppuntamentoCommand}" 
-                                    Background="#FF95A5A6" Foreground="White" BorderThickness="0" 
-                                    Padding="12,8" Margin="5" Cursor="Hand"/>
-
-                            <Separator Margin="10,0"/>
-
-                            <Button Content="🔄 Outlook" Command="{Binding ConnectOutlookCommand}" 
-                                    Background="#FF607D8B" Foreground="White" BorderThickness="0" 
-                                    Padding="12,8" Margin="5" Cursor="Hand"/>
-
-                            <Button Content="🔗 Sync" Command="{Binding SyncOutlookCommand}" 
-                                    Background="#FF795548" Foreground="White" BorderThickness="0" 
-                                    Padding="12,8" Margin="5" Cursor="Hand"
-                                    Visibility="{Binding IsOutlookConnected, Converter={StaticResource BoolToVisConverter}}"/>
-                        </StackPanel>
-                    </Grid>
-                </Border>
-
-                <!-- Filtri -->
-                <Border Grid.Row="1" Background="White" BorderBrush="#FFECF0F1" BorderThickness="0,0,0,1">
-                    <StackPanel Orientation="Horizontal" Margin="20,15">
-                        <TextBlock Text="🔍 Filtri:" VerticalAlignment="Center" FontWeight="Bold" 
-                                   Foreground="#FF2C3E50" Margin="0,0,15,0"/>
-
-                        <TextBox Width="200" Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" 
-                                 VerticalAlignment="Center" Margin="0,0,10,0" Padding="8,6"
-                                 ToolTip="Cerca appuntamenti..."/>
-
-                        <ComboBox Width="120" ItemsSource="{Binding StatiAppuntamentoFiltro}" 
-                                  SelectedItem="{Binding FiltroStato}" VerticalAlignment="Center" 
-                                  Margin="0,0,10,0" Padding="8,6"/>
-
-                        <ComboBox Width="120" ItemsSource="{Binding TipiAppuntamentoFiltro}" 
-                                  SelectedItem="{Binding FiltroTipo}" VerticalAlignment="Center" 
-                                  Margin="0,0,10,0" Padding="8,6"/>
-
-                        <Button Content="🧹 Pulisci Filtri" Command="{Binding ClearFiltriCommand}" 
-                                Background="#FF95A5A6" Foreground="White" BorderThickness="0" 
-                                Padding="12,8" Margin="5" Cursor="Hand"/>
-
-                        <Separator Margin="15,0"/>
-
-                        <Button Content="◀" Command="{Binding PreviousPeriodCommand}" 
-                                Background="#FF95A5A6" Foreground="White" BorderThickness="0" 
-                                Width="35" Height="35" Padding="0" Margin="5" Cursor="Hand"/>
-
-                        <Button Content="Oggi" Command="{Binding TodayCommand}" 
-                                Background="#FF3498DB" Foreground="White" BorderThickness="0" 
-                                Padding="12,8" Margin="5" Cursor="Hand"/>
-
-                        <Button Content="▶" Command="{Binding NextPeriodCommand}" 
-                                Background="#FF95A5A6" Foreground="White" BorderThickness="0" 
-                                Width="35" Height="35" Padding="0" Margin="5" Cursor="Hand"/>
+                <!-- HEADER MINIMAL -->
+                <Border Grid.Row="0" 
+                        Background="{StaticResource BackgroundBrush}"
+                        BorderBrush="{StaticResource BorderBrush}"
+                        BorderThickness="0,0,0,1"
+                        Padding="20">
+                    <StackPanel>
+                        <TextBlock Text="ImmobiGestio" 
+                                   FontSize="18" 
+                                   FontWeight="Medium" 
+                                   Foreground="{StaticResource TextPrimary}"/>
+                        <TextBlock Text="Gestione Immobiliare" 
+                                   FontSize="11" 
+                                   Foreground="{StaticResource TextMuted}" 
+                                   Margin="0,2,0,0"/>
                     </StackPanel>
                 </Border>
 
-                <!-- Contenuto Principale -->
-                <Grid Grid.Row="2" Margin="20">
+                <!-- NAVIGATION MINIMAL -->
+                <StackPanel Grid.Row="1" Margin="0,12,0,0">
+
+                    <Button Content="Dashboard" 
+                            Command="{Binding NavigateToDashboardCommand}">
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource SidebarButtonStyle}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsDashboardActive}" Value="True">
+                                        <Setter Property="Background" Value="{StaticResource AccentBrush}"/>
+                                        <Setter Property="Foreground" Value="White"/>
+                                        <Setter Property="FontWeight" Value="Medium"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+
+                    <Button Content="Immobili" 
+                            Command="{Binding NavigateToImmobiliCommand}">
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource SidebarButtonStyle}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsImmobiliActive}" Value="True">
+                                        <Setter Property="Background" Value="{StaticResource AccentBrush}"/>
+                                        <Setter Property="Foreground" Value="White"/>
+                                        <Setter Property="FontWeight" Value="Medium"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+
+                    <Button Content="Clienti" 
+                            Command="{Binding NavigateToClientiCommand}">
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource SidebarButtonStyle}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsClientiActive}" Value="True">
+                                        <Setter Property="Background" Value="{StaticResource AccentBrush}"/>
+                                        <Setter Property="Foreground" Value="White"/>
+                                        <Setter Property="FontWeight" Value="Medium"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+
+                    <Button Content="Appuntamenti" 
+                            Command="{Binding NavigateToAppuntamentiCommand}">
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource SidebarButtonStyle}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsAppuntamentiActive}" Value="True">
+                                        <Setter Property="Background" Value="{StaticResource AccentBrush}"/>
+                                        <Setter Property="Foreground" Value="White"/>
+                                        <Setter Property="FontWeight" Value="Medium"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+
+                    <!-- SEPARATOR -->
+                    <Border Height="1" 
+                            Background="{StaticResource BorderBrush}" 
+                            Margin="16,16"/>
+
+                    <!-- QUICK ACTIONS -->
+                    <TextBlock Text="Azioni Rapide" 
+                               Style="{StaticResource Caption}" 
+                               Margin="20,0,0,8"/>
+
+                    <Button Content="+ Nuovo Immobile" 
+                            Command="{Binding QuickAddImmobileCommand}"
+                            Style="{StaticResource SidebarButtonStyle}"/>
+
+                    <Button Content="+ Nuovo Cliente" 
+                            Command="{Binding QuickAddClienteCommand}"
+                            Style="{StaticResource SidebarButtonStyle}"/>
+
+                    <Button Content="+ Nuovo Appuntamento" 
+                            Command="{Binding QuickAddAppuntamentoCommand}"
+                            Style="{StaticResource SidebarButtonStyle}"/>
+
+                </StackPanel>
+
+                <!-- FOOTER STATUS -->
+                <Border Grid.Row="2" 
+                        Background="{StaticResource BackgroundBrush}"
+                        BorderBrush="{StaticResource BorderBrush}"
+                        BorderThickness="0,1,0,0"
+                        Padding="16,12">
+                    <StackPanel>
+                        <TextBlock Text="Sistema Online" 
+                                   FontSize="11" 
+                                   Foreground="#4CAF50" 
+                                   FontWeight="Medium"/>
+                        <TextBlock Text="{Binding StatusMessage}" 
+                                   FontSize="10" 
+                                   Foreground="{StaticResource TextMuted}" 
+                                   TextWrapping="Wrap" 
+                                   Margin="0,4,0,0"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Border>
+
+        <!-- MAIN CONTENT AREA -->
+        <Grid Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- HEADER BAR -->
+            <Border Grid.Row="0" 
+                    Background="{StaticResource SurfaceBrush}" 
+                    BorderBrush="{StaticResource BorderBrush}" 
+                    BorderThickness="0,0,0,1"
+                    Height="60">
+
+                <Grid Margin="24,0">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="400"/>
-                        <ColumnDefinition Width="15"/>
                         <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
 
-                    <!-- Lista Appuntamenti -->
-                    <Border Grid.Column="0" Background="White" BorderBrush="#FFECF0F1" 
-                            BorderThickness="1" CornerRadius="8" Margin="5">
-                        <Border.Effect>
-                            <DropShadowEffect Color="#FFBDC3C7" Direction="270" ShadowDepth="1" BlurRadius="8" Opacity="0.2"/>
-                        </Border.Effect>
-                        <Grid>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="*"/>
-                                <RowDefinition Height="Auto"/>
-                            </Grid.RowDefinitions>
+                    <!-- PAGE TITLE -->
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="{Binding CurrentView}" 
+                                   FontSize="20" 
+                                   FontWeight="Medium" 
+                                   Foreground="{StaticResource TextPrimary}"/>
+                    </StackPanel>
 
-                            <!-- Header Lista -->
-                            <Border Grid.Row="0" Background="#FF3498DB" CornerRadius="8,8,0,0" Padding="15,12">
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="📋 Lista Appuntamenti" FontSize="16" FontWeight="Bold" 
-                                               Foreground="White" VerticalAlignment="Center"/>
-                                    <TextBlock Text="{Binding Appuntamenti.Count, StringFormat='({0})'}" 
-                                               FontSize="14" Foreground="White" VerticalAlignment="Center" Margin="10,0,0,0"/>
-                                </StackPanel>
-                            </Border>
+                    <!-- TOOLBAR -->
+                    <StackPanel Grid.Column="1" 
+                              Orientation="Horizontal" 
+                              VerticalAlignment="Center">
 
-                            <!-- Lista Scrollabile -->
-                            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-                                <ItemsControl ItemsSource="{Binding Appuntamenti}">
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <Border Background="White" BorderBrush="#FFECF0F1" 
-                                                    BorderThickness="0,0,0,1" Padding="15,12">
-                                                <Border.InputBindings>
-                                                    <MouseBinding Gesture="LeftClick" 
-                                                                  Command="{Binding DataContext.SelectAppuntamentoCommand, RelativeSource={RelativeSource AncestorType=Grid, AncestorLevel=4}}" 
-                                                                  CommandParameter="{Binding}"/>
-                                                </Border.InputBindings>
+                        <Button Content="Aggiorna" 
+                                Command="{Binding RefreshCommand}"
+                                Style="{StaticResource SidebarButtonStyle}"
+                                Width="80" Height="32" 
+                                Margin="0,0,8,0"/>
 
-                                                <Grid>
-                                                    <Grid.ColumnDefinitions>
-                                                        <ColumnDefinition Width="8"/>
-                                                        <ColumnDefinition Width="*"/>
-                                                        <ColumnDefinition Width="Auto"/>
-                                                    </Grid.ColumnDefinitions>
-
-                                                    <!-- Barra Colore Stato -->
-                                                    <Rectangle Grid.Column="0" Width="4" Fill="{Binding StatoColore}" 
-                                                               RadiusX="2" RadiusY="2" Margin="0,0,10,0"/>
-
-                                                    <!-- Contenuto Appuntamento -->
-                                                    <StackPanel Grid.Column="1">
-                                                        <TextBlock Text="{Binding Titolo}" FontWeight="Bold" FontSize="14" 
-                                                                   Foreground="#FF2C3E50" TextTrimming="CharacterEllipsis"/>
-
-                                                        <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
-                                                            <TextBlock Text="🕐" FontSize="12" Margin="0,0,5,0"/>
-                                                            <TextBlock Text="{Binding DataInizio, StringFormat=dd/MM/yyyy HH:mm}" 
-                                                                       FontSize="12" Foreground="#FF7F8C8D"/>
-                                                        </StackPanel>
-
-                                                        <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
-                                                            <TextBlock Text="👤" FontSize="12" Margin="0,0,5,0"/>
-                                                            <TextBlock Text="{Binding Cliente.NomeCompleto, FallbackValue='Nessun cliente'}" 
-                                                                       FontSize="12" Foreground="#FF7F8C8D"/>
-                                                        </StackPanel>
-
-                                                        <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
-                                                            <TextBlock Text="📍" FontSize="12" Margin="0,0,5,0"/>
-                                                            <TextBlock Text="{Binding Luogo}" FontSize="12" Foreground="#FF7F8C8D" 
-                                                                       TextTrimming="CharacterEllipsis"/>
-                                                        </StackPanel>
-                                                    </StackPanel>
-
-                                                    <!-- Badge Stato -->
-                                                    <Border Grid.Column="2" Background="{Binding StatoColore}" CornerRadius="12" 
-                                                            Padding="8,4" VerticalAlignment="Top">
-                                                        <TextBlock Text="{Binding StatoAppuntamento}" FontSize="10" 
-                                                                   Foreground="White" FontWeight="Bold"/>
-                                                    </Border>
-                                                </Grid>
-                                            </Border>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-                            </ScrollViewer>
-
-                            <!-- Footer Statistiche -->
-                            <Border Grid.Row="2" Background="#FFF8F9FA" Padding="15,10" CornerRadius="0,0,8,8">
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="📊" FontSize="12" Margin="0,0,8,0"/>
-                                    <TextBlock Text="Totale:" FontSize="11" FontWeight="Bold" Foreground="#FF2C3E50"/>
-                                    <TextBlock Text="{Binding Appuntamenti.Count}" FontSize="11" 
-                                               Foreground="#FF3498DB" Margin="5,0,15,0"/>
-                                    <TextBlock Text="Oggi:" FontSize="11" FontWeight="Bold" Foreground="#FF2C3E50"/>
-                                    <TextBlock Text="{Binding AppuntamentiOggi}" FontSize="11" 
-                                               Foreground="#FF27AE60" Margin="5,0,0,0"/>
-                                </StackPanel>
-                            </Border>
-                        </Grid>
-                    </Border>
-
-                    <!-- Dettagli Appuntamento -->
-                    <Border Grid.Column="2" Background="White" BorderBrush="#FFECF0F1" 
-                            BorderThickness="1" CornerRadius="8" Margin="5">
-                        <Border.Effect>
-                            <DropShadowEffect Color="#FFBDC3C7" Direction="270" ShadowDepth="1" BlurRadius="8" Opacity="0.2"/>
-                        </Border.Effect>
-                        <Grid>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="*"/>
-                            </Grid.RowDefinitions>
-
-                            <!-- Header Dettagli -->
-                            <Border Grid.Row="0" Background="#FF4CAF50" CornerRadius="8,8,0,0" Padding="20,15">
-                                <TextBlock Text="📝 Dettagli Appuntamento" FontSize="16" FontWeight="Bold" 
-                                           Foreground="White"/>
-                            </Border>
-
-                            <!-- Contenuto Dettagli -->
-                            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-                                <StackPanel Margin="20">
-                                    <!-- Placeholder quando nessun appuntamento selezionato -->
-                                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0,50">
-                                        <StackPanel.Style>
-                                            <Style TargetType="StackPanel">
-                                                <Setter Property="Visibility" Value="Collapsed"/>
-                                                <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding SelectedAppuntamento}" Value="{x:Null}">
-                                                        <Setter Property="Visibility" Value="Visible"/>
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </StackPanel.Style>
-                                        <TextBlock Text="📅" FontSize="48" HorizontalAlignment="Center" 
-                                                   Foreground="#FFBDC3C7" Margin="0,0,0,20"/>
-                                        <TextBlock Text="Seleziona un appuntamento" FontSize="16" HorizontalAlignment="Center" 
-                                                   Foreground="#FF7F8C8D" Margin="0,0,0,10"/>
-                                        <TextBlock Text="dalla lista per visualizzare i dettagli" FontSize="12" 
-                                                   HorizontalAlignment="Center" Foreground="#FF95A5A6"/>
-                                    </StackPanel>
-
-                                    <!-- Form Dettagli Appuntamento -->
-                                    <StackPanel DataContext="{Binding SelectedAppuntamento}">
-                                        <StackPanel.Style>
-                                            <Style TargetType="StackPanel">
-                                                <Setter Property="Visibility" Value="Visible"/>
-                                                <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding}" Value="{x:Null}">
-                                                        <Setter Property="Visibility" Value="Collapsed"/>
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </StackPanel.Style>
-
-                                        <!-- Informazioni Principali -->
-                                        <GroupBox Header="📋 Informazioni Principali" Margin="0,0,0,15">
-                                            <Grid Margin="10">
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="Auto"/>
-                                                    <ColumnDefinition Width="*"/>
-                                                </Grid.ColumnDefinitions>
-                                                <Grid.RowDefinitions>
-                                                    <RowDefinition Height="Auto"/>
-                                                    <RowDefinition Height="Auto"/>
-                                                    <RowDefinition Height="Auto"/>
-                                                    <RowDefinition Height="Auto"/>
-                                                    <RowDefinition Height="Auto"/>
-                                                </Grid.RowDefinitions>
-
-                                                <Label Grid.Row="0" Grid.Column="0" Content="Titolo:" FontWeight="Bold"/>
-                                                <TextBox Grid.Row="0" Grid.Column="1" 
-                                                         Text="{Binding Titolo, UpdateSourceTrigger=PropertyChanged}" 
-                                                         Margin="5" Padding="8,6"/>
-
-                                                <Label Grid.Row="1" Grid.Column="0" Content="Tipo:" FontWeight="Bold"/>
-                                                <ComboBox Grid.Row="1" Grid.Column="1" 
-                                                          ItemsSource="{Binding DataContext.TipiAppuntamento, RelativeSource={RelativeSource AncestorType=Grid, AncestorLevel=4}}" 
-                                                          SelectedItem="{Binding TipoAppuntamento}" 
-                                                          Margin="5" Padding="8,6"/>
-
-                                                <Label Grid.Row="2" Grid.Column="0" Content="Data/Ora:" FontWeight="Bold"/>
-                                                <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal" Margin="5">
-                                                    <DatePicker SelectedDate="{Binding DataInizio}" Padding="8,6" Margin="0,0,10,0"/>
-                                                    <TextBox Text="{Binding DataInizio, StringFormat=HH:mm}" Width="60" Padding="8,6"/>
-                                                </StackPanel>
-
-                                                <Label Grid.Row="3" Grid.Column="0" Content="Durata:" FontWeight="Bold"/>
-                                                <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding DurataFormattata}" 
-                                                           VerticalAlignment="Center" Margin="5"/>
-
-                                                <Label Grid.Row="4" Grid.Column="0" Content="Luogo:" FontWeight="Bold"/>
-                                                <TextBox Grid.Row="4" Grid.Column="1" 
-                                                         Text="{Binding Luogo, UpdateSourceTrigger=PropertyChanged}" 
-                                                         Margin="5" Padding="8,6"/>
-                                            </Grid>
-                                        </GroupBox>
-
-                                        <!-- Descrizione -->
-                                        <GroupBox Header="📝 Descrizione" Margin="0,0,0,15">
-                                            <TextBox Text="{Binding Descrizione, UpdateSourceTrigger=PropertyChanged}" 
-                                                     Height="80" TextWrapping="Wrap" AcceptsReturn="True"
-                                                     VerticalScrollBarVisibility="Auto" Margin="10" Padding="8,6"/>
-                                        </GroupBox>
-
-                                        <!-- Stato -->
-                                        <GroupBox Header="⚡ Stato" Margin="0,0,0,15">
-                                            <Grid Margin="10">
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="Auto"/>
-                                                    <ColumnDefinition Width="*"/>
-                                                </Grid.ColumnDefinitions>
-                                                <Grid.RowDefinitions>
-                                                    <RowDefinition Height="Auto"/>
-                                                    <RowDefinition Height="Auto"/>
-                                                </Grid.RowDefinitions>
-
-                                                <Label Grid.Row="0" Grid.Column="0" Content="Stato Attuale:" FontWeight="Bold"/>
-                                                <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" Margin="5">
-                                                    <Border Background="{Binding StatoColore}" CornerRadius="12" Padding="8,4">
-                                                        <TextBlock Text="{Binding StatoAppuntamento}" FontSize="12" 
-                                                                   Foreground="White" FontWeight="Bold"/>
-                                                    </Border>
-                                                </StackPanel>
-
-                                                <Label Grid.Row="1" Grid.Column="0" Content="Outlook Sync:" FontWeight="Bold"/>
-                                                <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" Margin="5">
-                                                    <TextBlock Text="{Binding SincronizzatoOutlook}" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                                                    <TextBlock Text="🔗" FontSize="16" Foreground="#FF27AE60" 
-                                                               Visibility="{Binding SincronizzatoOutlook, Converter={StaticResource BoolToVisConverter}}"/>
-                                                </StackPanel>
-                                            </Grid>
-                                        </GroupBox>
-                                    </StackPanel>
-                                </StackPanel>
-                            </ScrollViewer>
-                        </Grid>
-                    </Border>
+                        <Button Content="Menu" 
+                                Command="{Binding SettingsCommand}"
+                                Style="{StaticResource SidebarButtonStyle}"
+                                Width="60" Height="32"/>
+                    </StackPanel>
                 </Grid>
-            </Grid>
-        </DataTemplate>
+            </Border>
 
-        <!-- Stili -->
-        <Style x:Key="SidebarButtonStyle" TargetType="Button">
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Foreground" Value="White"/>
-            <Setter Property="FontSize" Value="14"/>
-            <Setter Property="FontWeight" Value="Normal"/>
-            <Setter Property="Padding" Value="20,15"/>
-            <Setter Property="HorizontalAlignment" Value="Stretch"/>
-            <Setter Property="HorizontalContentAlignment" Value="Left"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="0">
-                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
-                                              VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
-                                              Margin="{TemplateBinding Padding}"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="#FF3F51B5"/>
-                            </Trigger>
-                            <Trigger Property="IsPressed" Value="True">
-                                <Setter Property="Background" Value="#FF303F9F"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-            <Style.Triggers>
-                <DataTrigger Binding="{Binding IsDashboardActive}" Value="True">
-                    <Setter Property="Background" Value="#FF2196F3"/>
-                    <Setter Property="FontWeight" Value="Bold"/>
-                </DataTrigger>
-                <DataTrigger Binding="{Binding IsImmobiliActive}" Value="True">
-                    <Setter Property="Background" Value="#FF2196F3"/>
-                    <Setter Property="FontWeight" Value="Bold"/>
-                </DataTrigger>
-                <DataTrigger Binding="{Binding IsClientiActive}" Value="True">
-                    <Setter Property="Background" Value="#FF2196F3"/>
-                    <Setter Property="FontWeight" Value="Bold"/>
-                </DataTrigger>
-                <DataTrigger Binding="{Binding IsAppuntamentiActive}" Value="True">
-                    <Setter Property="Background" Value="#FF2196F3"/>
-                    <Setter Property="FontWeight" Value="Bold"/>
-                </DataTrigger>
-            </Style.Triggers>
-        </Style>
-
-        <Style x:Key="QuickActionButtonStyle" TargetType="Button">
-            <Setter Property="Background" Value="#FF4CAF50"/>
-            <Setter Property="Foreground" Value="White"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Padding" Value="15,8"/>
-            <Setter Property="Margin" Value="5"/>
-            <Setter Property="FontWeight" Value="Bold"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Style.Triggers>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#FF388E3C"/>
-                </Trigger>
-            </Style.Triggers>
-        </Style>
-    </Window.Resources>
-
-    <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
-
-        <!-- Menu Bar -->
-        <Menu Grid.Row="0" Background="#FF37474F" Foreground="White" FontSize="12">
-            <MenuItem Header="File" Foreground="White">
-                <MenuItem Header="Backup Database" Command="{Binding BackupDatabaseCommand}"/>
-                <MenuItem Header="Restore Database" Command="{Binding RestoreDatabaseCommand}"/>
-                <Separator/>
-                <MenuItem Header="Esci" Command="{Binding ExitApplicationCommand}"/>
-            </MenuItem>
-            <MenuItem Header="Azioni" Foreground="White">
-                <MenuItem Header="Nuovo Immobile" Command="{Binding QuickAddImmobileCommand}"/>
-                <MenuItem Header="Nuovo Cliente" Command="{Binding QuickAddClienteCommand}"/>
-                <MenuItem Header="Nuovo Appuntamento" Command="{Binding QuickAddAppuntamentoCommand}"/>
-                <Separator/>
-                <MenuItem Header="Aggiorna Dati" Click="RefreshData_Click"/>
-            </MenuItem>
-            <MenuItem Header="Strumenti" Foreground="White">
-                <MenuItem Header="Impostazioni" Command="{Binding SettingsCommand}"/>
-            </MenuItem>
-            <MenuItem Header="?" Foreground="White">
-                <MenuItem Header="Informazioni" Command="{Binding AboutCommand}"/>
-            </MenuItem>
-        </Menu>
-
-        <!-- Main Content Area -->
-        <Grid Grid.Row="1">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="250"/>
-                <ColumnDefinition Width="5"/>
-                <ColumnDefinition Width="*"/>
-            </Grid.ColumnDefinitions>
-
-            <!-- Sidebar Navigation -->
-            <Grid Grid.Column="0" Background="#FF455A64">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
-
-                <!-- Logo/Title -->
-                <StackPanel Grid.Row="0" Margin="20" HorizontalAlignment="Center">
-                    <TextBlock Text="🏢" FontSize="48" HorizontalAlignment="Center" Margin="0,10"/>
-                    <TextBlock Text="ImmobiGestio" FontSize="18" FontWeight="Bold" 
-                               Foreground="White" HorizontalAlignment="Center"/>
-                    <TextBlock Text="v2.0" FontSize="10" Foreground="#FFAAAA" 
-                               HorizontalAlignment="Center" Margin="0,5,0,20"/>
-                </StackPanel>
-
-                <!-- Navigation Buttons -->
-                <StackPanel Grid.Row="1" Margin="0,10">
-                    <Button Content="📊 Dashboard" 
-                            Command="{Binding NavigateToDashboardCommand}"
-                            Style="{StaticResource SidebarButtonStyle}" Margin="15,2"/>
-
-                    <Button Content="🏠 Immobili" 
-                            Command="{Binding NavigateToImmobiliCommand}"
-                            Style="{StaticResource SidebarButtonStyle}" Margin="15,2" Cursor="Hand"/>
-
-                    <Button Content="👥 Clienti" 
-                            Command="{Binding NavigateToClientiCommand}"
-                            Style="{StaticResource SidebarButtonStyle}" Margin="15,2"/>
-
-                    <Button Content="📅 Appuntamenti" 
-                            Command="{Binding NavigateToAppuntamentiCommand}"
-                            Style="{StaticResource SidebarButtonStyle}" Margin="15,2"/>
-
-                    <!-- Separator -->
-                    <Rectangle Height="1" Fill="#FF607D8B" Margin="20,20"/>
-
-                    <!-- Quick Actions -->
-                    <TextBlock Text="Azioni Rapide" Foreground="#FFAAAAAA" FontSize="12" 
-                               Margin="20,0,20,10" FontWeight="Bold"/>
-
-                    <Button Content="➕ Nuovo Immobile" 
-                            Command="{Binding QuickAddImmobileCommand}"
-                            Style="{StaticResource QuickActionButtonStyle}"
-                            Background="#FF2196F3" Margin="15,2"/>
-
-                    <Button Content="👤 Nuovo Cliente" 
-                            Command="{Binding QuickAddClienteCommand}"
-                            Style="{StaticResource QuickActionButtonStyle}"
-                            Background="#FF4CAF50" Margin="15,2"/>
-
-                    <Button Content="📅 Nuovo Appuntamento" 
-                            Command="{Binding QuickAddAppuntamentoCommand}"
-                            Style="{StaticResource QuickActionButtonStyle}"
-                            Background="#FFFF9800" Margin="15,2"/>
-                </StackPanel>
-
-                <!-- User Info / Status -->
-                <StackPanel Grid.Row="2" Margin="20,10,20,20">
-                    <Rectangle Height="1" Fill="#FF607D8B" Margin="0,0,0,10"/>
-                    <TextBlock Text="👤 Amministratore" Foreground="White" FontSize="12"/>
-                    <TextBlock Text="{Binding StatusMessage}" Foreground="#FFAAAAAA" FontSize="10" 
-                               TextWrapping="Wrap" Margin="0,5,0,0"/>
-                </StackPanel>
-            </Grid>
-
-            <!-- Splitter -->
-            <GridSplitter Grid.Column="1" HorizontalAlignment="Stretch" Background="#FFBBBBBB"/>
-
-            <!-- Content Area -->
-            <Border Grid.Column="2" Background="White">
-                <ContentPresenter Content="{Binding CurrentViewModel}"/>
+            <!-- MAIN CONTENT -->
+            <Border Grid.Row="1" 
+                    Background="{StaticResource BackgroundBrush}"
+                    Padding="24">
+                <ContentControl Content="{Binding CurrentViewModel}" 
+                              Style="{StaticResource AnimatedContentControl}"/>
             </Border>
         </Grid>
-
-        <!-- Status Bar -->
-        <StatusBar Grid.Row="2" Background="#FFF5F5F5" Height="25">
-            <StatusBarItem>
-                <TextBlock Text="{Binding StatusMessage}" FontSize="11"/>
-            </StatusBarItem>
-            <Separator/>
-            <StatusBarItem>
-                <TextBlock Text="{Binding CurrentView, StringFormat=Vista corrente: {0}}" 
-                           FontSize="11" Foreground="Gray"/>
-            </StatusBarItem>
-            <StatusBarItem HorizontalAlignment="Right">
-                <TextBlock Text="ImmobiGestio v2.0" FontSize="11" Foreground="Gray"/>
-            </StatusBarItem>
-        </StatusBar>
     </Grid>
 </Window>

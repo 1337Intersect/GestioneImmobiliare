@@ -45,6 +45,9 @@ namespace ImmobiGestio.ViewModels
         public ObservableCollection<string> StatiVenditaFiltro { get; set; } = new();
         public ObservableCollection<string> CittaFiltro { get; set; } = new();
 
+        // Eventi per comunicare con altri ViewModels
+        public event Action? AppuntamentoCreated;
+
         public Immobile? SelectedImmobile
         {
             get => _selectedImmobile;
@@ -395,38 +398,126 @@ namespace ImmobiGestio.ViewModels
             }
         }
 
+        // FIX: Metodo AddImmobile corretto con inizializzazione delle stringhe
         private void AddImmobile(object? parameter)
         {
-            var newImmobile = new Immobile
-            {
-                Titolo = "Nuovo Immobile",
-                Indirizzo = "Inserisci indirizzo",
-                Citta = "",
-                Prezzo = 0,
-                TipoImmobile = "Appartamento",
-                StatoConservazione = "Buono",
-                ClasseEnergetica = "G",
-                StatoVendita = "Disponibile",
-                Superficie = 0,
-                NumeroLocali = 0,
-                NumeroBagni = 0
-            };
-
             try
             {
-                _context.Immobili.Add(newImmobile);
-                _context.SaveChanges();
+                // Crea l'immobile con TUTTI i valori richiesti impostati correttamente
+                var newImmobile = new Immobile
+                {
+                    Titolo = "Nuovo Immobile",
+                    Indirizzo = "Inserisci indirizzo",
+                    Citta = "",
+                    CAP = "",
+                    Provincia = "",
+                    Descrizione = "",
 
-                Immobili.Insert(0, newImmobile);
-                SelectedImmobile = newImmobile;
+                    // Proprietà numeriche inizializzate correttamente
+                    Prezzo = 0, // decimal not null
+                    Superficie = null, // int nullable
+                    NumeroLocali = null, // int nullable  
+                    NumeroBagni = null, // int nullable
+                    Piano = null, // int nullable
+
+                    // Proprietà con valori di default RICHIESTI
+                    TipoImmobile = "Appartamento", // NOT NULL
+                    StatoConservazione = "Buono", // NOT NULL
+                    ClasseEnergetica = "G", // NOT NULL
+                    StatoVendita = "Disponibile", // NOT NULL
+
+                    // Date RICHIESTE
+                    DataInserimento = DateTime.Now,
+                    DataUltimaModifica = null // nullable
+                };
+
+                // Verifica che il contesto sia valido
+                if (_context == null)
+                {
+                    MessageBox.Show("Errore: Database non inizializzato correttamente.",
+                        "Errore Database", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+
+                // Log per debug - verifica che tutti i campi siano impostati
+                System.Diagnostics.Debug.WriteLine($"=== CREAZIONE IMMOBILE ===");
+                System.Diagnostics.Debug.WriteLine($"Titolo: '{newImmobile.Titolo}'");
+                System.Diagnostics.Debug.WriteLine($"Indirizzo: '{newImmobile.Indirizzo}'");
+                System.Diagnostics.Debug.WriteLine($"TipoImmobile: '{newImmobile.TipoImmobile}'");
+                System.Diagnostics.Debug.WriteLine($"StatoConservazione: '{newImmobile.StatoConservazione}'");
+                System.Diagnostics.Debug.WriteLine($"ClasseEnergetica: '{newImmobile.ClasseEnergetica}'");
+                System.Diagnostics.Debug.WriteLine($"StatoVendita: '{newImmobile.StatoVendita}'");
+                System.Diagnostics.Debug.WriteLine($"Prezzo: {newImmobile.Prezzo}");
+                System.Diagnostics.Debug.WriteLine($"DataInserimento: {newImmobile.DataInserimento}");
+
+                // Verifica che tutti i campi obbligatori siano valorizzati
+                if (string.IsNullOrEmpty(newImmobile.Titolo))
+                {
+                    MessageBox.Show("Errore: Titolo è vuoto!", "Errore Validazione",
+                        MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+
+                if (string.IsNullOrEmpty(newImmobile.Indirizzo))
+                {
+                    MessageBox.Show("Errore: Indirizzo è vuoto!", "Errore Validazione",
+                        MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+
+                if (string.IsNullOrEmpty(newImmobile.TipoImmobile))
+                {
+                    MessageBox.Show("Errore: TipoImmobile è vuoto!", "Errore Validazione",
+                        MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+
+                // Usa un nuovo contesto per evitare conflitti di tracking
+                using (var newContext = new ImmobiliContext())
+                {
+                    newContext.Immobili.Add(newImmobile);
+                    newContext.SaveChanges();
+
+                    System.Diagnostics.Debug.WriteLine($"Immobile creato con ID: {newImmobile.Id}");
+                }
+
+                // Ricarica tutti gli immobili per aggiornare la UI
+                LoadImmobili();
+
+                // Seleziona il nuovo immobile creato
+                var createdImmobile = Immobili.FirstOrDefault(i => i.Id == newImmobile.Id);
+                if (createdImmobile != null)
+                {
+                    SelectedImmobile = createdImmobile;
+                    System.Diagnostics.Debug.WriteLine($"Immobile selezionato: ID {createdImmobile.Id}");
+                }
 
                 MessageBox.Show("Nuovo immobile creato con successo!", "Successo",
                     MessageBoxButton.OK, MessageBoxImage.Information);
             }
+            catch (Microsoft.EntityFrameworkCore.DbUpdateException dbEx)
+            {
+                var innerException = dbEx.InnerException?.Message ?? "Nessun dettaglio disponibile";
+                var message = $"Errore di database nella creazione dell'immobile:\n\n" +
+                             $"Errore principale: {dbEx.Message}\n\n" +
+                             $"Dettagli: {innerException}";
+
+                MessageBox.Show(message, "Errore Database", MessageBoxButton.OK, MessageBoxImage.Error);
+                System.Diagnostics.Debug.WriteLine($"DbUpdateException immobile: {dbEx}");
+            }
             catch (Exception ex)
             {
-                MessageBox.Show($"Errore nella creazione dell'immobile: {ex.Message}", "Errore",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
+                var message = $"Errore imprevisto nella creazione dell'immobile:\n\n" +
+                             $"Tipo: {ex.GetType().Name}\n" +
+                             $"Messaggio: {ex.Message}";
+
+                if (ex.InnerException != null)
+                {
+                    message += $"\n\nErrore interno: {ex.InnerException.Message}";
+                }
+
+                MessageBox.Show(message, "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
+                System.Diagnostics.Debug.WriteLine($"Exception immobile: {ex}");
             }
         }
 
@@ -539,6 +630,68 @@ namespace ImmobiGestio.ViewModels
             }
         }
 
+        // FIX: Metodo CreaAppuntamento corretto
+        private void CreaAppuntamento(object? parameter)
+        {
+            if (SelectedImmobile == null) return;
+
+            try
+            {
+                // Salva prima l'immobile corrente
+                SaveCurrentImmobile();
+
+                var newAppuntamento = new Appuntamento
+                {
+                    ImmobileId = SelectedImmobile.Id, // USA SOLO L'ID!
+                    Titolo = $"Visita - {SelectedImmobile.Titolo}",
+                    Descrizione = "",
+                    DataInizio = DateTime.Now.AddDays(1),
+                    DataFine = DateTime.Now.AddDays(1).AddHours(1),
+                    TipoAppuntamento = "Visita",
+                    StatoAppuntamento = "Programmato",
+                    Priorita = "Media",
+                    Luogo = SelectedImmobile.Indirizzo,
+                    NotePrivate = "",
+                    EsitoIncontro = "",
+                    OutlookEventId = "",
+                    CreatoDa = "Sistema",
+                    DataCreazione = DateTime.Now,
+                    SincronizzatoOutlook = false,
+                    NotificaInviata = false,
+                    RichiedeConferma = true
+                };
+
+                // Usa un nuovo contesto per evitare conflitti di tracking
+                using (var newContext = new ImmobiliContext())
+                {
+                    newContext.Appuntamenti.Add(newAppuntamento);
+                    newContext.SaveChanges();
+
+                    System.Diagnostics.Debug.WriteLine($"Appuntamento creato con ID: {newAppuntamento.Id}, ImmobileId: {newAppuntamento.ImmobileId}");
+                }
+
+                RefreshCurrentCollections();
+
+                // Notifica agli altri ViewModels
+                AppuntamentoCreated?.Invoke();
+
+                MessageBox.Show("Appuntamento creato con successo!", "Successo",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                var message = $"Errore nella creazione dell'appuntamento:\n\n{ex.Message}";
+                if (ex.InnerException != null)
+                {
+                    message += $"\n\nDettagli: {ex.InnerException.Message}";
+                }
+
+                MessageBox.Show(message, "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
+                System.Diagnostics.Debug.WriteLine($"Errore CreaAppuntamento: {ex}");
+            }
+        }
+
+        // Altri metodi rimangono uguali...
         private void AddDocument(object? parameter)
         {
             if (SelectedImmobile == null) return;
@@ -557,7 +710,6 @@ namespace ImmobiGestio.ViewModels
                     var tipoDocumento = parameter?.ToString() ?? "Altro";
                     var sourceFile = openFileDialog.FileName;
 
-                    // Valida il file
                     if (!FileManagerService.IsValidDocumentFile(sourceFile))
                     {
                         MessageBox.Show("Tipo di file non supportato per i documenti.", "Errore",
@@ -565,9 +717,8 @@ namespace ImmobiGestio.ViewModels
                         return;
                     }
 
-                    // Controlla la dimensione del file (max 50MB)
                     var fileSize = FileManagerService.GetFileSize(sourceFile);
-                    if (fileSize > 50 * 1024 * 1024) // 50MB
+                    if (fileSize > 50 * 1024 * 1024)
                     {
                         MessageBox.Show($"Il file è troppo grande ({FileManagerService.FormatFileSize(fileSize)}). Dimensione massima: 50MB",
                             "File troppo grande", MessageBoxButton.OK, MessageBoxImage.Warning);
@@ -634,16 +785,14 @@ namespace ImmobiGestio.ViewModels
                     {
                         try
                         {
-                            // Valida il file
                             if (!FileManagerService.IsValidImageFile(sourceFile))
                             {
                                 errori.Add($"{Path.GetFileName(sourceFile)}: Tipo di file non supportato");
                                 continue;
                             }
 
-                            // Controlla la dimensione del file (max 10MB per le foto)
                             var fileSize = FileManagerService.GetFileSize(sourceFile);
-                            if (fileSize > 10 * 1024 * 1024) // 10MB
+                            if (fileSize > 10 * 1024 * 1024)
                             {
                                 errori.Add($"{Path.GetFileName(sourceFile)}: File troppo grande ({FileManagerService.FormatFileSize(fileSize)})");
                                 continue;
@@ -658,7 +807,7 @@ namespace ImmobiGestio.ViewModels
                                     ImmobileId = SelectedImmobile.Id,
                                     NomeFile = newFileName,
                                     PercorsoFile = destinationFile,
-                                    IsPrincipale = FotoCorrente.Count == 0, // Prima foto = principale
+                                    IsPrincipale = FotoCorrente.Count == 0,
                                     Descrizione = $"Foto {newFileName}"
                                 };
 
@@ -677,13 +826,11 @@ namespace ImmobiGestio.ViewModels
                         }
                     }
 
-                    // Salva le modifiche al database solo se ci sono foto aggiunte
                     if (fotoAggiunte > 0)
                     {
                         _context.SaveChanges();
                     }
 
-                    // Mostra risultato
                     var messaggio = $"{fotoAggiunte} foto aggiunte con successo!";
                     if (errori.Any())
                     {
@@ -711,7 +858,6 @@ namespace ImmobiGestio.ViewModels
             {
                 try
                 {
-                    // Prima controlla se il file esiste nel percorso salvato
                     if (File.Exists(documento.PercorsoFile))
                     {
                         System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
@@ -722,18 +868,16 @@ namespace ImmobiGestio.ViewModels
                         return;
                     }
 
-                    // Se non esiste, prova a cercarlo
                     var foundPath = FileManagerService.FindFile(documento.NomeFile, documento.ImmobileId, "Documenti");
 
                     if (!string.IsNullOrEmpty(foundPath))
                     {
-                        // Aggiorna il percorso nel database
                         var docToUpdate = _context.Documenti.Find(documento.Id);
                         if (docToUpdate != null)
                         {
                             docToUpdate.PercorsoFile = foundPath;
                             _context.SaveChanges();
-                            documento.PercorsoFile = foundPath; // Aggiorna anche l'oggetto UI
+                            documento.PercorsoFile = foundPath;
                         }
 
                         System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
@@ -851,7 +995,6 @@ namespace ImmobiGestio.ViewModels
 
         private void AddClienteInteressato(object? parameter)
         {
-            // Implementa finestra di selezione cliente o crea interesse automatico
             MessageBox.Show("Funzionalità in sviluppo: Aggiungi Cliente Interessato", "Info",
                 MessageBoxButton.OK, MessageBoxImage.Information);
         }
@@ -888,37 +1031,6 @@ namespace ImmobiGestio.ViewModels
                             MessageBoxButton.OK, MessageBoxImage.Error);
                     }
                 }
-            }
-        }
-
-        private void CreaAppuntamento(object? parameter)
-        {
-            if (SelectedImmobile == null) return;
-
-            var newAppuntamento = new Appuntamento
-            {
-                ImmobileId = SelectedImmobile.Id,
-                Titolo = $"Visita - {SelectedImmobile.Titolo}",
-                DataInizio = DateTime.Now.AddDays(1),
-                DataFine = DateTime.Now.AddDays(1).AddHours(1),
-                TipoAppuntamento = "Visita",
-                Luogo = SelectedImmobile.Indirizzo
-            };
-
-            try
-            {
-                _context.Appuntamenti.Add(newAppuntamento);
-                _context.SaveChanges();
-
-                RefreshCurrentCollections();
-
-                MessageBox.Show("Appuntamento creato con successo!", "Successo",
-                    MessageBoxButton.OK, MessageBoxImage.Information);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Errore nella creazione dell'appuntamento: {ex.Message}", "Errore",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 

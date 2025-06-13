@@ -9,16 +9,22 @@ namespace ImmobiGestio.Converters
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if (value is bool isTrue && isTrue && parameter is Style trueStyle)
+            // Questo converter ora è usato meno nel design minimal
+            // perché stiamo usando DataTrigger direttamente nello XAML
+
+            if (value is bool boolValue && boolValue)
             {
-                return trueStyle;
+                if (parameter is Style style)
+                    return style;
+
+                // Cerca lo stile attivo nelle risorse
+                if (Application.Current.TryFindResource("SidebarButtonActiveStyle") is Style activeStyle)
+                    return activeStyle;
             }
 
-            // Restituisce il FallbackValue se disponibile
-            if (parameter is FrameworkElement element && element.TryFindResource("SidebarButtonStyle") is Style fallbackStyle)
-            {
-                return fallbackStyle;
-            }
+            // Fallback allo stile normale
+            if (Application.Current.TryFindResource("SidebarButtonStyle") is Style normalStyle)
+                return normalStyle;
 
             return DependencyProperty.UnsetValue;
         }
@@ -26,6 +32,26 @@ namespace ImmobiGestio.Converters
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
             throw new NotImplementedException();
+        }
+    }
+
+    // Converter semplificato per visibilità
+    public class BoolToVisibilityConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value is bool boolValue)
+                return boolValue ? Visibility.Visible : Visibility.Collapsed;
+
+            return Visibility.Collapsed;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value is Visibility visibility)
+                return visibility == Visibility.Visible;
+
+            return false;
         }
     }
 }

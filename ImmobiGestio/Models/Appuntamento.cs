@@ -11,26 +11,33 @@ namespace ImmobiGestio.Models
 
         [Required]
         [StringLength(200)]
-        public string Titolo { get; set; } = string.Empty;
+        public string Titolo { get; set; } = "Nuovo Appuntamento";
 
         [StringLength(1000)]
         public string Descrizione { get; set; } = string.Empty;
 
-        public DateTime DataInizio { get; set; }
-        public DateTime DataFine { get; set; }
+        [Required]
+        public DateTime DataInizio { get; set; } = DateTime.Now.AddHours(1);
 
+        [Required]
+        public DateTime DataFine { get; set; } = DateTime.Now.AddHours(2);
+
+        [Required]
         [StringLength(500)]
-        public string Luogo { get; set; } = string.Empty;
+        public string Luogo { get; set; } = "Ufficio";
 
+        [Required]
         [StringLength(50)]
         public string TipoAppuntamento { get; set; } = "Visita"; // Visita, Incontro, Chiamata, Firma
 
+        [Required]
         [StringLength(50)]
         public string StatoAppuntamento { get; set; } = "Programmato"; // Programmato, Confermato, Completato, Annullato
 
         public int? ClienteId { get; set; }
         public int? ImmobileId { get; set; }
 
+        [Required]
         [StringLength(20)]
         public string Priorita { get; set; } = "Media"; // Bassa, Media, Alta
 
@@ -51,9 +58,12 @@ namespace ImmobiGestio.Models
         [StringLength(255)]
         public string OutlookEventId { get; set; } = string.Empty;
 
-        public DateTime DataCreazione { get; set; }
+        [Required]
+        public DateTime DataCreazione { get; set; } = DateTime.Now;
+
         public DateTime? DataUltimaModifica { get; set; }
 
+        [Required]
         [StringLength(100)]
         public string CreatoDa { get; set; } = "Sistema";
 
@@ -110,12 +120,27 @@ namespace ImmobiGestio.Models
 
         public Appuntamento()
         {
+            // Imposta tutti i valori di default nel costruttore
             DataCreazione = DateTime.Now;
+            DataInizio = DateTime.Now.AddHours(1);
+            DataFine = DateTime.Now.AddHours(2);
+
             StatoAppuntamento = "Programmato";
             TipoAppuntamento = "Visita";
             Priorita = "Media";
-            RichiedeConferma = true;
+            Luogo = "Ufficio";
+            Titolo = "Nuovo Appuntamento";
             CreatoDa = "Sistema";
+
+            RichiedeConferma = true;
+            NotificaInviata = false;
+            SincronizzatoOutlook = false;
+
+            // Inizializza tutte le stringhe
+            Descrizione = string.Empty;
+            NotePrivate = string.Empty;
+            EsitoIncontro = string.Empty;
+            OutlookEventId = string.Empty;
         }
 
         // Metodi di utilità

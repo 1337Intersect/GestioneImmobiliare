@@ -1,515 +1,283 @@
 ﻿<UserControl x:Class="ImmobiGestio.Views.AppuntamentiView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d" 
+             d:DesignHeight="700" d:DesignWidth="1200">
 
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVisConverter"/>
 
-        <!-- Stili per i pulsanti -->
-        <Style x:Key="ModernButtonStyle" TargetType="Button">
-            <Setter Property="Background" Value="#FF3498DB"/>
+        <Style TargetType="Button">
+            <Setter Property="Margin" Value="5"/>
+            <Setter Property="Padding" Value="10,5"/>
+            <Setter Property="Background" Value="#FF2196F3"/>
             <Setter Property="Foreground" Value="White"/>
             <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Padding" Value="12,8"/>
-            <Setter Property="Margin" Value="5"/>
-            <Setter Property="FontWeight" Value="Medium"/>
             <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}" 
-                                CornerRadius="6" 
-                                Padding="{TemplateBinding Padding}">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="#FF2980B9"/>
-                            </Trigger>
-                            <Trigger Property="IsEnabled" Value="False">
-                                <Setter Property="Background" Value="#FFBDC3C7"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter Property="Background" Value="#FFCCCCCC"/>
+                    <Setter Property="Foreground" Value="#FF666666"/>
+                </Trigger>
+            </Style.Triggers>
         </Style>
 
-        <!-- Stile per le card -->
-        <Style x:Key="CardStyle" TargetType="Border">
-            <Setter Property="Background" Value="White"/>
-            <Setter Property="BorderBrush" Value="#FFECF0F1"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="CornerRadius" Value="8"/>
+        <Style TargetType="TextBox">
             <Setter Property="Margin" Value="5"/>
-            <Setter Property="Effect">
-                <Setter.Value>
-                    <DropShadowEffect Color="#FFBDC3C7" Direction="270" ShadowDepth="1" BlurRadius="8" Opacity="0.2"/>
-                </Setter.Value>
-            </Setter>
+            <Setter Property="Padding" Value="5"/>
+            <Setter Property="BorderBrush" Value="#FFCCCCCC"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Style.Triggers>
+                <Trigger Property="IsFocused" Value="True">
+                    <Setter Property="BorderBrush" Value="#FF2196F3"/>
+                    <Setter Property="BorderThickness" Value="2"/>
+                </Trigger>
+            </Style.Triggers>
         </Style>
 
-        <!-- Stile per gli appuntamenti nella lista -->
-        <Style x:Key="AppuntamentoItemStyle" TargetType="Border">
-            <Setter Property="Background" Value="White"/>
-            <Setter Property="BorderBrush" Value="#FFECF0F1"/>
-            <Setter Property="BorderThickness" Value="0,0,0,1"/>
-            <Setter Property="Padding" Value="15,12"/>
-            <Setter Property="Margin" Value="0"/>
+        <Style TargetType="ComboBox">
+            <Setter Property="Margin" Value="5"/>
+            <Setter Property="Padding" Value="5"/>
+        </Style>
+
+        <Style TargetType="Label">
+            <Setter Property="Margin" Value="5,5,5,0"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+        </Style>
+
+        <Style TargetType="DatePicker">
+            <Setter Property="Margin" Value="5"/>
+            <Setter Property="Padding" Value="5"/>
         </Style>
     </UserControl.Resources>
 
-    <Grid Background="#FFF8F9FA">
+    <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <!-- Header e Toolbar -->
-        <Border Grid.Row="0" Background="White" BorderBrush="#FFECF0F1" BorderThickness="0,0,0,1">
-            <Grid Margin="20,15">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
+        <!-- Toolbar -->
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Background="#FFF5F5F5" Margin="5">
+            <Button Content="📅 Nuovo Appuntamento" Command="{Binding AddAppuntamentoCommand}" 
+                    Background="#FF4CAF50" FontWeight="Bold"/>
+            <Button Content="💾 Salva" Command="{Binding SaveAppuntamentoCommand}" 
+                    Background="#FFFF9800"/>
+            <Button Content="🗑️ Elimina" Command="{Binding DeleteAppuntamentoCommand}" 
+                    Background="#FFF44336"/>
+            <Separator Margin="10,0"/>
+            <Button Content="✅ Conferma" Command="{Binding ConfermaAppuntamentoCommand}" 
+                    Background="#FF4CAF50"/>
+            <Button Content="✔️ Completa" Command="{Binding CompletaAppuntamentoCommand}" 
+                    Background="#FF607D8B"/>
+            <Separator Margin="10,0"/>
+            <Label Content="🔍" VerticalAlignment="Center" Foreground="#FF666666"/>
+            <TextBox x:Name="SearchBox" Width="200" Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" 
+                     VerticalAlignment="Center" Margin="5,0"
+                     ToolTip="Cerca appuntamenti"/>
+        </StackPanel>
 
-                <!-- Titolo -->
-                <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,15">
-                    <TextBlock Text="📅" FontSize="24" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                    <TextBlock Text="Gestione Appuntamenti" FontSize="24" FontWeight="Bold" 
-                               Foreground="#FF2C3E50" VerticalAlignment="Center"/>
-                    <TextBlock Text="{Binding TitoloVista}" FontSize="14" Foreground="#FF7F8C8D" 
-                               VerticalAlignment="Center" Margin="20,0,0,0"/>
-                </StackPanel>
-
-                <!-- Toolbar Azioni -->
-                <StackPanel Grid.Row="1" Orientation="Horizontal">
-                    <Button Content="➕ Nuovo Appuntamento" Command="{Binding AddAppuntamentoCommand}" 
-                            Style="{StaticResource ModernButtonStyle}" Background="#FF4CAF50"/>
-
-                    <Button Content="💾 Salva" Command="{Binding SaveAppuntamentoCommand}" 
-                            Style="{StaticResource ModernButtonStyle}" Background="#FFFF9800"/>
-
-                    <Button Content="🗑️ Elimina" Command="{Binding DeleteAppuntamentoCommand}" 
-                            Style="{StaticResource ModernButtonStyle}" Background="#FFF44336"/>
-
-                    <Separator Margin="10,0"/>
-
-                    <Button Content="✅ Conferma" Command="{Binding ConfermaAppuntamentoCommand}" 
-                            Style="{StaticResource ModernButtonStyle}" Background="#FF2ECC71"/>
-
-                    <Button Content="🏁 Completa" Command="{Binding CompletaAppuntamentoCommand}" 
-                            Style="{StaticResource ModernButtonStyle}" Background="#FF9C27B0"/>
-
-                    <Button Content="❌ Annulla" Command="{Binding AnnullaAppuntamentoCommand}" 
-                            Style="{StaticResource ModernButtonStyle}" Background="#FF95A5A6"/>
-
-                    <Separator Margin="10,0"/>
-
-                    <Button Content="🔄 Outlook" Command="{Binding ConnectOutlookCommand}" 
-                            Style="{StaticResource ModernButtonStyle}" Background="#FF607D8B"/>
-
-                    <Button Content="🔗 Sync" Command="{Binding SyncOutlookCommand}" 
-                            Style="{StaticResource ModernButtonStyle}" Background="#FF795548"
-                            Visibility="{Binding IsOutlookConnected, Converter={StaticResource BoolToVisConverter}}"/>
-                </StackPanel>
-            </Grid>
-        </Border>
-
-        <!-- Filtri e Vista Calendario -->
-        <Border Grid.Row="1" Background="White" BorderBrush="#FFECF0F1" BorderThickness="0,0,0,1">
-            <Grid Margin="20,15">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
-
-                <!-- Filtri -->
-                <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,15">
-                    <TextBlock Text="🔍 Filtri:" VerticalAlignment="Center" FontWeight="Bold" 
-                               Foreground="#FF2C3E50" Margin="0,0,15,0"/>
-
-                    <TextBox Width="200" Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" 
-                             VerticalAlignment="Center" Margin="0,0,10,0" Padding="8,6"
-                             BorderBrush="#FFBDC3C7" BorderThickness="1"
-                             ToolTip="Cerca appuntamenti..."/>
-
-                    <ComboBox Width="120" ItemsSource="{Binding StatiAppuntamentoFiltro}" 
-                              SelectedItem="{Binding FiltroStato}" VerticalAlignment="Center" 
-                              Margin="0,0,10,0" Padding="8,6"/>
-
-                    <ComboBox Width="120" ItemsSource="{Binding TipiAppuntamentoFiltro}" 
-                              SelectedItem="{Binding FiltroTipo}" VerticalAlignment="Center" 
-                              Margin="0,0,10,0" Padding="8,6"/>
-
-                    <Button Content="🧹 Pulisci" Command="{Binding ClearFiltriCommand}" 
-                            Style="{StaticResource ModernButtonStyle}" Background="#FF95A5A6"/>
-                </StackPanel>
-
-                <!-- Controlli Vista Calendario -->
-                <StackPanel Grid.Row="1" Orientation="Horizontal">
-                    <TextBlock Text="📅 Vista:" VerticalAlignment="Center" FontWeight="Bold" 
-                               Foreground="#FF2C3E50" Margin="0,0,15,0"/>
-
-                    <Button Content="◀" Command="{Binding PreviousPeriodCommand}" 
-                            Style="{StaticResource ModernButtonStyle}" Background="#FF95A5A6" 
-                            Width="35" Height="35" Padding="0"/>
-
-                    <Button Content="Oggi" Command="{Binding TodayCommand}" 
-                            Style="{StaticResource ModernButtonStyle}" Background="#FF3498DB" Margin="5,0"/>
-
-                    <Button Content="▶" Command="{Binding NextPeriodCommand}" 
-                            Style="{StaticResource ModernButtonStyle}" Background="#FF95A5A6" 
-                            Width="35" Height="35" Padding="0"/>
-
-                    <Separator Margin="15,0"/>
-
-                    <Button Content="Giorno" Command="{Binding CambiaVistaCommand}" CommandParameter="Giorno"
-                            Style="{StaticResource ModernButtonStyle}" Background="#FF95A5A6"/>
-                    <Button Content="Settimana" Command="{Binding CambiaVistaCommand}" CommandParameter="Settimana"
-                            Style="{StaticResource ModernButtonStyle}" Background="#FF95A5A6"/>
-                    <Button Content="Mese" Command="{Binding CambiaVistaCommand}" CommandParameter="Mese"
-                            Style="{StaticResource ModernButtonStyle}" Background="#FF95A5A6"/>
-                </StackPanel>
-            </Grid>
-        </Border>
-
-        <!-- Contenuto Principale -->
-        <Grid Grid.Row="2" Margin="20">
+        <!-- Main Content -->
+        <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="400"/>
-                <ColumnDefinition Width="15"/>
+                <ColumnDefinition Width="5"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
 
             <!-- Lista Appuntamenti -->
-            <Border Grid.Column="0" Style="{StaticResource CardStyle}" Padding="0">
+            <GroupBox Grid.Column="0" Header="📅 Lista Appuntamenti" Margin="5">
                 <Grid>
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
-                    <!-- Header Lista -->
-                    <Border Grid.Row="0" Background="#FF3498DB" CornerRadius="8,8,0,0" Padding="15,12">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="📋 Lista Appuntamenti" FontSize="16" FontWeight="Bold" 
-                                       Foreground="White" VerticalAlignment="Center"/>
-                            <TextBlock Text="{Binding Appuntamenti.Count, StringFormat='({0})'}" 
-                                       FontSize="14" Foreground="White" VerticalAlignment="Center" Margin="10,0,0,0"/>
-                        </StackPanel>
-                    </Border>
+                    <ListBox Grid.Row="0" ItemsSource="{Binding Appuntamenti}" SelectedItem="{Binding SelectedAppuntamento}">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Border BorderBrush="#FFEEEEEE" BorderThickness="0,0,0,1" Padding="5">
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding Titolo}" FontWeight="Bold" FontSize="14"/>
+                                        <TextBlock Text="{Binding DataInizio, StringFormat=dd/MM/yyyy HH:mm}" FontSize="11" Foreground="Gray"/>
+                                        <StackPanel Orientation="Horizontal" Margin="0,2">
+                                            <TextBlock Text="{Binding StatoAppuntamento}" FontWeight="Bold" Foreground="Blue"/>
+                                            <TextBlock Text=" • " Foreground="Gray"/>
+                                            <TextBlock Text="{Binding TipoAppuntamento}" FontSize="10" Foreground="Green"/>
+                                        </StackPanel>
+                                        <TextBlock Text="{Binding Cliente.NomeCompleto}" FontSize="10" Foreground="Gray"/>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
 
-                    <!-- Lista Scrollabile -->
-                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-                        <ItemsControl ItemsSource="{Binding Appuntamenti}">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <Border Style="{StaticResource AppuntamentoItemStyle}">
-                                        <Border.InputBindings>
-                                            <MouseBinding Gesture="LeftClick" 
-                                                          Command="{Binding DataContext.SelectAppuntamentoCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
-                                                          CommandParameter="{Binding}"/>
-                                        </Border.InputBindings>
-
-                                        <Grid>
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="8"/>
-                                                <ColumnDefinition Width="*"/>
-                                                <ColumnDefinition Width="Auto"/>
-                                            </Grid.ColumnDefinitions>
-
-                                            <!-- Barra Colore Stato -->
-                                            <Rectangle Grid.Column="0" Width="4" Fill="{Binding StatoColore}" 
-                                                       RadiusX="2" RadiusY="2" Margin="0,0,10,0"/>
-
-                                            <!-- Contenuto Appuntamento -->
-                                            <StackPanel Grid.Column="1">
-                                                <TextBlock Text="{Binding Titolo}" FontWeight="Bold" FontSize="14" 
-                                                           Foreground="#FF2C3E50" TextTrimming="CharacterEllipsis"/>
-
-                                                <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
-                                                    <TextBlock Text="🕐" FontSize="12" Margin="0,0,5,0"/>
-                                                    <TextBlock Text="{Binding DataInizio, StringFormat=dd/MM/yyyy HH:mm}" 
-                                                               FontSize="12" Foreground="#FF7F8C8D"/>
-                                                    <TextBlock Text="-" FontSize="12" Foreground="#FF7F8C8D" Margin="5,0"/>
-                                                    <TextBlock Text="{Binding DataFine, StringFormat=HH:mm}" 
-                                                               FontSize="12" Foreground="#FF7F8C8D"/>
-                                                </StackPanel>
-
-                                                <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
-                                                    <TextBlock Text="👤" FontSize="12" Margin="0,0,5,0"/>
-                                                    <TextBlock Text="{Binding Cliente.NomeCompleto, FallbackValue='Nessun cliente'}" 
-                                                               FontSize="12" Foreground="#FF7F8C8D"/>
-                                                </StackPanel>
-
-                                                <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
-                                                    <TextBlock Text="📍" FontSize="12" Margin="0,0,5,0"/>
-                                                    <TextBlock Text="{Binding Luogo}" FontSize="12" Foreground="#FF7F8C8D" 
-                                                               TextTrimming="CharacterEllipsis"/>
-                                                </StackPanel>
-                                            </StackPanel>
-
-                                            <!-- Badge Stato -->
-                                            <Border Grid.Column="2" Background="{Binding StatoColore}" CornerRadius="12" 
-                                                    Padding="8,4" VerticalAlignment="Top">
-                                                <TextBlock Text="{Binding StatoAppuntamento}" FontSize="10" 
-                                                           Foreground="White" FontWeight="Bold"/>
-                                            </Border>
-                                        </Grid>
-                                    </Border>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                    </ScrollViewer>
-
-                    <!-- Footer Statistiche -->
-                    <Border Grid.Row="2" Background="#FFF8F9FA" Padding="15,10" CornerRadius="0,0,8,8">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="📊" FontSize="12" Margin="0,0,8,0"/>
-                            <TextBlock Text="Oggi:" FontSize="11" FontWeight="Bold" Foreground="#FF2C3E50"/>
-                            <TextBlock Text="{Binding Appuntamenti.Count}" FontSize="11" 
-                                       Foreground="#FF3498DB" Margin="5,0,15,0"/>
-                            <TextBlock Text="Completati:" FontSize="11" FontWeight="Bold" Foreground="#FF2C3E50"/>
-                            <TextBlock Text="{Binding AppuntamentiCompletati}" FontSize="11" 
-                                       Foreground="#FF27AE60" Margin="5,0,0,0"/>
-                        </StackPanel>
-                    </Border>
+                    <TextBlock Grid.Row="1" Text="{Binding Appuntamenti.Count, StringFormat=Totale: {0} appuntamenti}" 
+                               Margin="5" FontSize="10" Foreground="Gray" HorizontalAlignment="Right"/>
                 </Grid>
-            </Border>
+            </GroupBox>
+
+            <GridSplitter Grid.Column="1" HorizontalAlignment="Stretch" Background="LightGray"/>
 
             <!-- Dettagli Appuntamento -->
-            <Border Grid.Column="2" Style="{StaticResource CardStyle}" Padding="0">
+            <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto">
                 <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
-                    </Grid.RowDefinitions>
+                    <Grid.Style>
+                        <Style TargetType="Grid">
+                            <Setter Property="IsEnabled" Value="True"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding SelectedAppuntamento}" Value="{x:Null}">
+                                    <Setter Property="IsEnabled" Value="False"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Grid.Style>
 
-                    <!-- Header Dettagli -->
-                    <Border Grid.Row="0" Background="#FF4CAF50" CornerRadius="8,8,0,0" Padding="20,15">
-                        <TextBlock Text="📝 Dettagli Appuntamento" FontSize="16" FontWeight="Bold" 
-                                   Foreground="White"/>
-                    </Border>
-
-                    <!-- Contenuto Dettagli -->
-                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-                        <StackPanel Margin="20">
-                            <!-- Placeholder quando nessun appuntamento selezionato -->
-                            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0,50">
-                                <StackPanel.Style>
-                                    <Style TargetType="StackPanel">
-                                        <Setter Property="Visibility" Value="Collapsed"/>
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding SelectedAppuntamento}" Value="{x:Null}">
-                                                <Setter Property="Visibility" Value="Visible"/>
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </StackPanel.Style>
-                                <TextBlock Text="📅" FontSize="48" HorizontalAlignment="Center" 
-                                           Foreground="#FFBDC3C7" Margin="0,0,0,20"/>
-                                <TextBlock Text="Seleziona un appuntamento" FontSize="16" HorizontalAlignment="Center" 
-                                           Foreground="#FF7F8C8D" Margin="0,0,0,10"/>
-                                <TextBlock Text="dalla lista per visualizzare i dettagli" FontSize="12" 
-                                           HorizontalAlignment="Center" Foreground="#FF95A5A6"/>
-                            </StackPanel>
-
-                            <!-- Form Dettagli Appuntamento -->
-                            <StackPanel DataContext="{Binding SelectedAppuntamento}">
-                                <StackPanel.Style>
-                                    <Style TargetType="StackPanel">
+                    <!-- Placeholder quando nessun appuntamento è selezionato -->
+                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                        <StackPanel.Style>
+                            <Style TargetType="StackPanel">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding SelectedAppuntamento}" Value="{x:Null}">
                                         <Setter Property="Visibility" Value="Visible"/>
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding}" Value="{x:Null}">
-                                                <Setter Property="Visibility" Value="Collapsed"/>
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </StackPanel.Style>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </StackPanel.Style>
+                        <TextBlock Text="📅" FontSize="48" HorizontalAlignment="Center" Foreground="#FFCCCCCC"/>
+                        <TextBlock Text="Seleziona un appuntamento dalla lista" FontSize="16" HorizontalAlignment="Center" 
+                                   Foreground="#FF666666" Margin="0,10"/>
+                        <TextBlock Text="oppure crea un nuovo appuntamento" FontSize="12" HorizontalAlignment="Center" 
+                                   Foreground="#FF999999"/>
+                    </StackPanel>
 
-                                <!-- Informazioni Principali -->
-                                <GroupBox Header="📋 Informazioni Principali" Margin="0,0,0,15" 
-                                          BorderBrush="#FFBDC3C7" BorderThickness="1">
-                                    <Grid Margin="10">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="Auto"/>
-                                            <ColumnDefinition Width="*"/>
-                                        </Grid.ColumnDefinitions>
-                                        <Grid.RowDefinitions>
-                                            <RowDefinition Height="Auto"/>
-                                            <RowDefinition Height="Auto"/>
-                                            <RowDefinition Height="Auto"/>
-                                            <RowDefinition Height="Auto"/>
-                                            <RowDefinition Height="Auto"/>
-                                            <RowDefinition Height="Auto"/>
-                                            <RowDefinition Height="Auto"/>
-                                        </Grid.RowDefinitions>
+                    <!-- Content when appuntamento is selected -->
+                    <StackPanel DataContext="{Binding SelectedAppuntamento}">
+                        <StackPanel.Style>
+                            <Style TargetType="StackPanel">
+                                <Setter Property="Visibility" Value="Visible"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding}" Value="{x:Null}">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </StackPanel.Style>
 
-                                        <Label Grid.Row="0" Grid.Column="0" Content="Titolo:" FontWeight="Bold"/>
-                                        <TextBox Grid.Row="0" Grid.Column="1" 
-                                                 Text="{Binding Titolo, UpdateSourceTrigger=PropertyChanged}" 
-                                                 Margin="5" Padding="8,6"/>
+                        <!-- Informazioni Appuntamento -->
+                        <GroupBox Header="📅 Dettagli Appuntamento" Margin="5">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
 
-                                        <Label Grid.Row="1" Grid.Column="0" Content="Tipo:" FontWeight="Bold"/>
-                                        <ComboBox Grid.Row="1" Grid.Column="1" 
-                                                  ItemsSource="{Binding DataContext.TipiAppuntamento, RelativeSource={RelativeSource AncestorType=UserControl}}" 
-                                                  SelectedItem="{Binding TipoAppuntamento}" 
-                                                  Margin="5" Padding="8,6"/>
+                                <Label Grid.Row="0" Grid.Column="0" Content="Titolo:"/>
+                                <TextBox Grid.Row="0" Grid.Column="1" 
+                                         Text="{Binding Titolo, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"/>
 
-                                        <Label Grid.Row="2" Grid.Column="0" Content="Data Inizio:" FontWeight="Bold"/>
-                                        <DatePicker Grid.Row="2" Grid.Column="1" 
-                                                    SelectedDate="{Binding DataInizio}" 
-                                                    Margin="5" Padding="8,6"/>
+                                <Label Grid.Row="1" Grid.Column="0" Content="Data Inizio:"/>
+                                <DatePicker Grid.Row="1" Grid.Column="1" 
+                                            SelectedDate="{Binding DataInizio, Mode=TwoWay}"/>
 
-                                        <Label Grid.Row="3" Grid.Column="0" Content="Ora Inizio:" FontWeight="Bold"/>
-                                        <TextBox Grid.Row="3" Grid.Column="1" 
-                                                 Text="{Binding DataInizio, StringFormat=HH:mm, UpdateSourceTrigger=PropertyChanged}" 
-                                                 Margin="5" Padding="8,6"/>
+                                <Label Grid.Row="2" Grid.Column="0" Content="Data Fine:"/>
+                                <DatePicker Grid.Row="2" Grid.Column="1" 
+                                            SelectedDate="{Binding DataFine, Mode=TwoWay}"/>
 
-                                        <Label Grid.Row="4" Grid.Column="0" Content="Ora Fine:" FontWeight="Bold"/>
-                                        <TextBox Grid.Row="4" Grid.Column="1" 
-                                                 Text="{Binding DataFine, StringFormat=HH:mm, UpdateSourceTrigger=PropertyChanged}" 
-                                                 Margin="5" Padding="8,6"/>
+                                <Label Grid.Row="3" Grid.Column="0" Content="Luogo:"/>
+                                <TextBox Grid.Row="3" Grid.Column="1" 
+                                         Text="{Binding Luogo, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"/>
 
-                                        <Label Grid.Row="5" Grid.Column="0" Content="Luogo:" FontWeight="Bold"/>
-                                        <TextBox Grid.Row="5" Grid.Column="1" 
-                                                 Text="{Binding Luogo, UpdateSourceTrigger=PropertyChanged}" 
-                                                 Margin="5" Padding="8,6"/>
+                                <Label Grid.Row="4" Grid.Column="0" Content="Tipo:"/>
+                                <ComboBox Grid.Row="4" Grid.Column="1" 
+                                          ItemsSource="{Binding RelativeSource={RelativeSource AncestorType=UserControl}, Path=DataContext.TipiAppuntamento}" 
+                                          SelectedItem="{Binding TipoAppuntamento, Mode=TwoWay}"/>
 
-                                        <Label Grid.Row="6" Grid.Column="0" Content="Priorità:" FontWeight="Bold"/>
-                                        <ComboBox Grid.Row="6" Grid.Column="1" 
-                                                  ItemsSource="{Binding DataContext.PrioritaAppuntamento, RelativeSource={RelativeSource AncestorType=UserControl}}" 
-                                                  SelectedItem="{Binding Priorita}" 
-                                                  Margin="5" Padding="8,6"/>
-                                    </Grid>
-                                </GroupBox>
+                                <Label Grid.Row="5" Grid.Column="0" Content="Stato:"/>
+                                <ComboBox Grid.Row="5" Grid.Column="1" 
+                                          ItemsSource="{Binding RelativeSource={RelativeSource AncestorType=UserControl}, Path=DataContext.StatiAppuntamento}" 
+                                          SelectedItem="{Binding StatoAppuntamento, Mode=TwoWay}"/>
+                            </Grid>
+                        </GroupBox>
 
-                                <!-- Cliente e Immobile -->
-                                <GroupBox Header="👥 Cliente e Immobile" Margin="0,0,0,15" 
-                                          BorderBrush="#FFBDC3C7" BorderThickness="1">
-                                    <Grid Margin="10">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="Auto"/>
-                                            <ColumnDefinition Width="*"/>
-                                        </Grid.ColumnDefinitions>
-                                        <Grid.RowDefinitions>
-                                            <RowDefinition Height="Auto"/>
-                                            <RowDefinition Height="Auto"/>
-                                        </Grid.RowDefinitions>
+                        <!-- Cliente e Immobile -->
+                        <GroupBox Header="👤 Cliente e Immobile" Margin="5">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
 
-                                        <Label Grid.Row="0" Grid.Column="0" Content="Cliente:" FontWeight="Bold"/>
-                                        <ComboBox Grid.Row="0" Grid.Column="1" 
-                                                  ItemsSource="{Binding DataContext.ClientiDisponibili, RelativeSource={RelativeSource AncestorType=UserControl}}" 
-                                                  SelectedItem="{Binding Cliente}" 
-                                                  DisplayMemberPath="NomeCompleto"
-                                                  Margin="5" Padding="8,6"/>
+                                <Label Grid.Row="0" Grid.Column="0" Content="Cliente:"/>
+                                <ComboBox Grid.Row="0" Grid.Column="1" 
+                                          ItemsSource="{Binding RelativeSource={RelativeSource AncestorType=UserControl}, Path=DataContext.ClientiDisponibili}" 
+                                          SelectedItem="{Binding Cliente, Mode=TwoWay}"
+                                          DisplayMemberPath="NomeCompleto"/>
 
-                                        <Label Grid.Row="1" Grid.Column="0" Content="Immobile:" FontWeight="Bold"/>
-                                        <ComboBox Grid.Row="1" Grid.Column="1" 
-                                                  ItemsSource="{Binding DataContext.ImmobiliDisponibili, RelativeSource={RelativeSource AncestorType=UserControl}}" 
-                                                  SelectedItem="{Binding Immobile}" 
-                                                  DisplayMemberPath="Titolo"
-                                                  Margin="5" Padding="8,6"/>
-                                    </Grid>
-                                </GroupBox>
+                                <Label Grid.Row="1" Grid.Column="0" Content="Immobile:"/>
+                                <ComboBox Grid.Row="1" Grid.Column="1" 
+                                          ItemsSource="{Binding RelativeSource={RelativeSource AncestorType=UserControl}, Path=DataContext.ImmobiliDisponibili}" 
+                                          SelectedItem="{Binding Immobile, Mode=TwoWay}"
+                                          DisplayMemberPath="Titolo"/>
+                            </Grid>
+                        </GroupBox>
 
-                                <!-- Descrizione e Note -->
-                                <GroupBox Header="📝 Descrizione e Note" Margin="0,0,0,15" 
-                                          BorderBrush="#FFBDC3C7" BorderThickness="1">
-                                    <StackPanel Margin="10">
-                                        <Label Content="Descrizione:" FontWeight="Bold"/>
-                                        <TextBox Text="{Binding Descrizione, UpdateSourceTrigger=PropertyChanged}" 
-                                                 Height="60" TextWrapping="Wrap" AcceptsReturn="True"
-                                                 VerticalScrollBarVisibility="Auto" Margin="5" Padding="8,6"/>
+                        <!-- Descrizione e Note -->
+                        <GroupBox Header="📝 Descrizione e Note" Margin="5">
+                            <StackPanel>
+                                <Label Content="Descrizione:"/>
+                                <TextBox Text="{Binding Descrizione, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" 
+                                         Height="60" TextWrapping="Wrap" AcceptsReturn="True" 
+                                         VerticalScrollBarVisibility="Auto" Margin="5"/>
 
-                                        <Label Content="Note Private:" FontWeight="Bold"/>
-                                        <TextBox Text="{Binding NotePrivate, UpdateSourceTrigger=PropertyChanged}" 
-                                                 Height="60" TextWrapping="Wrap" AcceptsReturn="True"
-                                                 VerticalScrollBarVisibility="Auto" Margin="5" Padding="8,6"/>
-
-                                        <Label Content="Esito Incontro:" FontWeight="Bold"/>
-                                        <TextBox Text="{Binding EsitoIncontro, UpdateSourceTrigger=PropertyChanged}" 
-                                                 Height="60" TextWrapping="Wrap" AcceptsReturn="True"
-                                                 VerticalScrollBarVisibility="Auto" Margin="5" Padding="8,6"/>
-                                    </StackPanel>
-                                </GroupBox>
-
-                                <!-- Stato e Conferme -->
-                                <GroupBox Header="⚡ Stato e Conferme" Margin="0,0,0,15" 
-                                          BorderBrush="#FFBDC3C7" BorderThickness="1">
-                                    <Grid Margin="10">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="*"/>
-                                        </Grid.ColumnDefinitions>
-                                        <Grid.RowDefinitions>
-                                            <RowDefinition Height="Auto"/>
-                                            <RowDefinition Height="Auto"/>
-                                            <RowDefinition Height="Auto"/>
-                                            <RowDefinition Height="Auto"/>
-                                        </Grid.RowDefinitions>
-
-                                        <Label Grid.Row="0" Grid.Column="0" Content="Stato:" FontWeight="Bold"/>
-                                        <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding StatoAppuntamento}" 
-                                                   FontSize="14" FontWeight="Bold" Foreground="{Binding StatoColore}" 
-                                                   VerticalAlignment="Center" Margin="5"/>
-
-                                        <Label Grid.Row="1" Grid.Column="0" Content="Richiede Conferma:" FontWeight="Bold"/>
-                                        <CheckBox Grid.Row="1" Grid.Column="1" IsChecked="{Binding RichiedeConferma}" 
-                                                  VerticalAlignment="Center" Margin="5"/>
-
-                                        <Label Grid.Row="2" Grid.Column="0" Content="Data Conferma:" FontWeight="Bold"/>
-                                        <TextBlock Grid.Row="2" Grid.Column="1" 
-                                                   Text="{Binding DataConferma, StringFormat=dd/MM/yyyy HH:mm, FallbackValue='Non confermato'}" 
-                                                   VerticalAlignment="Center" Margin="5"/>
-
-                                        <Label Grid.Row="3" Grid.Column="0" Content="Outlook Sync:" FontWeight="Bold"/>
-                                        <StackPanel Grid.Row="3" Grid.Column="1" Orientation="Horizontal" Margin="5">
-                                            <TextBlock Text="{Binding SincronizzatoOutlook}" 
-                                                       VerticalAlignment="Center" Margin="0,0,10,0"/>
-                                            <TextBlock Text="🔗" FontSize="16" Foreground="#FF27AE60" 
-                                                       Visibility="{Binding SincronizzatoOutlook, Converter={StaticResource BoolToVisConverter}}"/>
-                                        </StackPanel>
-                                    </Grid>
-                                </GroupBox>
-
-                                <!-- Durata e Informazioni Aggiuntive -->
-                                <GroupBox Header="⏱️ Informazioni Aggiuntive" 
-                                          BorderBrush="#FFBDC3C7" BorderThickness="1">
-                                    <Grid Margin="10">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="*"/>
-                                        </Grid.ColumnDefinitions>
-                                        <Grid.RowDefinitions>
-                                            <RowDefinition Height="Auto"/>
-                                            <RowDefinition Height="Auto"/>
-                                            <RowDefinition Height="Auto"/>
-                                        </Grid.RowDefinitions>
-
-                                        <Label Grid.Row="0" Grid.Column="0" Content="Durata:" FontWeight="Bold"/>
-                                        <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding DurataFormattata}" 
-                                                   VerticalAlignment="Center" Margin="5"/>
-
-                                        <Label Grid.Row="1" Grid.Column="0" Content="Creato il:" FontWeight="Bold"/>
-                                        <TextBlock Grid.Row="1" Grid.Column="1" 
-                                                   Text="{Binding DataCreazione, StringFormat=dd/MM/yyyy HH:mm}" 
-                                                   VerticalAlignment="Center" Margin="5"/>
-
-                                        <Label Grid.Row="2" Grid.Column="0" Content="Ultima Modifica:" FontWeight="Bold"/>
-                                        <TextBlock Grid.Row="2" Grid.Column="1" 
-                                                   Text="{Binding DataUltimaModifica, StringFormat=dd/MM/yyyy HH:mm, FallbackValue='Mai modificato'}" 
-                                                   VerticalAlignment="Center" Margin="5"/>
-                                    </Grid>
-                                </GroupBox>
+                                <Label Content="Note Private:"/>
+                                <TextBox Text="{Binding NotePrivate, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" 
+                                         Height="40" TextWrapping="Wrap" AcceptsReturn="True" 
+                                         VerticalScrollBarVisibility="Auto" Margin="5"/>
                             </StackPanel>
-                        </StackPanel>
-                    </ScrollViewer>
+                        </GroupBox>
+
+                        <!-- Stato e Priorità -->
+                        <GroupBox Header="⚡ Gestione Stato" Margin="5">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <StackPanel Grid.Column="0" Margin="5">
+                                    <Label Content="Priorità:"/>
+                                    <ComboBox ItemsSource="{Binding RelativeSource={RelativeSource AncestorType=UserControl}, Path=DataContext.PrioritaAppuntamento}" 
+                                              SelectedItem="{Binding Priorita, Mode=TwoWay}"/>
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="1" Margin="5">
+                                    <Label Content="Durata:"/>
+                                    <TextBlock Text="{Binding DurataFormattata, Mode=OneWay}" 
+                                               FontSize="14" 
+                                               Margin="5" 
+                                               Foreground="Blue"/>
+                                </StackPanel>
+                            </Grid>
+                        </GroupBox>
+                    </StackPanel>
                 </Grid>
-            </Border>
+            </ScrollViewer>
         </Grid>
     </Grid>
 </UserControl>

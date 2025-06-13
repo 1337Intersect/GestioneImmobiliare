@@ -56,6 +56,7 @@ namespace ImmobiGestio.ViewModels
         public ICommand? QuickAddAppuntamentoCommand { get; set; }
 
         // Menu Commands
+        public ICommand? RefreshCommand { get; set; } // <- QUESTO ERA MANCANTE!
         public ICommand? ExitApplicationCommand { get; set; }
         public ICommand? AboutCommand { get; set; }
         public ICommand? BackupDatabaseCommand { get; set; }
@@ -112,6 +113,7 @@ namespace ImmobiGestio.ViewModels
             QuickAddAppuntamentoCommand = new RelayCommand(_ => QuickAddAppuntamento());
 
             // Menu Commands
+            RefreshCommand = new RelayCommand(_ => RefreshAllData()); // <- AGGIUNTO!
             ExitApplicationCommand = new RelayCommand(_ => ExitApplication());
             AboutCommand = new RelayCommand(_ => ShowAbout());
             BackupDatabaseCommand = new RelayCommand(_ => BackupDatabase());
@@ -132,11 +134,45 @@ namespace ImmobiGestio.ViewModels
                 DashboardViewModel.NavigateToAppuntamento += (id) => NavigateToAppuntamento(id);
             }
 
-            // Immobili navigation events (per il futuro)
+            // Immobili navigation events
             if (ImmobiliViewModel != null)
             {
                 ImmobiliViewModel.NavigateToCliente += (id) => NavigateToCliente(id);
                 ImmobiliViewModel.NavigateToAppuntamento += (id) => NavigateToAppuntamento(id);
+            }
+
+            // Eventi per sincronizzare i ViewModels quando si creano nuovi oggetti
+            if (ClientiViewModel != null)
+            {
+                ClientiViewModel.AppuntamentoCreated += OnAppuntamentoCreated;
+            }
+
+            if (ImmobiliViewModel != null)
+            {
+                ImmobiliViewModel.AppuntamentoCreated += OnAppuntamentoCreated;
+            }
+        }
+
+        // Evento per sincronizzare quando viene creato un appuntamento
+        private void OnAppuntamentoCreated()
+        {
+            try
+            {
+                // Ricarica gli appuntamenti in AppuntamentiViewModel
+                AppuntamentiViewModel?.LoadAppuntamenti();
+
+                // Ricarica anche la dashboard se necessario
+                if (CurrentView == "Dashboard")
+                {
+                    DashboardViewModel?.LoadDashboardData();
+                }
+
+                // Aggiorna lo status
+                RefreshStatusMessage();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Errore nell'aggiornamento dopo creazione appuntamento: {ex.Message}");
             }
         }
 
@@ -368,6 +404,7 @@ namespace ImmobiGestio.ViewModels
                 else if (CurrentView == "Clienti")
                 {
                     ClientiViewModel?.LoadClienti();
+                    ClientiViewModel?.RefreshCurrentCollections();
                 }
                 else if (CurrentView == "Appuntamenti")
                 {
@@ -375,6 +412,9 @@ namespace ImmobiGestio.ViewModels
                 }
 
                 RefreshStatusMessage();
+
+                MessageBox.Show("Dati aggiornati con successo!", "Aggiornamento",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
