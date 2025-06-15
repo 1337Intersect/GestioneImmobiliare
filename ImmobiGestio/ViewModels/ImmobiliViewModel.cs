@@ -630,64 +630,97 @@ namespace ImmobiGestio.ViewModels
             }
         }
 
-        // FIX: Metodo CreaAppuntamento corretto
         private void CreaAppuntamento(object? parameter)
         {
-            if (SelectedImmobile == null) return;
+            if (SelectedImmobile == null)
+            {
+                MessageBox.Show("Nessun immobile selezionato per creare l'appuntamento.",
+                    "Attenzione", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
 
             try
             {
                 // Salva prima l'immobile corrente
                 SaveCurrentImmobile();
 
-                var newAppuntamento = new Appuntamento
+                // USA IL FACTORY METHOD - MOLTO PIÙ SICURO!
+                var newAppuntamento = Appuntamento.CreaPerImmobile(
+                    SelectedImmobile.Id,
+                    SelectedImmobile.Titolo,
+                    SelectedImmobile.Indirizzo
+                );
+
+                // Log per debug
+                System.Diagnostics.Debug.WriteLine($"=== CREAZIONE APPUNTAMENTO DA IMMOBILE ===");
+                System.Diagnostics.Debug.WriteLine($"ImmobileId: {newAppuntamento.ImmobileId}");
+                System.Diagnostics.Debug.WriteLine($"Immobile: {SelectedImmobile.Titolo}");
+                System.Diagnostics.Debug.WriteLine($"TipoAppuntamento: '{newAppuntamento.TipoAppuntamento}'");
+                System.Diagnostics.Debug.WriteLine($"StatoAppuntamento: '{newAppuntamento.StatoAppuntamento}'");
+                System.Diagnostics.Debug.WriteLine($"Priorita: '{newAppuntamento.Priorita}'");
+
+                // Valida prima di salvare
+                if (!newAppuntamento.IsValid())
                 {
-                    ImmobileId = SelectedImmobile.Id, // USA SOLO L'ID!
-                    Titolo = $"Visita - {SelectedImmobile.Titolo}",
-                    Descrizione = "",
-                    DataInizio = DateTime.Now.AddDays(1),
-                    DataFine = DateTime.Now.AddDays(1).AddHours(1),
-                    TipoAppuntamento = "Visita",
-                    StatoAppuntamento = "Programmato",
-                    Priorita = "Media",
-                    Luogo = SelectedImmobile.Indirizzo,
-                    NotePrivate = "",
-                    EsitoIncontro = "",
-                    OutlookEventId = "",
-                    CreatoDa = "Sistema",
-                    DataCreazione = DateTime.Now,
-                    SincronizzatoOutlook = false,
-                    NotificaInviata = false,
-                    RichiedeConferma = true
-                };
+                    MessageBox.Show("Errore: L'appuntamento creato non è valido. Controlla i dati.",
+                        "Errore Validazione", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
 
                 // Usa un nuovo contesto per evitare conflitti di tracking
                 using (var newContext = new ImmobiliContext())
                 {
-                    newContext.Appuntamenti.Add(newAppuntamento);
-                    newContext.SaveChanges();
+                    // Verifica che l'immobile esista ancora
+                    var immobileExists = newContext.Immobili.Any(i => i.Id == SelectedImmobile.Id);
+                    if (!immobileExists)
+                    {
+                        MessageBox.Show("Errore: L'immobile selezionato non esiste nel database!",
+                            "Errore Database", MessageBoxButton.OK, MessageBoxImage.Error);
+                        return;
+                    }
 
-                    System.Diagnostics.Debug.WriteLine($"Appuntamento creato con ID: {newAppuntamento.Id}, ImmobileId: {newAppuntamento.ImmobileId}");
+                    // Aggiungi e salva
+                    newContext.Appuntamenti.Add(newAppuntamento);
+                    var saved = newContext.SaveChanges();
+
+                    System.Diagnostics.Debug.WriteLine($"Appuntamento salvato con ID: {newAppuntamento.Id}, Records salvati: {saved}");
                 }
 
+                // Ricarica le collezioni correnti
                 RefreshCurrentCollections();
 
                 // Notifica agli altri ViewModels
                 AppuntamentoCreated?.Invoke();
 
-                MessageBox.Show("Appuntamento creato con successo!", "Successo",
-                    MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show($"Appuntamento creato con successo per l'immobile!\n\n" +
+                               $"Immobile: {SelectedImmobile.Titolo}\n" +
+                               $"Data: {newAppuntamento.DataInizio:dd/MM/yyyy HH:mm}\n" +
+                               $"Tipo: {newAppuntamento.TipoAppuntamento}",
+                    "Successo", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Microsoft.EntityFrameworkCore.DbUpdateException dbEx)
+            {
+                var innerMessage = dbEx.InnerException?.Message ?? "Nessun dettaglio";
+                var message = $"Errore di database nella creazione dell'appuntamento:\n\n" +
+                             $"Errore: {dbEx.Message}\n\n" +
+                             $"Dettagli: {innerMessage}";
+
+                MessageBox.Show(message, "Errore Database", MessageBoxButton.OK, MessageBoxImage.Error);
+                System.Diagnostics.Debug.WriteLine($"DbUpdateException CreaAppuntamento: {dbEx}");
             }
             catch (Exception ex)
             {
-                var message = $"Errore nella creazione dell'appuntamento:\n\n{ex.Message}";
+                var message = $"Errore imprevisto nella creazione dell'appuntamento:\n\n" +
+                             $"Tipo: {ex.GetType().Name}\n" +
+                             $"Messaggio: {ex.Message}";
+
                 if (ex.InnerException != null)
                 {
-                    message += $"\n\nDettagli: {ex.InnerException.Message}";
+                    message += $"\n\nErrore interno: {ex.InnerException.Message}";
                 }
 
                 MessageBox.Show(message, "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
-                System.Diagnostics.Debug.WriteLine($"Errore CreaAppuntamento: {ex}");
+                System.Diagnostics.Debug.WriteLine($"Exception CreaAppuntamento: {ex}");
             }
         }
 

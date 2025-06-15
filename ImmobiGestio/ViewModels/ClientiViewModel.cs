@@ -23,7 +23,7 @@ namespace ImmobiGestio.ViewModels
         public ObservableCollection<Appuntamento> AppuntamentiCliente { get; set; } = new();
         public ObservableCollection<ClienteImmobile> ImmobiliInteresse { get; set; } = new();
 
-        // Combo boxes data SOLO per i clienti (NON per appuntamenti)
+        // Combo boxes data SOLO per i clienti
         public ObservableCollection<string> TipiCliente { get; set; } = new();
         public ObservableCollection<string> StatiCliente { get; set; } = new();
         public ObservableCollection<string> FontiContatto { get; set; } = new();
@@ -99,54 +99,74 @@ namespace ImmobiGestio.ViewModels
 
         private void InitializeCollections()
         {
-            // Tipi cliente (SOLO per clienti, NON appuntamenti)
-            TipiCliente.Clear();
-            TipiClienteFiltro.Clear();
-            TipiClienteFiltro.Add("Tutti");
-
-            foreach (var tipo in new[] { "Acquirente", "Venditore", "Locatario", "Locatore" })
+            try
             {
-                TipiCliente.Add(tipo);
-                TipiClienteFiltro.Add(tipo);
+                // Tipi cliente
+                TipiCliente.Clear();
+                TipiClienteFiltro.Clear();
+                TipiClienteFiltro.Add("Tutti");
+
+                foreach (var tipo in new[] { "Acquirente", "Venditore", "Locatario", "Locatore" })
+                {
+                    TipiCliente.Add(tipo);
+                    TipiClienteFiltro.Add(tipo);
+                }
+
+                // Stati cliente
+                StatiCliente.Clear();
+                StatiClienteFiltro.Clear();
+                StatiClienteFiltro.Add("Tutti");
+
+                foreach (var stato in new[] { "Attivo", "Inattivo", "Prospect", "Concluso" })
+                {
+                    StatiCliente.Add(stato);
+                    StatiClienteFiltro.Add(stato);
+                }
+
+                // Fonti contatto
+                FontiContatto.Clear();
+                foreach (var fonte in new[] { "Web", "Telefono", "Email", "Referral", "Social Media", "Cartellone", "Passaparola", "Altro" })
+                {
+                    FontiContatto.Add(fonte);
+                }
+
+                System.Diagnostics.Debug.WriteLine($"Collezioni clienti inizializzate: Tipi={TipiCliente.Count}, Stati={StatiCliente.Count}, Fonti={FontiContatto.Count}");
             }
-
-            // Stati cliente (SOLO per clienti, NON appuntamenti)
-            StatiCliente.Clear();
-            StatiClienteFiltro.Clear();
-            StatiClienteFiltro.Add("Tutti");
-
-            foreach (var stato in new[] { "Attivo", "Inattivo", "Prospect", "Concluso" })
+            catch (Exception ex)
             {
-                StatiCliente.Add(stato);
-                StatiClienteFiltro.Add(stato);
-            }
-
-            // Fonti contatto
-            FontiContatto.Clear();
-            foreach (var fonte in new[] { "Web", "Telefono", "Email", "Referral", "Social Media", "Cartellone", "Passaparola", "Altro" })
-            {
-                FontiContatto.Add(fonte);
+                System.Diagnostics.Debug.WriteLine($"Errore InitializeCollections clienti: {ex.Message}");
             }
         }
 
         private void InitializeCommands()
         {
-            AddClienteCommand = new RelayCommand(AddCliente);
-            SaveClienteCommand = new RelayCommand(SaveCliente, _ => SelectedCliente != null);
-            DeleteClienteCommand = new RelayCommand(DeleteCliente, _ => SelectedCliente != null);
-            AddAppuntamentoCommand = new RelayCommand(AddAppuntamento, _ => SelectedCliente != null);
-            AddInteresseImmobileCommand = new RelayCommand(AddInteresseImmobile, _ => SelectedCliente != null);
-            DeleteAppuntamentoCommand = new RelayCommand(DeleteAppuntamento);
-            DeleteInteresseCommand = new RelayCommand(DeleteInteresse);
-            InviaEmailCommand = new RelayCommand(InviaEmail, _ => SelectedCliente != null && !string.IsNullOrEmpty(SelectedCliente.Email));
-            ChiamaClienteCommand = new RelayCommand(ChiamaCliente, _ => SelectedCliente != null && (!string.IsNullOrEmpty(SelectedCliente.Telefono) || !string.IsNullOrEmpty(SelectedCliente.Cellulare)));
-            EsportaClientiCommand = new RelayCommand(EsportaClienti);
+            try
+            {
+                AddClienteCommand = new RelayCommand(AddCliente);
+                SaveClienteCommand = new RelayCommand(SaveCliente, _ => SelectedCliente != null);
+                DeleteClienteCommand = new RelayCommand(DeleteCliente, _ => SelectedCliente != null);
+                AddAppuntamentoCommand = new RelayCommand(AddAppuntamento, _ => SelectedCliente != null);
+                AddInteresseImmobileCommand = new RelayCommand(AddInteresseImmobile, _ => SelectedCliente != null);
+                DeleteAppuntamentoCommand = new RelayCommand(DeleteAppuntamento);
+                DeleteInteresseCommand = new RelayCommand(DeleteInteresse);
+                InviaEmailCommand = new RelayCommand(InviaEmail, _ => SelectedCliente != null && !string.IsNullOrEmpty(SelectedCliente.Email));
+                ChiamaClienteCommand = new RelayCommand(ChiamaCliente, _ => SelectedCliente != null && (!string.IsNullOrEmpty(SelectedCliente.Telefono) || !string.IsNullOrEmpty(SelectedCliente.Cellulare)));
+                EsportaClientiCommand = new RelayCommand(EsportaClienti);
+
+                System.Diagnostics.Debug.WriteLine("Comandi clienti inizializzati");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Errore InitializeCommands clienti: {ex.Message}");
+            }
         }
 
         public void LoadClienti()
         {
             try
             {
+                System.Diagnostics.Debug.WriteLine("=== CARICAMENTO CLIENTI ===");
+
                 var clienti = _context.Clienti
                     .AsNoTracking()
                     .Include(c => c.Appuntamenti)
@@ -154,14 +174,19 @@ namespace ImmobiGestio.ViewModels
                     .OrderByDescending(c => c.DataInserimento)
                     .ToList();
 
+                System.Diagnostics.Debug.WriteLine($"Caricati {clienti.Count} clienti dal database");
+
                 Clienti.Clear();
                 foreach (var cliente in clienti)
                 {
                     Clienti.Add(cliente);
                 }
+
+                System.Diagnostics.Debug.WriteLine($"LoadClienti completato: {Clienti.Count} clienti nella UI");
             }
             catch (Exception ex)
             {
+                System.Diagnostics.Debug.WriteLine($"Errore LoadClienti: {ex}");
                 MessageBox.Show($"Errore nel caricamento dei clienti: {ex.Message}",
                     "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
             }
@@ -177,7 +202,6 @@ namespace ImmobiGestio.ViewModels
                     .Include(c => c.ImmobiliDiInteresse)
                     .AsQueryable();
 
-                // Filtro per testo di ricerca
                 if (!string.IsNullOrWhiteSpace(SearchText))
                 {
                     query = query.Where(c =>
@@ -188,13 +212,11 @@ namespace ImmobiGestio.ViewModels
                         c.Cellulare.Contains(SearchText));
                 }
 
-                // Filtro per tipo cliente
                 if (FiltroTipoCliente != "Tutti")
                 {
                     query = query.Where(c => c.TipoCliente == FiltroTipoCliente);
                 }
 
-                // Filtro per stato
                 if (FiltroStato != "Tutti")
                 {
                     query = query.Where(c => c.StatoCliente == FiltroStato);
@@ -209,9 +231,12 @@ namespace ImmobiGestio.ViewModels
                 {
                     Clienti.Add(cliente);
                 }
+
+                System.Diagnostics.Debug.WriteLine($"Filtro clienti applicato: {Clienti.Count} risultati");
             }
             catch (Exception ex)
             {
+                System.Diagnostics.Debug.WriteLine($"Errore FilterClienti: {ex}");
                 MessageBox.Show($"Errore nella ricerca clienti: {ex.Message}",
                     "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
             }
@@ -219,86 +244,109 @@ namespace ImmobiGestio.ViewModels
 
         public void RefreshCurrentCollections()
         {
-            AppuntamentiCliente.Clear();
-            ImmobiliInteresse.Clear();
-
-            if (SelectedCliente != null)
+            try
             {
-                try
-                {
-                    // Carica appuntamenti del cliente
-                    var appuntamenti = _context.Appuntamenti
-                        .AsNoTracking()
-                        .Include(a => a.Immobile)
-                        .Where(a => a.ClienteId == SelectedCliente.Id)
-                        .OrderByDescending(a => a.DataInizio)
-                        .ToList();
+                AppuntamentiCliente.Clear();
+                ImmobiliInteresse.Clear();
 
-                    foreach (var app in appuntamenti)
+                if (SelectedCliente != null)
+                {
+                    System.Diagnostics.Debug.WriteLine($"=== REFRESH COLLEZIONI CLIENTE ID {SelectedCliente.Id} ===");
+
+                    using (var refreshContext = new ImmobiliContext())
                     {
-                        AppuntamentiCliente.Add(app);
+                        // Carica appuntamenti del cliente
+                        var appuntamenti = refreshContext.Appuntamenti
+                            .AsNoTracking()
+                            .Include(a => a.Immobile)
+                            .Where(a => a.ClienteId == SelectedCliente.Id)
+                            .OrderByDescending(a => a.DataInizio)
+                            .ToList();
+
+                        foreach (var app in appuntamenti)
+                        {
+                            AppuntamentiCliente.Add(app);
+                        }
+                        System.Diagnostics.Debug.WriteLine($"Caricati {AppuntamentiCliente.Count} appuntamenti per il cliente");
+
+                        // Carica immobili di interesse
+                        var interessi = refreshContext.ClientiImmobili
+                            .AsNoTracking()
+                            .Include(ci => ci.Immobile)
+                            .Where(ci => ci.ClienteId == SelectedCliente.Id)
+                            .OrderByDescending(ci => ci.DataInteresse)
+                            .ToList();
+
+                        foreach (var interesse in interessi)
+                        {
+                            ImmobiliInteresse.Add(interesse);
+                        }
+                        System.Diagnostics.Debug.WriteLine($"Caricati {ImmobiliInteresse.Count} immobili di interesse");
                     }
 
-                    // Carica immobili di interesse
-                    var interessi = _context.ClientiImmobili
-                        .AsNoTracking()
-                        .Include(ci => ci.Immobile)
-                        .Where(ci => ci.ClienteId == SelectedCliente.Id)
-                        .OrderByDescending(ci => ci.DataInteresse)
-                        .ToList();
-
-                    foreach (var interesse in interessi)
-                    {
-                        ImmobiliInteresse.Add(interesse);
-                    }
+                    OnPropertyChanged(nameof(AppuntamentiCliente));
+                    OnPropertyChanged(nameof(ImmobiliInteresse));
                 }
-                catch (Exception ex)
-                {
-                    MessageBox.Show($"Errore nel caricamento dei dati del cliente: {ex.Message}",
-                        "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
-                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Errore RefreshCurrentCollections: {ex.Message}");
+                MessageBox.Show($"Errore nel caricamento dei dati del cliente: {ex.Message}",
+                    "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
         private void AddCliente(object? parameter)
         {
-            var newCliente = new Cliente
-            {
-                Nome = "Nuovo",
-                Cognome = "Cliente",
-                TipoCliente = "Acquirente",
-                StatoCliente = "Prospect",
-                FonteContatto = "Web",
-                Email = "",
-                Telefono = "",
-                Cellulare = "",
-                CodiceFiscale = "",
-                Indirizzo = "",
-                Citta = "",
-                CAP = "",
-                Provincia = "",
-                Note = "",
-                PreferenzeTipologia = "",
-                PreferenzeZone = "",
-                BudgetMin = 0,
-                BudgetMax = 0,
-                DataNascita = DateTime.Today.AddYears(-30),
-                DataInserimento = DateTime.Now
-            };
-
             try
             {
-                _context.Clienti.Add(newCliente);
-                _context.SaveChanges();
+                System.Diagnostics.Debug.WriteLine("=== CREAZIONE NUOVO CLIENTE ===");
 
-                Clienti.Insert(0, newCliente);
-                SelectedCliente = newCliente;
+                var newCliente = new Cliente
+                {
+                    Nome = "Nuovo",
+                    Cognome = "Cliente",
+                    TipoCliente = "Acquirente",
+                    StatoCliente = "Prospect",
+                    FonteContatto = "Web",
+                    Email = "",
+                    Telefono = "",
+                    Cellulare = "",
+                    CodiceFiscale = "",
+                    Indirizzo = "",
+                    Citta = "",
+                    CAP = "",
+                    Provincia = "",
+                    Note = "",
+                    PreferenzeTipologia = "",
+                    PreferenzeZone = "",
+                    BudgetMin = 0,
+                    BudgetMax = 0,
+                    DataNascita = DateTime.Today.AddYears(-30),
+                    DataInserimento = DateTime.Now
+                };
+
+                using (var newContext = new ImmobiliContext())
+                {
+                    newContext.Clienti.Add(newCliente);
+                    var saved = newContext.SaveChanges();
+                    System.Diagnostics.Debug.WriteLine($"Cliente creato con ID: {newCliente.Id}, Records salvati: {saved}");
+                }
+
+                LoadClienti();
+
+                var createdCliente = Clienti.FirstOrDefault(c => c.Id == newCliente.Id);
+                if (createdCliente != null)
+                {
+                    SelectedCliente = createdCliente;
+                }
 
                 MessageBox.Show("Nuovo cliente creato con successo!",
                     "Successo", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
+                System.Diagnostics.Debug.WriteLine($"Errore AddCliente: {ex}");
                 MessageBox.Show($"Errore nella creazione del cliente: {ex.Message}",
                     "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
             }
@@ -306,42 +354,87 @@ namespace ImmobiGestio.ViewModels
 
         private void SaveCurrentCliente()
         {
-            if (SelectedCliente != null)
+            if (SelectedCliente == null) return;
+
+            try
             {
-                try
+                SelectedCliente.DataUltimaModifica = DateTime.Now;
+
+                using (var saveContext = new ImmobiliContext())
                 {
-                    var exists = _context.Clienti.Any(c => c.Id == SelectedCliente.Id);
-                    if (!exists) return;
+                    var clienteId = SelectedCliente.Id;
+                    var existingCliente = saveContext.Clienti
+                        .FirstOrDefault(c => c.Id == clienteId);
 
-                    SelectedCliente.DataUltimaModifica = DateTime.Now;
-
-                    // Detach eventuali entità già tracciate
-                    var tracked = _context.ChangeTracker.Entries<Cliente>()
-                        .FirstOrDefault(e => e.Entity.Id == SelectedCliente.Id);
-                    if (tracked != null)
+                    if (existingCliente != null)
                     {
-                        _context.Entry(tracked.Entity).State = EntityState.Detached;
+                        // AGGIORNAMENTO
+                        existingCliente.Nome = SelectedCliente.Nome;
+                        existingCliente.Cognome = SelectedCliente.Cognome;
+                        existingCliente.Email = SelectedCliente.Email;
+                        existingCliente.Telefono = SelectedCliente.Telefono;
+                        existingCliente.Cellulare = SelectedCliente.Cellulare;
+                        existingCliente.TipoCliente = SelectedCliente.TipoCliente;
+                        existingCliente.StatoCliente = SelectedCliente.StatoCliente;
+                        existingCliente.BudgetMin = SelectedCliente.BudgetMin;
+                        existingCliente.BudgetMax = SelectedCliente.BudgetMax;
+                        existingCliente.PreferenzeZone = SelectedCliente.PreferenzeZone;
+                        existingCliente.PreferenzeTipologia = SelectedCliente.PreferenzeTipologia;
+                        existingCliente.Note = SelectedCliente.Note;
+                        existingCliente.CodiceFiscale = SelectedCliente.CodiceFiscale;
+                        existingCliente.Indirizzo = SelectedCliente.Indirizzo;
+                        existingCliente.Citta = SelectedCliente.Citta;
+                        existingCliente.CAP = SelectedCliente.CAP;
+                        existingCliente.Provincia = SelectedCliente.Provincia;
+                        existingCliente.DataNascita = SelectedCliente.DataNascita;
+                        existingCliente.FonteContatto = SelectedCliente.FonteContatto;
+                        existingCliente.DataUltimaModifica = DateTime.Now;
+
+                        saveContext.Update(existingCliente);
+                        System.Diagnostics.Debug.WriteLine($"Aggiornamento cliente ID {clienteId}");
+                    }
+                    else
+                    {
+                        saveContext.Clienti.Add(SelectedCliente);
+                        System.Diagnostics.Debug.WriteLine($"Nuovo cliente in creazione");
                     }
 
-                    _context.Update(SelectedCliente);
-                    _context.SaveChanges();
+                    var saved = saveContext.SaveChanges();
+                    System.Diagnostics.Debug.WriteLine($"SaveCurrentCliente completato: {saved} record salvati");
                 }
-                catch (Exception ex)
+            }
+            catch (Exception ex)
+            {
+                if (!_isDeleting)
                 {
-                    if (!_isDeleting)
-                    {
-                        MessageBox.Show($"Errore nel salvataggio del cliente: {ex.Message}",
-                            "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
-                    }
+                    System.Diagnostics.Debug.WriteLine($"Errore SaveCurrentCliente: {ex}");
+                    MessageBox.Show($"Errore nel salvataggio del cliente: {ex.Message}",
+                        "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
         }
 
         private void SaveCliente(object? parameter)
         {
-            SaveCurrentCliente();
-            MessageBox.Show("Cliente salvato con successo!",
-                "Successo", MessageBoxButton.OK, MessageBoxImage.Information);
+            try
+            {
+                if (SelectedCliente == null)
+                {
+                    MessageBox.Show("Nessun cliente selezionato da salvare.",
+                        "Attenzione", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                SaveCurrentCliente();
+                MessageBox.Show("Cliente salvato con successo!",
+                    "Successo", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Errore SaveCliente: {ex}");
+                MessageBox.Show($"Errore nel salvataggio: {ex.Message}",
+                    "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private void DeleteCliente(object? parameter)
@@ -363,30 +456,35 @@ namespace ImmobiGestio.ViewModels
                     var clienteId = SelectedCliente.Id;
                     var clienteNome = SelectedCliente.NomeCompleto;
 
-                    var clienteToDelete = _context.Clienti
-                        .Include(c => c.Appuntamenti)
-                        .Include(c => c.ImmobiliDiInteresse)
-                        .FirstOrDefault(c => c.Id == clienteId);
-
-                    if (clienteToDelete != null)
+                    using (var deleteContext = new ImmobiliContext())
                     {
-                        _context.Clienti.Remove(clienteToDelete);
-                        _context.SaveChanges();
+                        var clienteToDelete = deleteContext.Clienti
+                            .Include(c => c.Appuntamenti)
+                            .Include(c => c.ImmobiliDiInteresse)
+                            .FirstOrDefault(c => c.Id == clienteId);
 
-                        var uiCliente = Clienti.FirstOrDefault(c => c.Id == clienteId);
-                        if (uiCliente != null)
+                        if (clienteToDelete != null)
                         {
-                            Clienti.Remove(uiCliente);
+                            deleteContext.Clienti.Remove(clienteToDelete);
+                            var deletedRecords = deleteContext.SaveChanges();
+                            System.Diagnostics.Debug.WriteLine($"Cliente eliminato: {deletedRecords} record interessati");
                         }
-
-                        SelectedCliente = Clienti.FirstOrDefault();
-
-                        MessageBox.Show($"Cliente '{clienteNome}' eliminato con successo!",
-                            "Successo", MessageBoxButton.OK, MessageBoxImage.Information);
                     }
+
+                    var uiCliente = Clienti.FirstOrDefault(c => c.Id == clienteId);
+                    if (uiCliente != null)
+                    {
+                        Clienti.Remove(uiCliente);
+                    }
+
+                    SelectedCliente = Clienti.FirstOrDefault();
+
+                    MessageBox.Show($"Cliente '{clienteNome}' eliminato con successo!",
+                        "Successo", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
                 catch (Exception ex)
                 {
+                    System.Diagnostics.Debug.WriteLine($"Errore DeleteCliente: {ex}");
                     MessageBox.Show($"Errore nell'eliminazione del cliente: {ex.Message}",
                         "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
                     LoadClienti();
@@ -398,7 +496,6 @@ namespace ImmobiGestio.ViewModels
             }
         }
 
-        // METODO FIX: AddAppuntamento corretto per ClientiViewModel
         private void AddAppuntamento(object? parameter)
         {
             if (SelectedCliente == null)
@@ -410,73 +507,58 @@ namespace ImmobiGestio.ViewModels
 
             try
             {
-                // Salva prima il cliente corrente
-                SaveCurrentCliente();
-
-                // Crea l'appuntamento con valori diretti
-                var newAppuntamento = new Appuntamento
+                // Verifica che il cliente esista
+                using (var checkContext = new ImmobiliContext())
                 {
-                    ClienteId = SelectedCliente.Id,
-                    Titolo = $"Appuntamento con {SelectedCliente.NomeCompleto}",
-                    Descrizione = $"Incontro con il cliente {SelectedCliente.NomeCompleto}",
-                    DataInizio = DateTime.Now.AddDays(1),
-                    DataFine = DateTime.Now.AddDays(1).AddHours(1),
-                    TipoAppuntamento = "Incontro",
-                    StatoAppuntamento = "Programmato",
-                    Priorita = "Media",
-                    Luogo = "Ufficio",
-                    NotePrivate = $"Appuntamento creato dalla scheda cliente: {SelectedCliente.NomeCompleto}",
-                    EsitoIncontro = "",
-                    OutlookEventId = "",
-                    CreatoDa = "Sistema",
-                    DataCreazione = DateTime.Now,
-                    SincronizzatoOutlook = false,
-                    NotificaInviata = false,
-                    RichiedeConferma = true
-                };
+                    var clienteExists = checkContext.Clienti.Any(c => c.Id == SelectedCliente.Id);
+                    if (!clienteExists)
+                    {
+                        MessageBox.Show("Errore: Il cliente selezionato non esiste nel database!\n" +
+                                       "Salva prima il cliente, poi crea l'appuntamento.",
+                            "Errore Database", MessageBoxButton.OK, MessageBoxImage.Error);
+                        return;
+                    }
+                }
 
-                // Log per debug
+                // USA IL FACTORY METHOD
+                var newAppuntamento = Appuntamento.CreaPerCliente(
+                    SelectedCliente.Id,
+                    SelectedCliente.NomeCompleto
+                );
+
+                newAppuntamento.NotePrivate = $"Appuntamento creato dalla scheda cliente: {SelectedCliente.NomeCompleto}";
+
                 System.Diagnostics.Debug.WriteLine($"=== CREAZIONE APPUNTAMENTO DA CLIENTE ===");
                 System.Diagnostics.Debug.WriteLine($"ClienteId: {newAppuntamento.ClienteId}");
                 System.Diagnostics.Debug.WriteLine($"Cliente: {SelectedCliente.NomeCompleto}");
 
-                // Usa un nuovo contesto per evitare conflitti
+                if (!newAppuntamento.IsValid())
+                {
+                    MessageBox.Show("Errore: L'appuntamento creato non è valido.",
+                        "Errore Validazione", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+
                 using (var newContext = new ImmobiliContext())
                 {
-                    var clienteExists = newContext.Clienti.Any(c => c.Id == SelectedCliente.Id);
-                    if (!clienteExists)
-                    {
-                        MessageBox.Show("Errore: Il cliente selezionato non esiste nel database!",
-                            "Errore Database", MessageBoxButton.OK, MessageBoxImage.Error);
-                        return;
-                    }
-
                     newContext.Appuntamenti.Add(newAppuntamento);
-                    newContext.SaveChanges();
-
+                    var saved = newContext.SaveChanges();
                     System.Diagnostics.Debug.WriteLine($"Appuntamento salvato con ID: {newAppuntamento.Id}");
                 }
 
-                // Ricarica gli appuntamenti del cliente
                 RefreshCurrentCollections();
-
-                // Notifica agli altri ViewModels
                 AppuntamentoCreated?.Invoke();
 
                 MessageBox.Show($"Appuntamento creato con successo per {SelectedCliente.NomeCompleto}!\n\n" +
-                               $"Data: {newAppuntamento.DataInizio:dd/MM/yyyy HH:mm}",
+                               $"Data: {newAppuntamento.DataInizio:dd/MM/yyyy HH:mm}\n" +
+                               $"Tipo: {newAppuntamento.TipoAppuntamento}",
                     "Successo", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
-                var message = $"Errore nella creazione dell'appuntamento:\n\n{ex.Message}";
-                if (ex.InnerException != null)
-                {
-                    message += $"\n\nDettagli: {ex.InnerException.Message}";
-                }
-
-                MessageBox.Show(message, "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
                 System.Diagnostics.Debug.WriteLine($"Errore AddAppuntamento: {ex}");
+                MessageBox.Show($"Errore nella creazione dell'appuntamento: {ex.Message}",
+                    "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -486,7 +568,6 @@ namespace ImmobiGestio.ViewModels
 
             try
             {
-                // Prendi il primo immobile disponibile per esempio
                 var immobile = _context.Immobili
                     .FirstOrDefault(i => i.StatoVendita == "Disponibile");
 
@@ -543,8 +624,6 @@ namespace ImmobiGestio.ViewModels
                             _context.SaveChanges();
 
                             AppuntamentiCliente.Remove(appuntamento);
-
-                            // Notifica agli altri ViewModels
                             AppuntamentoCreated?.Invoke();
 
                             MessageBox.Show("Appuntamento eliminato con successo!",
@@ -678,14 +757,45 @@ namespace ImmobiGestio.ViewModels
             }
         }
 
+        public void RefreshSelectedCliente()
+        {
+            if (SelectedCliente != null)
+            {
+                try
+                {
+                    var clienteId = SelectedCliente.Id;
+
+                    using (var refreshContext = new ImmobiliContext())
+                    {
+                        var updatedCliente = refreshContext.Clienti
+                            .AsNoTracking()
+                            .FirstOrDefault(c => c.Id == clienteId);
+
+                        if (updatedCliente != null)
+                        {
+                            SelectedCliente = updatedCliente;
+                            System.Diagnostics.Debug.WriteLine($"Cliente ID {clienteId} ricaricato dal database");
+                        }
+                    }
+
+                    RefreshCurrentCollections();
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Errore RefreshSelectedCliente: {ex.Message}");
+                }
+            }
+        }
+
         public void OnApplicationClosing()
         {
             try
             {
-                if (!_isDeleting)
+                if (!_isDeleting && SelectedCliente != null)
                 {
                     SaveCurrentCliente();
                 }
+                System.Diagnostics.Debug.WriteLine("ClientiViewModel cleanup completato");
             }
             catch (Exception ex)
             {

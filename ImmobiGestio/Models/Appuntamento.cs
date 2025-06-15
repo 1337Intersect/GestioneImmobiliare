@@ -11,35 +11,35 @@ namespace ImmobiGestio.Models
 
         [Required]
         [StringLength(200)]
-        public string Titolo { get; set; } = "Nuovo Appuntamento";
+        public string Titolo { get; set; } = string.Empty;
 
         [StringLength(1000)]
         public string Descrizione { get; set; } = string.Empty;
 
         [Required]
-        public DateTime DataInizio { get; set; } = DateTime.Now.AddHours(1);
+        public DateTime DataInizio { get; set; }
 
         [Required]
-        public DateTime DataFine { get; set; } = DateTime.Now.AddHours(2);
+        public DateTime DataFine { get; set; }
 
         [Required]
         [StringLength(500)]
-        public string Luogo { get; set; } = "Ufficio";
+        public string Luogo { get; set; } = string.Empty;
 
         [Required]
         [StringLength(50)]
-        public string TipoAppuntamento { get; set; } = "Visita"; // Visita, Incontro, Chiamata, Firma
+        public string TipoAppuntamento { get; set; } = string.Empty;
 
         [Required]
         [StringLength(50)]
-        public string StatoAppuntamento { get; set; } = "Programmato"; // Programmato, Confermato, Completato, Annullato
+        public string StatoAppuntamento { get; set; } = string.Empty;
 
         public int? ClienteId { get; set; }
         public int? ImmobileId { get; set; }
 
         [Required]
         [StringLength(20)]
-        public string Priorita { get; set; } = "Media"; // Bassa, Media, Alta
+        public string Priorita { get; set; } = string.Empty;
 
         public bool RichiedeConferma { get; set; } = true;
         public DateTime? DataConferma { get; set; }
@@ -59,13 +59,13 @@ namespace ImmobiGestio.Models
         public string OutlookEventId { get; set; } = string.Empty;
 
         [Required]
-        public DateTime DataCreazione { get; set; } = DateTime.Now;
+        public DateTime DataCreazione { get; set; }
 
         public DateTime? DataUltimaModifica { get; set; }
 
         [Required]
         [StringLength(100)]
-        public string CreatoDa { get; set; } = "Sistema";
+        public string CreatoDa { get; set; } = string.Empty;
 
         // Proprietà calcolate
         [NotMapped]
@@ -78,7 +78,7 @@ namespace ImmobiGestio.Models
         public bool IsProssimo => DataInizio.Date > DateTime.Today && DataInizio.Date <= DateTime.Today.AddDays(7);
 
         [NotMapped]
-        public bool IsScaduto => DataInizio < DateTime.Now && StatoAppuntamento == "Programmato";
+        public bool IsScaduto => DataInizio < DateTime.Now && StatoAppuntamento == StatiAppuntamento.Programmato;
 
         [NotMapped]
         public string DurataFormattata
@@ -118,20 +118,25 @@ namespace ImmobiGestio.Models
         [ForeignKey("ImmobileId")]
         public virtual Immobile? Immobile { get; set; }
 
+        // COSTRUTTORE CORRETTO CON COSTANTI
         public Appuntamento()
         {
-            // Imposta tutti i valori di default nel costruttore
+            // Date
             DataCreazione = DateTime.Now;
             DataInizio = DateTime.Now.AddHours(1);
             DataFine = DateTime.Now.AddHours(2);
 
-            StatoAppuntamento = "Programmato";
-            TipoAppuntamento = "Visita";
-            Priorita = "Media";
-            Luogo = "Ufficio";
+            // USA LE COSTANTI - CRITICO!
+            StatoAppuntamento = StatiAppuntamento.Programmato;
+            TipoAppuntamento = TipiAppuntamento.Visita;
+            Priorita = PrioritaAppuntamento.Media;
+
+            // Valori di default
             Titolo = "Nuovo Appuntamento";
+            Luogo = "Ufficio";
             CreatoDa = "Sistema";
 
+            // Booleani
             RichiedeConferma = true;
             NotificaInviata = false;
             SincronizzatoOutlook = false;
@@ -143,22 +148,60 @@ namespace ImmobiGestio.Models
             OutlookEventId = string.Empty;
         }
 
+        // FACTORY METHOD per creare appuntamenti corretti
+        public static Appuntamento CreaPerCliente(int clienteId, string nomeCliente)
+        {
+            return new Appuntamento
+            {
+                ClienteId = clienteId,
+                Titolo = $"Appuntamento con {nomeCliente}",
+                Descrizione = $"Incontro con il cliente {nomeCliente}",
+                DataInizio = DateTime.Now.AddDays(1),
+                DataFine = DateTime.Now.AddDays(1).AddHours(1),
+                TipoAppuntamento = TipiAppuntamento.Incontro,
+                StatoAppuntamento = StatiAppuntamento.Programmato,
+                Priorita = PrioritaAppuntamento.Media,
+                Luogo = "Ufficio",
+                CreatoDa = "Sistema",
+                DataCreazione = DateTime.Now
+            };
+        }
+
+        public static Appuntamento CreaPerImmobile(int immobileId, string titoloImmobile, string indirizzo)
+        {
+            return new Appuntamento
+            {
+                ImmobileId = immobileId,
+                Titolo = $"Visita - {titoloImmobile}",
+                Descrizione = $"Visita dell'immobile: {titoloImmobile}",
+                DataInizio = DateTime.Now.AddDays(1),
+                DataFine = DateTime.Now.AddDays(1).AddHours(1),
+                TipoAppuntamento = TipiAppuntamento.Visita,
+                StatoAppuntamento = StatiAppuntamento.Programmato,
+                Priorita = PrioritaAppuntamento.Media,
+                Luogo = indirizzo,
+                CreatoDa = "Sistema",
+                DataCreazione = DateTime.Now
+            };
+        }
+
         // Metodi di utilità
         public bool PuoEssereModificato()
         {
-            return StatoAppuntamento == "Programmato" || StatoAppuntamento == "Confermato";
+            return StatoAppuntamento == StatiAppuntamento.Programmato ||
+                   StatoAppuntamento == StatiAppuntamento.Confermato;
         }
 
         public bool PuoEssereCancellato()
         {
-            return StatoAppuntamento != "Completato";
+            return StatoAppuntamento != StatiAppuntamento.Completato;
         }
 
         public void Conferma()
         {
-            if (StatoAppuntamento == "Programmato")
+            if (StatoAppuntamento == StatiAppuntamento.Programmato)
             {
-                StatoAppuntamento = "Confermato";
+                StatoAppuntamento = StatiAppuntamento.Confermato;
                 DataConferma = DateTime.Now;
                 DataUltimaModifica = DateTime.Now;
             }
@@ -166,7 +209,7 @@ namespace ImmobiGestio.Models
 
         public void Completa(string? esito = null)
         {
-            StatoAppuntamento = "Completato";
+            StatoAppuntamento = StatiAppuntamento.Completato;
             if (!string.IsNullOrEmpty(esito))
                 EsitoIncontro = esito;
             DataUltimaModifica = DateTime.Now;
@@ -176,13 +219,28 @@ namespace ImmobiGestio.Models
         {
             if (PuoEssereCancellato())
             {
-                StatoAppuntamento = "Annullato";
+                StatoAppuntamento = StatiAppuntamento.Annullato;
                 DataUltimaModifica = DateTime.Now;
             }
         }
+
+        // Metodo per validare che tutti i campi obbligatori siano impostati
+        public bool IsValid()
+        {
+            return !string.IsNullOrEmpty(Titolo) &&
+                   !string.IsNullOrEmpty(TipoAppuntamento) &&
+                   !string.IsNullOrEmpty(StatoAppuntamento) &&
+                   !string.IsNullOrEmpty(Priorita) &&
+                   !string.IsNullOrEmpty(Luogo) &&
+                   !string.IsNullOrEmpty(CreatoDa) &&
+                   DataInizio != default &&
+                   DataFine != default &&
+                   DataCreazione != default &&
+                   DataFine > DataInizio;
+        }
     }
 
-    // Enum helper per migliorare l'usabilità
+    // Enum helper per migliorare l'usabilità - CORRETTI E FUNZIONANTI
     public static class TipiAppuntamento
     {
         public const string Visita = "Visita";

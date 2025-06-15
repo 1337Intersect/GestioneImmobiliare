@@ -56,7 +56,7 @@ namespace ImmobiGestio.ViewModels
         public ICommand? QuickAddAppuntamentoCommand { get; set; }
 
         // Menu Commands
-        public ICommand? RefreshCommand { get; set; } // <- QUESTO ERA MANCANTE!
+        public ICommand? RefreshCommand { get; set; }
         public ICommand? ExitApplicationCommand { get; set; }
         public ICommand? AboutCommand { get; set; }
         public ICommand? BackupDatabaseCommand { get; set; }
@@ -71,28 +71,52 @@ namespace ImmobiGestio.ViewModels
 
         public MainViewModel()
         {
-            _context = new ImmobiliContext();
-            _context.Database.EnsureCreated();
+            try
+            {
+                _context = new ImmobiliContext();
+                _context.Database.EnsureCreated();
 
-            InitializeViewModels();
-            InitializeCommands();
-            SetupNavigationEvents();
+                InitializeViewModels();
+                InitializeCommands();
+                SetupNavigationEvents();
 
-            // Imposta la vista iniziale
-            NavigateToDashboard();
+                // Imposta la vista iniziale
+                NavigateToDashboard();
+
+                System.Diagnostics.Debug.WriteLine("MainViewModel inizializzato correttamente");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Errore inizializzazione MainViewModel: {ex}");
+                MessageBox.Show($"Errore nell'inizializzazione dell'applicazione: {ex.Message}",
+                    "Errore Critico", MessageBoxButton.OK, MessageBoxImage.Error);
+                throw;
+            }
         }
 
         private void InitializeViewModels()
         {
             try
             {
+                System.Diagnostics.Debug.WriteLine("=== INIZIALIZZAZIONE VIEWMODELS ===");
+
                 DashboardViewModel = new DashboardViewModel(_context);
+                System.Diagnostics.Debug.WriteLine("DashboardViewModel creato");
+
                 ImmobiliViewModel = new ImmobiliViewModel(_context);
+                System.Diagnostics.Debug.WriteLine("ImmobiliViewModel creato");
+
                 ClientiViewModel = new ClientiViewModel(_context);
+                System.Diagnostics.Debug.WriteLine("ClientiViewModel creato");
+
                 AppuntamentiViewModel = new AppuntamentiViewModel(_context);
+                System.Diagnostics.Debug.WriteLine("AppuntamentiViewModel creato");
+
+                System.Diagnostics.Debug.WriteLine("Tutti i ViewModels creati con successo");
             }
             catch (Exception ex)
             {
+                System.Diagnostics.Debug.WriteLine($"Errore InitializeViewModels: {ex}");
                 MessageBox.Show($"Errore nell'inizializzazione: {ex.Message}",
                     "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
                 throw;
@@ -113,66 +137,50 @@ namespace ImmobiGestio.ViewModels
             QuickAddAppuntamentoCommand = new RelayCommand(_ => QuickAddAppuntamento());
 
             // Menu Commands
-            RefreshCommand = new RelayCommand(_ => RefreshAllData()); // <- AGGIUNTO!
+            RefreshCommand = new RelayCommand(_ => RefreshAllData());
             ExitApplicationCommand = new RelayCommand(_ => ExitApplication());
             AboutCommand = new RelayCommand(_ => ShowAbout());
             BackupDatabaseCommand = new RelayCommand(_ => BackupDatabase());
             RestoreDatabaseCommand = new RelayCommand(_ => RestoreDatabase());
             SettingsCommand = new RelayCommand(_ => ShowSettings());
+
+            System.Diagnostics.Debug.WriteLine("Comandi inizializzati");
         }
 
         private void SetupNavigationEvents()
         {
-            // Dashboard navigation events
-            if (DashboardViewModel != null)
-            {
-                DashboardViewModel.NavigateToClienti += () => NavigateToClienti();
-                DashboardViewModel.NavigateToImmobili += () => NavigateToImmobili();
-                DashboardViewModel.NavigateToAppuntamenti += () => NavigateToAppuntamenti();
-                DashboardViewModel.NavigateToCliente += (id) => NavigateToCliente(id);
-                DashboardViewModel.NavigateToImmobile += (id) => NavigateToImmobile(id);
-                DashboardViewModel.NavigateToAppuntamento += (id) => NavigateToAppuntamento(id);
-            }
-
-            // Immobili navigation events
-            if (ImmobiliViewModel != null)
-            {
-                ImmobiliViewModel.NavigateToCliente += (id) => NavigateToCliente(id);
-                ImmobiliViewModel.NavigateToAppuntamento += (id) => NavigateToAppuntamento(id);
-            }
-
-            // Eventi per sincronizzare i ViewModels quando si creano nuovi oggetti
-            if (ClientiViewModel != null)
-            {
-                ClientiViewModel.AppuntamentoCreated += OnAppuntamentoCreated;
-            }
-
-            if (ImmobiliViewModel != null)
-            {
-                ImmobiliViewModel.AppuntamentoCreated += OnAppuntamentoCreated;
-            }
-        }
-
-        // Evento per sincronizzare quando viene creato un appuntamento
-        private void OnAppuntamentoCreated()
-        {
             try
             {
-                // Ricarica gli appuntamenti in AppuntamentiViewModel
-                AppuntamentiViewModel?.LoadAppuntamenti();
-
-                // Ricarica anche la dashboard se necessario
-                if (CurrentView == "Dashboard")
+                // Dashboard navigation events
+                if (DashboardViewModel != null)
                 {
-                    DashboardViewModel?.LoadDashboardData();
+                    DashboardViewModel.NavigateToClienti += () => NavigateToClienti();
+                    DashboardViewModel.NavigateToImmobili += () => NavigateToImmobili();
+                    DashboardViewModel.NavigateToAppuntamenti += () => NavigateToAppuntamenti();
+                    DashboardViewModel.NavigateToCliente += (id) => NavigateToCliente(id);
+                    DashboardViewModel.NavigateToImmobile += (id) => NavigateToImmobile(id);
+                    DashboardViewModel.NavigateToAppuntamento += (id) => NavigateToAppuntamento(id);
                 }
 
-                // Aggiorna lo status
-                RefreshStatusMessage();
+                // Immobili navigation events
+                if (ImmobiliViewModel != null)
+                {
+                    ImmobiliViewModel.NavigateToCliente += (id) => NavigateToCliente(id);
+                    ImmobiliViewModel.NavigateToAppuntamento += (id) => NavigateToAppuntamento(id);
+                    ImmobiliViewModel.AppuntamentoCreated += () => OnDataChanged("appuntamento");
+                }
+
+                // Eventi per sincronizzare i ViewModels quando si creano nuovi oggetti
+                if (ClientiViewModel != null)
+                {
+                    ClientiViewModel.AppuntamentoCreated += () => OnDataChanged("appuntamento");
+                }
+
+                System.Diagnostics.Debug.WriteLine("Eventi di navigazione configurati");
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Errore nell'aggiornamento dopo creazione appuntamento: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Errore SetupNavigationEvents: {ex.Message}");
             }
         }
 
@@ -180,63 +188,127 @@ namespace ImmobiGestio.ViewModels
 
         public void NavigateToDashboard()
         {
-            CurrentView = "Dashboard";
-            CurrentViewModel = DashboardViewModel;
-            DashboardViewModel?.LoadDashboardData();
-            RefreshActiveFlags();
-        }
-
-        public void NavigateToImmobili()
-        {
-            CurrentView = "Immobili";
-            CurrentViewModel = ImmobiliViewModel;
-            RefreshActiveFlags();
+            try
+            {
+                CurrentView = "Dashboard";
+                CurrentViewModel = DashboardViewModel;
+                DashboardViewModel?.LoadDashboardData();
+                RefreshActiveFlags();
+                System.Diagnostics.Debug.WriteLine("Navigazione a Dashboard completata");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Errore NavigateToDashboard: {ex.Message}");
+            }
         }
 
         public void NavigateToClienti()
         {
-            CurrentView = "Clienti";
-            CurrentViewModel = ClientiViewModel;
-            RefreshActiveFlags();
+            try
+            {
+                CurrentView = "Clienti";
+                CurrentViewModel = ClientiViewModel;
+                ClientiViewModel?.LoadClienti();
+                RefreshActiveFlags();
+                System.Diagnostics.Debug.WriteLine("Navigazione a Clienti completata");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Errore NavigateToClienti: {ex.Message}");
+            }
+        }
+
+        public void NavigateToImmobili()
+        {
+            try
+            {
+                CurrentView = "Immobili";
+                CurrentViewModel = ImmobiliViewModel;
+                ImmobiliViewModel?.LoadImmobili();
+                RefreshActiveFlags();
+                System.Diagnostics.Debug.WriteLine("Navigazione a Immobili completata");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Errore NavigateToImmobili: {ex.Message}");
+            }
         }
 
         public void NavigateToAppuntamenti()
         {
-            CurrentView = "Appuntamenti";
-            CurrentViewModel = AppuntamentiViewModel;
-            RefreshActiveFlags();
+            try
+            {
+                System.Diagnostics.Debug.WriteLine("=== NAVIGAZIONE A APPUNTAMENTI ===");
+
+                CurrentView = "Appuntamenti";
+                CurrentViewModel = AppuntamentiViewModel;
+
+                // REFRESH AUTOMATICO completo quando si naviga
+                AppuntamentiViewModel?.LoadAllData();
+
+                RefreshActiveFlags();
+
+                System.Diagnostics.Debug.WriteLine("Navigazione a Appuntamenti completata con refresh");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Errore NavigateToAppuntamenti: {ex.Message}");
+                MessageBox.Show($"Errore nella navigazione agli appuntamenti: {ex.Message}",
+                    "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         public void NavigateToCliente(int clienteId)
         {
-            NavigateToClienti();
-
-            var cliente = ClientiViewModel?.Clienti.FirstOrDefault(c => c.Id == clienteId);
-            if (cliente != null && ClientiViewModel != null)
+            try
             {
-                ClientiViewModel.SelectedCliente = cliente;
+                NavigateToClienti();
+
+                var cliente = ClientiViewModel?.Clienti.FirstOrDefault(c => c.Id == clienteId);
+                if (cliente != null && ClientiViewModel != null)
+                {
+                    ClientiViewModel.SelectedCliente = cliente;
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Errore NavigateToCliente: {ex.Message}");
             }
         }
 
         public void NavigateToImmobile(int immobileId)
         {
-            NavigateToImmobili();
-
-            var immobile = ImmobiliViewModel?.Immobili.FirstOrDefault(i => i.Id == immobileId);
-            if (immobile != null && ImmobiliViewModel != null)
+            try
             {
-                ImmobiliViewModel.SelectedImmobile = immobile;
+                NavigateToImmobili();
+
+                var immobile = ImmobiliViewModel?.Immobili.FirstOrDefault(i => i.Id == immobileId);
+                if (immobile != null && ImmobiliViewModel != null)
+                {
+                    ImmobiliViewModel.SelectedImmobile = immobile;
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Errore NavigateToImmobile: {ex.Message}");
             }
         }
 
         public void NavigateToAppuntamento(int appuntamentoId)
         {
-            NavigateToAppuntamenti();
-
-            var appuntamento = AppuntamentiViewModel?.Appuntamenti.FirstOrDefault(a => a.Id == appuntamentoId);
-            if (appuntamento != null && AppuntamentiViewModel != null)
+            try
             {
-                AppuntamentiViewModel.SelectedAppuntamento = appuntamento;
+                NavigateToAppuntamenti();
+
+                var appuntamento = AppuntamentiViewModel?.Appuntamenti.FirstOrDefault(a => a.Id == appuntamentoId);
+                if (appuntamento != null && AppuntamentiViewModel != null)
+                {
+                    AppuntamentiViewModel.SelectedAppuntamento = appuntamento;
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Errore NavigateToAppuntamento: {ex.Message}");
             }
         }
 
@@ -266,20 +338,41 @@ namespace ImmobiGestio.ViewModels
 
         private void QuickAddImmobile()
         {
-            NavigateToImmobili();
-            ImmobiliViewModel?.AddImmobileCommand?.Execute(null);
+            try
+            {
+                NavigateToImmobili();
+                ImmobiliViewModel?.AddImmobileCommand?.Execute(null);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Errore QuickAddImmobile: {ex.Message}");
+            }
         }
 
         private void QuickAddCliente()
         {
-            NavigateToClienti();
-            ClientiViewModel?.AddClienteCommand?.Execute(null);
+            try
+            {
+                NavigateToClienti();
+                ClientiViewModel?.AddClienteCommand?.Execute(null);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Errore QuickAddCliente: {ex.Message}");
+            }
         }
 
         private void QuickAddAppuntamento()
         {
-            NavigateToAppuntamenti();
-            AppuntamentiViewModel?.AddAppuntamentoCommand?.Execute(null);
+            try
+            {
+                NavigateToAppuntamenti();
+                AppuntamentiViewModel?.AddAppuntamentoCommand?.Execute(null);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Errore QuickAddAppuntamento: {ex.Message}");
+            }
         }
 
         #endregion
@@ -379,8 +472,9 @@ namespace ImmobiGestio.ViewModels
 
                     return $"Immobili: {totaleImmobili} • Clienti: {totaleClienti} • Appuntamenti oggi: {appuntamentiOggi}";
                 }
-                catch
+                catch (Exception ex)
                 {
+                    System.Diagnostics.Debug.WriteLine($"Errore StatusMessage: {ex.Message}");
                     return "Pronto";
                 }
             }
@@ -388,36 +482,50 @@ namespace ImmobiGestio.ViewModels
 
         public void RefreshStatusMessage()
         {
-            OnPropertyChanged(nameof(StatusMessage));
+            try
+            {
+                OnPropertyChanged(nameof(StatusMessage));
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Errore RefreshStatusMessage: {ex.Message}");
+            }
         }
 
         public void RefreshAllData()
         {
             try
             {
+                System.Diagnostics.Debug.WriteLine("=== REFRESH GLOBALE DATI ===");
+
+                // Refresh sempre la dashboard
                 DashboardViewModel?.LoadDashboardData();
 
-                if (CurrentView == "Immobili")
+                // Refresh la vista corrente
+                switch (CurrentView)
                 {
-                    ImmobiliViewModel?.LoadImmobili();
-                }
-                else if (CurrentView == "Clienti")
-                {
-                    ClientiViewModel?.LoadClienti();
-                    ClientiViewModel?.RefreshCurrentCollections();
-                }
-                else if (CurrentView == "Appuntamenti")
-                {
-                    AppuntamentiViewModel?.LoadAppuntamenti();
+                    case "Immobili":
+                        ImmobiliViewModel?.LoadImmobili();
+                        break;
+                    case "Clienti":
+                        ClientiViewModel?.LoadClienti();
+                        ClientiViewModel?.RefreshCurrentCollections();
+                        break;
+                    case "Appuntamenti":
+                        AppuntamentiViewModel?.LoadAllData();
+                        break;
                 }
 
                 RefreshStatusMessage();
 
                 MessageBox.Show("Dati aggiornati con successo!", "Aggiornamento",
                     MessageBoxButton.OK, MessageBoxImage.Information);
+
+                System.Diagnostics.Debug.WriteLine("Refresh globale completato");
             }
             catch (Exception ex)
             {
+                System.Diagnostics.Debug.WriteLine($"Errore RefreshAllData: {ex.Message}");
                 MessageBox.Show($"Errore nell'aggiornamento dei dati: {ex.Message}",
                     "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
             }
@@ -427,9 +535,13 @@ namespace ImmobiGestio.ViewModels
         {
             try
             {
+                System.Diagnostics.Debug.WriteLine("=== CHIUSURA APPLICAZIONE ===");
+
                 ImmobiliViewModel?.OnApplicationClosing();
                 ClientiViewModel?.OnApplicationClosing();
                 AppuntamentiViewModel?.OnApplicationClosing();
+
+                System.Diagnostics.Debug.WriteLine("Cleanup ViewModels completato");
             }
             catch (Exception ex)
             {
@@ -437,7 +549,84 @@ namespace ImmobiGestio.ViewModels
             }
             finally
             {
-                _context?.Dispose();
+                try
+                {
+                    _context?.Dispose();
+                    System.Diagnostics.Debug.WriteLine("Context disposed");
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Errore dispose context: {ex.Message}");
+                }
+            }
+        }
+
+        private void OnDataChanged(string dataType, int? id = null)
+        {
+            try
+            {
+                System.Diagnostics.Debug.WriteLine($"=== NOTIFICA CAMBIO DATI: {dataType} ===");
+
+                switch (dataType.ToLower())
+                {
+                    case "appuntamento":
+                        // Ricarica appuntamenti se è la vista corrente
+                        if (CurrentView == "Appuntamenti")
+                        {
+                            AppuntamentiViewModel?.LoadAllData();
+                        }
+                        else
+                        {
+                            // Ricarica solo i dati necessari per gli altri ViewModels
+                            AppuntamentiViewModel?.LoadAppuntamenti();
+                        }
+                        // Aggiorna sempre la dashboard
+                        DashboardViewModel?.LoadDashboardData();
+                        break;
+
+                    case "cliente":
+                        ClientiViewModel?.LoadClienti();
+                        AppuntamentiViewModel?.LoadClientiEImmobiliDisponibili();
+                        if (CurrentView == "Dashboard")
+                            DashboardViewModel?.LoadDashboardData();
+                        break;
+
+                    case "immobile":
+                        ImmobiliViewModel?.LoadImmobili();
+                        AppuntamentiViewModel?.LoadClientiEImmobiliDisponibili();
+                        if (CurrentView == "Dashboard")
+                            DashboardViewModel?.LoadDashboardData();
+                        break;
+                }
+
+                RefreshStatusMessage();
+                System.Diagnostics.Debug.WriteLine($"Sincronizzazione {dataType} completata");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Errore sincronizzazione {dataType}: {ex.Message}");
+            }
+        }
+
+        public void TestSync()
+        {
+            try
+            {
+                System.Diagnostics.Debug.WriteLine("=== TEST SINCRONIZZAZIONE ===");
+
+                // Forza il refresh di tutti i ViewModels
+                DashboardViewModel?.LoadDashboardData();
+                ImmobiliViewModel?.LoadImmobili();
+                ClientiViewModel?.LoadClienti();
+                AppuntamentiViewModel?.LoadAllData();
+
+                RefreshStatusMessage();
+
+                System.Diagnostics.Debug.WriteLine("Test sincronizzazione completato");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Errore TestSync: {ex.Message}");
             }
         }
     }

@@ -1,14 +1,16 @@
-﻿using System;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Windows.Input;
-using Microsoft.EntityFrameworkCore;
-using ImmobiGestio.Commands;
+﻿using ImmobiGestio.Commands;
 using ImmobiGestio.Data;
 using ImmobiGestio.Models;
 using ImmobiGestio.Services;
-using System.Windows;
+using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Input;
 
 namespace ImmobiGestio.ViewModels
 {
@@ -22,7 +24,7 @@ namespace ImmobiGestio.ViewModels
         private string _filtroStato = "Tutti";
         private string _filtroTipo = "Tutti";
         private DateTime _selectedDate = DateTime.Today;
-        private string _vistaCalendario = "Settimana"; // Giorno, Settimana, Mese
+        private string _vistaCalendario = "Mese";
         private bool _isDeleting = false;
         private bool _isOutlookConnected = false;
 
@@ -31,12 +33,13 @@ namespace ImmobiGestio.ViewModels
         public ObservableCollection<Cliente> ClientiDisponibili { get; set; } = new();
         public ObservableCollection<Immobile> ImmobiliDisponibili { get; set; } = new();
 
-        // Combo boxes data
+        // Combo boxes data - SEMPLIFICATI
         public ObservableCollection<string> TipiAppuntamento { get; set; } = new();
         public ObservableCollection<string> StatiAppuntamento { get; set; } = new();
         public ObservableCollection<string> PrioritaAppuntamento { get; set; } = new();
         public ObservableCollection<string> TipiAppuntamentoFiltro { get; set; } = new();
         public ObservableCollection<string> StatiAppuntamentoFiltro { get; set; } = new();
+        public ObservableCollection<CalendarDay> CalendarDays { get; set; } = new();
 
         public Appuntamento? SelectedAppuntamento
         {
@@ -47,8 +50,9 @@ namespace ImmobiGestio.ViewModels
                 {
                     SaveCurrentAppuntamento();
                 }
+
                 SetProperty(ref _selectedAppuntamento, value);
-                LoadClientiEImmobiliDisponibili();
+                OnPropertyChanged(nameof(SelectedAppuntamento));
             }
         }
 
@@ -89,6 +93,9 @@ namespace ImmobiGestio.ViewModels
             {
                 SetProperty(ref _selectedDate, value);
                 LoadEventiCalendario();
+                GenerateMiniCalendarDays();
+                GenerateMainCalendar(); // Aggiungi questa riga
+                OnPropertyChanged(nameof(TitoloVista));
             }
         }
 
@@ -99,6 +106,7 @@ namespace ImmobiGestio.ViewModels
             {
                 SetProperty(ref _vistaCalendario, value);
                 LoadEventiCalendario();
+                OnPropertyChanged(nameof(TitoloVista));
             }
         }
 
@@ -111,6 +119,39 @@ namespace ImmobiGestio.ViewModels
         // Proprietà calcolate per statistiche
         public int AppuntamentiCompletati => Appuntamenti?.Count(a => a.StatoAppuntamento == "Completato") ?? 0;
         public int AppuntamentiOggi => Appuntamenti?.Count(a => a.DataInizio.Date == DateTime.Today) ?? 0;
+
+        // NUOVE PROPRIETÀ PER VISTA OUTLOOK
+        // Proprietà per gli appuntamenti di oggi (per la sidebar)
+        public ObservableCollection<Appuntamento> AppuntamentiOggiCollection
+        {
+            get
+            {
+                var oggi = DateTime.Today;
+                var appuntamentiOggi = new ObservableCollection<Appuntamento>();
+
+                foreach (var app in Appuntamenti.Where(a => a.DataInizio.Date == oggi).OrderBy(a => a.DataInizio))
+                {
+                    appuntamentiOggi.Add(app);
+                }
+
+                return appuntamentiOggi;
+            }
+        }
+
+        // Proprietà per il titolo della vista
+        public string TitoloVista
+        {
+            get
+            {
+                return VistaCalendario switch
+                {
+                    "Giorno" => $"{SelectedDate:dddd, dd MMMM yyyy}",
+                    "Settimana" => GetTitoloSettimana(),
+                    "Mese" => $"{SelectedDate:MMMM yyyy}",
+                    _ => SelectedDate.ToString("MMMM yyyy")
+                };
+            }
+        }
 
         // Commands
         public ICommand? AddAppuntamentoCommand { get; set; }
@@ -128,6 +169,12 @@ namespace ImmobiGestio.ViewModels
         public ICommand? EsportaCalendarioCommand { get; set; }
         public ICommand? SelectAppuntamentoCommand { get; set; }
         public ICommand? ClearFiltriCommand { get; set; }
+        public ICommand? SetFiltroTipoCommand { get; set; }
+        public ICommand? SetFiltroStatoCommand { get; set; }
+        public ICommand? SelectDateCommand { get; set; }
+        public ICommand? RefreshCommand { get; set; }
+        public ObservableCollection<MiniCalendarDay> MiniCalendarDays { get; set; } = new();
+
 
         public AppuntamentiViewModel(ImmobiliContext context)
         {
@@ -137,46 +184,53 @@ namespace ImmobiGestio.ViewModels
 
             InitializeCollections();
             InitializeCommands();
-            LoadAppuntamenti();
-            LoadEventiCalendario();
-            LoadClientiEImmobiliDisponibili();
+            LoadAllData();
+
+            // Inizializza le notifiche per le nuove proprietà
+            OnPropertyChanged(nameof(AppuntamentiOggiCollection));
+            OnPropertyChanged(nameof(TitoloVista));
         }
 
         private void InitializeCollections()
         {
-            // Tipi appuntamento - Usa le ObservableCollection esistenti
-            TipiAppuntamento.Clear();
-            TipiAppuntamentoFiltro.Clear();
-            TipiAppuntamentoFiltro.Add("Tutti");
-
-            foreach (var tipo in Models.TipiAppuntamento.GetAll())
+            try
             {
-                TipiAppuntamento.Add(tipo);
-                TipiAppuntamentoFiltro.Add(tipo);
+                // CORRETTO - usa le classi statiche invece delle ObservableCollection
+                TipiAppuntamento.Clear();
+                TipiAppuntamentoFiltro.Clear();
+                TipiAppuntamentoFiltro.Add("Tutti");
+
+                // USA LE CLASSI STATICHE - CORRETTO!
+                foreach (var tipo in Models.TipiAppuntamento.GetAll())
+                {
+                    TipiAppuntamento.Add(tipo);
+                    TipiAppuntamentoFiltro.Add(tipo);
+                }
+
+                StatiAppuntamento.Clear();
+                StatiAppuntamentoFiltro.Clear();
+                StatiAppuntamentoFiltro.Add("Tutti");
+
+                // USA LE CLASSI STATICHE - CORRETTO!
+                foreach (var stato in Models.StatiAppuntamento.GetAll())
+                {
+                    StatiAppuntamento.Add(stato);
+                    StatiAppuntamentoFiltro.Add(stato);
+                }
+
+                PrioritaAppuntamento.Clear();
+                // USA LE CLASSI STATICHE - CORRETTO!
+                foreach (var priorita in Models.PrioritaAppuntamento.GetAll())
+                {
+                    PrioritaAppuntamento.Add(priorita);
+                }
+
+                System.Diagnostics.Debug.WriteLine($"Collezioni inizializzate: Tipi={TipiAppuntamento.Count}, Stati={StatiAppuntamento.Count}, Priorità={PrioritaAppuntamento.Count}");
             }
-
-            // Stati appuntamento - Usa le ObservableCollection esistenti
-            StatiAppuntamento.Clear();
-            StatiAppuntamentoFiltro.Clear();
-            StatiAppuntamentoFiltro.Add("Tutti");
-
-            foreach (var stato in Models.StatiAppuntamento.GetAll())
+            catch (Exception ex)
             {
-                StatiAppuntamento.Add(stato);
-                StatiAppuntamentoFiltro.Add(stato);
+                System.Diagnostics.Debug.WriteLine($"Errore InitializeCollections: {ex.Message}");
             }
-
-            // Priorità - Usa le ObservableCollection esistenti
-            PrioritaAppuntamento.Clear();
-            foreach (var priorita in Models.PrioritaAppuntamento.GetAll())
-            {
-                PrioritaAppuntamento.Add(priorita);
-            }
-
-            // Debug: Verifica che le collezioni siano popolate
-            System.Diagnostics.Debug.WriteLine($"TipiAppuntamento popolati: {TipiAppuntamento.Count}");
-            System.Diagnostics.Debug.WriteLine($"StatiAppuntamento popolati: {StatiAppuntamento.Count}");
-            System.Diagnostics.Debug.WriteLine($"PrioritaAppuntamento popolati: {PrioritaAppuntamento.Count}");
         }
 
         private void InitializeCommands()
@@ -192,24 +246,65 @@ namespace ImmobiGestio.ViewModels
             CambiaVistaCommand = new RelayCommand(CambiaVista);
             PreviousPeriodCommand = new RelayCommand(PreviousPeriod);
             NextPeriodCommand = new RelayCommand(NextPeriod);
-            TodayCommand = new RelayCommand(_ => SelectedDate = DateTime.Today);
+            TodayCommand = new RelayCommand(_ => { SelectedDate = DateTime.Today; });
             EsportaCalendarioCommand = new RelayCommand(EsportaCalendario);
+            SetFiltroTipoCommand = new RelayCommand(param => {
+                if (param is string tipo)
+                {
+                    FiltroTipo = tipo;
+                }
+            });
 
-            // Nuovi comandi aggiunti
+            SetFiltroStatoCommand = new RelayCommand(param => {
+                if (param is string stato)
+                {
+                    FiltroStato = stato;
+                }
+            });
+
+            SelectDateCommand = new RelayCommand(param => {
+                if (param is DateTime date)
+                {
+                    SelectedDate = date;
+                }
+            });
+
+            RefreshCommand = new RelayCommand(_ => LoadAllData());
             SelectAppuntamentoCommand = new RelayCommand(param => {
                 if (param is Appuntamento app)
                 {
                     SelectedAppuntamento = app;
                 }
             });
-
             ClearFiltriCommand = new RelayCommand(_ => ClearFiltri());
+        }
+
+        public void LoadAllData()
+        {
+            try
+            {
+                System.Diagnostics.Debug.WriteLine("=== CARICAMENTO COMPLETO DATI APPUNTAMENTI ===");
+
+                LoadClientiEImmobiliDisponibili();
+                LoadAppuntamenti();
+                LoadEventiCalendario();
+
+                System.Diagnostics.Debug.WriteLine("Caricamento completo dati completato");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Errore LoadAllData: {ex.Message}");
+                MessageBox.Show($"Errore nel caricamento dei dati: {ex.Message}",
+                    "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         public void LoadAppuntamenti()
         {
             try
             {
+                System.Diagnostics.Debug.WriteLine("=== CARICAMENTO APPUNTAMENTI ===");
+
                 var appuntamenti = _context.Appuntamenti
                     .AsNoTracking()
                     .Include(a => a.Cliente)
@@ -217,19 +312,80 @@ namespace ImmobiGestio.ViewModels
                     .OrderBy(a => a.DataInizio)
                     .ToList();
 
+                System.Diagnostics.Debug.WriteLine($"Caricati {appuntamenti.Count} appuntamenti dal database");
+
                 Appuntamenti.Clear();
                 foreach (var appuntamento in appuntamenti)
                 {
+                    // Fix automatico dei valori mancanti
+                    if (string.IsNullOrEmpty(appuntamento.TipoAppuntamento))
+                        appuntamento.TipoAppuntamento = Models.TipiAppuntamento.Visita;
+                    if (string.IsNullOrEmpty(appuntamento.StatoAppuntamento))
+                        appuntamento.StatoAppuntamento = Models.StatiAppuntamento.Programmato;
+                    if (string.IsNullOrEmpty(appuntamento.Priorita))
+                        appuntamento.Priorita = Models.PrioritaAppuntamento.Media;
+
                     Appuntamenti.Add(appuntamento);
                 }
 
-                // Notifica le proprietà calcolate
                 OnPropertyChanged(nameof(AppuntamentiCompletati));
                 OnPropertyChanged(nameof(AppuntamentiOggi));
+                OnPropertyChanged(nameof(AppuntamentiOggiCollection));
+
+                System.Diagnostics.Debug.WriteLine($"LoadAppuntamenti completato: {Appuntamenti.Count} appuntamenti caricati");
             }
             catch (Exception ex)
             {
+                System.Diagnostics.Debug.WriteLine($"Errore LoadAppuntamenti: {ex}");
                 MessageBox.Show($"Errore nel caricamento degli appuntamenti: {ex.Message}",
+                    "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            GenerateMiniCalendarDays();
+            GenerateMainCalendar();
+        }
+
+        public void LoadClientiEImmobiliDisponibili()
+        {
+            try
+            {
+                System.Diagnostics.Debug.WriteLine("=== CARICAMENTO CLIENTI E IMMOBILI DISPONIBILI ===");
+
+                // Carica TUTTI i clienti
+                var clienti = _context.Clienti
+                    .AsNoTracking()
+                    .OrderBy(c => c.Nome)
+                    .ThenBy(c => c.Cognome)
+                    .ToList();
+
+                ClientiDisponibili.Clear();
+                foreach (var cliente in clienti)
+                {
+                    ClientiDisponibili.Add(cliente);
+                }
+                System.Diagnostics.Debug.WriteLine($"Caricati {ClientiDisponibili.Count} clienti");
+
+                // Carica TUTTI gli immobili
+                var immobili = _context.Immobili
+                    .AsNoTracking()
+                    .OrderBy(i => i.Titolo)
+                    .ToList();
+
+                ImmobiliDisponibili.Clear();
+                foreach (var immobile in immobili)
+                {
+                    ImmobiliDisponibili.Add(immobile);
+                }
+                System.Diagnostics.Debug.WriteLine($"Caricati {ImmobiliDisponibili.Count} immobili");
+
+                OnPropertyChanged(nameof(ClientiDisponibili));
+                OnPropertyChanged(nameof(ImmobiliDisponibili));
+
+                System.Diagnostics.Debug.WriteLine("Caricamento clienti e immobili completato");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Errore LoadClientiEImmobiliDisponibili: {ex.Message}");
+                MessageBox.Show($"Errore nel caricamento di clienti e immobili: {ex.Message}",
                     "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
@@ -244,7 +400,6 @@ namespace ImmobiGestio.ViewModels
                     .Include(a => a.Immobile)
                     .AsQueryable();
 
-                // Filtro per testo di ricerca
                 if (!string.IsNullOrWhiteSpace(SearchText))
                 {
                     query = query.Where(a =>
@@ -254,21 +409,17 @@ namespace ImmobiGestio.ViewModels
                         (a.Cliente != null && (a.Cliente.Nome.Contains(SearchText) || a.Cliente.Cognome.Contains(SearchText))));
                 }
 
-                // Filtro per stato
                 if (FiltroStato != "Tutti")
                 {
                     query = query.Where(a => a.StatoAppuntamento == FiltroStato);
                 }
 
-                // Filtro per tipo
                 if (FiltroTipo != "Tutti")
                 {
                     query = query.Where(a => a.TipoAppuntamento == FiltroTipo);
                 }
 
-                var filtered = query
-                    .OrderBy(a => a.DataInizio)
-                    .ToList();
+                var filtered = query.OrderBy(a => a.DataInizio).ToList();
 
                 Appuntamenti.Clear();
                 foreach (var appuntamento in filtered)
@@ -276,9 +427,9 @@ namespace ImmobiGestio.ViewModels
                     Appuntamenti.Add(appuntamento);
                 }
 
-                // Notifica le proprietà calcolate
                 OnPropertyChanged(nameof(AppuntamentiCompletati));
                 OnPropertyChanged(nameof(AppuntamentiOggi));
+                OnPropertyChanged(nameof(AppuntamentiOggiCollection));
             }
             catch (Exception ex)
             {
@@ -287,7 +438,7 @@ namespace ImmobiGestio.ViewModels
             }
         }
 
-        private void LoadEventiCalendario()
+        public void LoadEventiCalendario()
         {
             try
             {
@@ -297,10 +448,10 @@ namespace ImmobiGestio.ViewModels
                 {
                     case "Giorno":
                         start = SelectedDate.Date;
-                        end = SelectedDate.Date.AddDays(1);
+                        end = start.AddDays(1);
                         break;
                     case "Settimana":
-                        start = SelectedDate.AddDays(-(int)SelectedDate.DayOfWeek);
+                        start = GetLunediSettimana(SelectedDate);
                         end = start.AddDays(7);
                         break;
                     case "Mese":
@@ -313,7 +464,6 @@ namespace ImmobiGestio.ViewModels
                         break;
                 }
 
-                // Carica eventi dal database
                 var eventi = _statisticheService.GetEventiCalendario(start, end);
 
                 EventiCalendario.Clear();
@@ -321,6 +471,13 @@ namespace ImmobiGestio.ViewModels
                 {
                     EventiCalendario.Add(evento);
                 }
+
+                // Aggiorna anche il calendario principale
+                GenerateMainCalendar();
+
+                // Notifica il cambiamento degli eventi di oggi
+                OnPropertyChanged(nameof(AppuntamentiOggiCollection));
+                OnPropertyChanged(nameof(TitoloVista));
             }
             catch (Exception ex)
             {
@@ -329,202 +486,175 @@ namespace ImmobiGestio.ViewModels
             }
         }
 
-        private void LoadClientiEImmobiliDisponibili()
+        private DateTime GetLunediSettimana(DateTime data)
         {
-            try
-            {
-                // Carica clienti attivi
-                var clienti = _context.Clienti
-                    .Where(c => c.StatoCliente == "Attivo")
-                    .OrderBy(c => c.Nome)
-                    .ThenBy(c => c.Cognome)
-                    .ToList();
-
-                ClientiDisponibili.Clear();
-                foreach (var cliente in clienti)
-                {
-                    ClientiDisponibili.Add(cliente);
-                }
-
-                // Carica immobili disponibili
-                var immobili = _context.Immobili
-                    .Where(i => i.StatoVendita == "Disponibile")
-                    .OrderBy(i => i.Titolo)
-                    .ToList();
-
-                ImmobiliDisponibili.Clear();
-                foreach (var immobile in immobili)
-                {
-                    ImmobiliDisponibili.Add(immobile);
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Errore nel caricamento di clienti e immobili: {ex.Message}",
-                    "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
+            var dayOfWeek = (int)data.DayOfWeek;
+            // In C#, Sunday = 0, Monday = 1, ..., Saturday = 6
+            // Vogliamo che Monday = 0
+            var daysFromMonday = (dayOfWeek == 0) ? 6 : dayOfWeek - 1;
+            return data.AddDays(-daysFromMonday);
         }
 
-        // Sostituisci SOLO il metodo AddAppuntamento nel tuo AppuntamentiViewModel esistente
+        private string GetTitoloSettimana()
+        {
+            var lunedi = SelectedDate.AddDays(-(int)SelectedDate.DayOfWeek + 1);
+            var domenica = lunedi.AddDays(6);
+
+            if (lunedi.Month == domenica.Month)
+            {
+                return $"{lunedi:dd} - {domenica:dd} {lunedi:MMMM yyyy}";
+            }
+            else if (lunedi.Year == domenica.Year)
+            {
+                return $"{lunedi:dd MMM} - {domenica:dd MMM yyyy}";
+            }
+            else
+            {
+                return $"{lunedi:dd MMM yyyy} - {domenica:dd MMM yyyy}";
+            }
+        }
 
         private void AddAppuntamento(object? parameter)
         {
             try
             {
-                // Crea l'appuntamento con TUTTI i valori richiesti impostati correttamente
-                var newAppuntamento = new Appuntamento
-                {
-                    Titolo = "Nuovo Appuntamento",
-                    Descrizione = "",
-                    DataInizio = DateTime.Now.AddHours(1),
-                    DataFine = DateTime.Now.AddHours(2),
-                    TipoAppuntamento = Models.TipiAppuntamento.Visita, // USA LA COSTANTE
-                    StatoAppuntamento = Models.StatiAppuntamento.Programmato, // USA LA COSTANTE
-                    Priorita = Models.PrioritaAppuntamento.Media, // USA LA COSTANTE
-                    Luogo = "Ufficio",
-                    NotePrivate = "",
-                    EsitoIncontro = "",
-                    OutlookEventId = "",
-                    CreatoDa = "Sistema",
-                    DataCreazione = DateTime.Now,
-                    SincronizzatoOutlook = false,
-                    NotificaInviata = false,
-                    RichiedeConferma = true,
-                    ClienteId = null, // Nessun cliente inizialmente
-                    ImmobileId = null // Nessun immobile inizialmente
-                };
+                var newAppuntamento = new Appuntamento();
 
-                // Verifica che il contesto sia valido
-                if (_context == null)
-                {
-                    MessageBox.Show("Errore: Database non inizializzato correttamente.",
-                        "Errore Database", MessageBoxButton.OK, MessageBoxImage.Error);
-                    return;
-                }
-
-                // Log per debug - verifica che tutti i campi siano impostati
-                System.Diagnostics.Debug.WriteLine($"=== CREAZIONE APPUNTAMENTO DIRETTO ===");
-                System.Diagnostics.Debug.WriteLine($"Titolo: {newAppuntamento.Titolo}");
+                System.Diagnostics.Debug.WriteLine($"=== CREAZIONE NUOVO APPUNTAMENTO ===");
                 System.Diagnostics.Debug.WriteLine($"TipoAppuntamento: '{newAppuntamento.TipoAppuntamento}'");
                 System.Diagnostics.Debug.WriteLine($"StatoAppuntamento: '{newAppuntamento.StatoAppuntamento}'");
                 System.Diagnostics.Debug.WriteLine($"Priorita: '{newAppuntamento.Priorita}'");
-                System.Diagnostics.Debug.WriteLine($"Luogo: '{newAppuntamento.Luogo}'");
 
-                // Verifica che tutti i campi obbligatori siano valorizzati
-                if (string.IsNullOrEmpty(newAppuntamento.TipoAppuntamento))
+                if (!newAppuntamento.IsValid())
                 {
-                    MessageBox.Show("Errore: TipoAppuntamento è vuoto!", "Errore Validazione",
-                        MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show("Errore: L'appuntamento non è valido.",
+                        "Errore Validazione", MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
                 }
 
-                if (string.IsNullOrEmpty(newAppuntamento.StatoAppuntamento))
-                {
-                    MessageBox.Show("Errore: StatoAppuntamento è vuoto!", "Errore Validazione",
-                        MessageBoxButton.OK, MessageBoxImage.Error);
-                    return;
-                }
-
-                if (string.IsNullOrEmpty(newAppuntamento.Priorita))
-                {
-                    MessageBox.Show("Errore: Priorita è vuoto!", "Errore Validazione",
-                        MessageBoxButton.OK, MessageBoxImage.Error);
-                    return;
-                }
-
-                // Usa un nuovo contesto per evitare conflitti di tracking
                 using (var newContext = new ImmobiliContext())
                 {
                     newContext.Appuntamenti.Add(newAppuntamento);
-                    newContext.SaveChanges();
-
+                    var saved = newContext.SaveChanges();
                     System.Diagnostics.Debug.WriteLine($"Appuntamento creato con ID: {newAppuntamento.Id}");
                 }
 
-                // Ricarica tutti gli appuntamenti per aggiornare la UI
                 LoadAppuntamenti();
 
-                // Seleziona il nuovo appuntamento creato
                 var createdAppuntamento = Appuntamenti.FirstOrDefault(a => a.Id == newAppuntamento.Id);
                 if (createdAppuntamento != null)
                 {
                     SelectedAppuntamento = createdAppuntamento;
-                    System.Diagnostics.Debug.WriteLine($"Appuntamento selezionato: ID {createdAppuntamento.Id}");
                 }
 
                 MessageBox.Show("Nuovo appuntamento creato con successo!",
                     "Successo", MessageBoxButton.OK, MessageBoxImage.Information);
             }
-            catch (Microsoft.EntityFrameworkCore.DbUpdateException dbEx)
-            {
-                var innerException = dbEx.InnerException?.Message ?? "Nessun dettaglio disponibile";
-                var message = $"Errore di database nella creazione dell'appuntamento:\n\n" +
-                             $"Errore principale: {dbEx.Message}\n\n" +
-                             $"Dettagli: {innerException}";
-
-                MessageBox.Show(message, "Errore Database", MessageBoxButton.OK, MessageBoxImage.Error);
-                System.Diagnostics.Debug.WriteLine($"DbUpdateException: {dbEx}");
-            }
             catch (Exception ex)
             {
-                var message = $"Errore imprevisto nella creazione dell'appuntamento:\n\n" +
-                             $"Tipo: {ex.GetType().Name}\n" +
-                             $"Messaggio: {ex.Message}";
-
-                if (ex.InnerException != null)
-                {
-                    message += $"\n\nErrore interno: {ex.InnerException.Message}";
-                }
-
-                MessageBox.Show(message, "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
-                System.Diagnostics.Debug.WriteLine($"Exception completa: {ex}");
+                MessageBox.Show($"Errore nella creazione dell'appuntamento: {ex.Message}",
+                    "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
+                System.Diagnostics.Debug.WriteLine($"Errore AddAppuntamento: {ex}");
             }
         }
 
         private void SaveCurrentAppuntamento()
         {
-            if (SelectedAppuntamento != null)
+            if (SelectedAppuntamento == null) return;
+
+            try
             {
-                try
+                if (!SelectedAppuntamento.IsValid())
                 {
-                    var exists = _context.Appuntamenti.Any(a => a.Id == SelectedAppuntamento.Id);
-                    if (!exists) return;
-
-                    SelectedAppuntamento.DataUltimaModifica = DateTime.Now;
-
-                    var tracked = _context.ChangeTracker.Entries<Appuntamento>()
-                        .FirstOrDefault(e => e.Entity.Id == SelectedAppuntamento.Id);
-                    if (tracked != null)
-                    {
-                        _context.Entry(tracked.Entity).State = EntityState.Detached;
-                    }
-
-                    _context.Update(SelectedAppuntamento);
-                    _context.SaveChanges();
-
-                    // Sync con Outlook se connesso
-                    if (IsOutlookConnected && SelectedAppuntamento.SincronizzatoOutlook)
-                    {
-                        Task.Run(async () => await _outlookService.UpdateAppuntamentoAsync(SelectedAppuntamento));
-                    }
+                    System.Diagnostics.Debug.WriteLine("Appuntamento non valido, salto il salvataggio");
+                    return;
                 }
-                catch (Exception ex)
+
+                SelectedAppuntamento.DataUltimaModifica = DateTime.Now;
+
+                using (var saveContext = new ImmobiliContext())
                 {
-                    if (!_isDeleting)
+                    var existingAppuntamento = saveContext.Appuntamenti
+                        .FirstOrDefault(a => a.Id == SelectedAppuntamento.Id);
+
+                    if (existingAppuntamento != null)
                     {
-                        MessageBox.Show($"Errore nel salvataggio dell'appuntamento: {ex.Message}",
-                            "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
+                        // AGGIORNAMENTO
+                        existingAppuntamento.Titolo = SelectedAppuntamento.Titolo;
+                        existingAppuntamento.Descrizione = SelectedAppuntamento.Descrizione;
+                        existingAppuntamento.DataInizio = SelectedAppuntamento.DataInizio;
+                        existingAppuntamento.DataFine = SelectedAppuntamento.DataFine;
+                        existingAppuntamento.Luogo = SelectedAppuntamento.Luogo;
+                        existingAppuntamento.TipoAppuntamento = SelectedAppuntamento.TipoAppuntamento;
+                        existingAppuntamento.StatoAppuntamento = SelectedAppuntamento.StatoAppuntamento;
+                        existingAppuntamento.Priorita = SelectedAppuntamento.Priorita;
+                        existingAppuntamento.ClienteId = SelectedAppuntamento.ClienteId;
+                        existingAppuntamento.ImmobileId = SelectedAppuntamento.ImmobileId;
+                        existingAppuntamento.NotePrivate = SelectedAppuntamento.NotePrivate;
+                        existingAppuntamento.EsitoIncontro = SelectedAppuntamento.EsitoIncontro;
+                        existingAppuntamento.RichiedeConferma = SelectedAppuntamento.RichiedeConferma;
+                        existingAppuntamento.DataUltimaModifica = DateTime.Now;
+
+                        saveContext.Update(existingAppuntamento);
+                        System.Diagnostics.Debug.WriteLine($"Aggiornamento appuntamento ID {SelectedAppuntamento.Id}");
                     }
+                    else
+                    {
+                        saveContext.Appuntamenti.Add(SelectedAppuntamento);
+                        System.Diagnostics.Debug.WriteLine($"Nuovo appuntamento in salvataggio");
+                    }
+
+                    var saved = saveContext.SaveChanges();
+                    System.Diagnostics.Debug.WriteLine($"SaveCurrentAppuntamento completato: {saved} record salvati");
+                }
+
+                if (IsOutlookConnected && SelectedAppuntamento.SincronizzatoOutlook)
+                {
+                    Task.Run(async () => await _outlookService.UpdateAppuntamentoAsync(SelectedAppuntamento));
+                }
+            }
+            catch (Exception ex)
+            {
+                if (!_isDeleting)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Errore SaveCurrentAppuntamento: {ex}");
+                    MessageBox.Show($"Errore nel salvataggio dell'appuntamento: {ex.Message}",
+                        "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
         }
 
         private void SaveAppuntamento(object? parameter)
         {
-            SaveCurrentAppuntamento();
-            LoadEventiCalendario(); // Ricarica il calendario
-            MessageBox.Show("Appuntamento salvato con successo!",
-                "Successo", MessageBoxButton.OK, MessageBoxImage.Information);
+            if (SelectedAppuntamento == null)
+            {
+                MessageBox.Show("Nessun appuntamento selezionato da salvare.",
+                    "Attenzione", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            try
+            {
+                if (!SelectedAppuntamento.IsValid())
+                {
+                    MessageBox.Show("L'appuntamento contiene dati non validi.\n" +
+                                   "Controlla che tutti i campi obbligatori siano compilati.",
+                        "Validazione", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                SaveCurrentAppuntamento();
+                LoadEventiCalendario();
+
+                MessageBox.Show("Appuntamento salvato con successo!",
+                    "Successo", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Errore nel salvataggio dell'appuntamento: {ex.Message}",
+                    "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
+                System.Diagnostics.Debug.WriteLine($"Errore SaveAppuntamento: {ex}");
+            }
         }
 
         private void DeleteAppuntamento(object? parameter)
@@ -532,7 +662,9 @@ namespace ImmobiGestio.ViewModels
             if (SelectedAppuntamento == null) return;
 
             var result = MessageBox.Show(
-                $"Sei sicuro di voler eliminare l'appuntamento '{SelectedAppuntamento.Titolo}'?",
+                $"Sei sicuro di voler eliminare l'appuntamento '{SelectedAppuntamento.Titolo}'?\n\n" +
+                $"Data: {SelectedAppuntamento.DataInizio:dd/MM/yyyy HH:mm}\n" +
+                $"Questa operazione non può essere annullata.",
                 "Conferma Eliminazione",
                 MessageBoxButton.YesNo,
                 MessageBoxImage.Question);
@@ -543,36 +675,42 @@ namespace ImmobiGestio.ViewModels
                 {
                     _isDeleting = true;
                     var appuntamentoId = SelectedAppuntamento.Id;
+                    var appuntamentoTitolo = SelectedAppuntamento.Titolo;
                     var outlookEventId = SelectedAppuntamento.OutlookEventId;
 
-                    var appuntamentoToDelete = _context.Appuntamenti.Find(appuntamentoId);
-                    if (appuntamentoToDelete != null)
+                    using (var deleteContext = new ImmobiliContext())
                     {
-                        _context.Appuntamenti.Remove(appuntamentoToDelete);
-                        _context.SaveChanges();
+                        var appuntamentoToDelete = deleteContext.Appuntamenti
+                            .FirstOrDefault(a => a.Id == appuntamentoId);
 
-                        // Elimina da Outlook se sincronizzato
-                        if (IsOutlookConnected && !string.IsNullOrEmpty(outlookEventId))
+                        if (appuntamentoToDelete != null)
                         {
-                            Task.Run(async () => await _outlookService.DeleteAppuntamentoAsync(outlookEventId));
+                            deleteContext.Appuntamenti.Remove(appuntamentoToDelete);
+                            var deletedRecords = deleteContext.SaveChanges();
+                            System.Diagnostics.Debug.WriteLine($"Eliminazione completata: {deletedRecords} record eliminati");
                         }
-
-                        var uiAppuntamento = Appuntamenti.FirstOrDefault(a => a.Id == appuntamentoId);
-                        if (uiAppuntamento != null)
-                        {
-                            Appuntamenti.Remove(uiAppuntamento);
-                        }
-
-                        SelectedAppuntamento = Appuntamenti.FirstOrDefault();
-                        LoadEventiCalendario();
-
-                        // Notifica le proprietà calcolate
-                        OnPropertyChanged(nameof(AppuntamentiCompletati));
-                        OnPropertyChanged(nameof(AppuntamentiOggi));
-
-                        MessageBox.Show("Appuntamento eliminato con successo!",
-                            "Successo", MessageBoxButton.OK, MessageBoxImage.Information);
                     }
+
+                    if (IsOutlookConnected && !string.IsNullOrEmpty(outlookEventId))
+                    {
+                        Task.Run(async () => await _outlookService.DeleteAppuntamentoAsync(outlookEventId));
+                    }
+
+                    var uiAppuntamento = Appuntamenti.FirstOrDefault(a => a.Id == appuntamentoId);
+                    if (uiAppuntamento != null)
+                    {
+                        Appuntamenti.Remove(uiAppuntamento);
+                    }
+
+                    SelectedAppuntamento = Appuntamenti.FirstOrDefault();
+                    LoadEventiCalendario();
+
+                    OnPropertyChanged(nameof(AppuntamentiCompletati));
+                    OnPropertyChanged(nameof(AppuntamentiOggi));
+                    OnPropertyChanged(nameof(AppuntamentiOggiCollection));
+
+                    MessageBox.Show($"Appuntamento '{appuntamentoTitolo}' eliminato con successo!",
+                        "Eliminazione Completata", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
                 catch (Exception ex)
                 {
@@ -604,7 +742,6 @@ namespace ImmobiGestio.ViewModels
         {
             if (SelectedAppuntamento != null && SelectedAppuntamento.StatoAppuntamento != "Completato")
             {
-                // Usa una finestra semplice per l'input
                 var result = MessageBox.Show(
                     "Vuoi aggiungere delle note per questo appuntamento completato?",
                     "Completa Appuntamento",
@@ -614,7 +751,6 @@ namespace ImmobiGestio.ViewModels
                 string esito = "";
                 if (result == MessageBoxResult.Yes)
                 {
-                    // Per ora usa un esito predefinito, in futuro si può implementare una finestra custom
                     esito = "Appuntamento completato con successo";
                 }
 
@@ -622,9 +758,9 @@ namespace ImmobiGestio.ViewModels
                 SaveCurrentAppuntamento();
                 LoadEventiCalendario();
 
-                // Notifica le proprietà calcolate
                 OnPropertyChanged(nameof(AppuntamentiCompletati));
                 OnPropertyChanged(nameof(AppuntamentiOggi));
+                OnPropertyChanged(nameof(AppuntamentiOggiCollection));
 
                 MessageBox.Show("Appuntamento completato con successo!",
                     "Successo", MessageBoxButton.OK, MessageBoxImage.Information);
@@ -685,7 +821,6 @@ namespace ImmobiGestio.ViewModels
 
             try
             {
-                // Sincronizza appuntamenti non ancora sincronizzati
                 var appuntamentiDaSincronizzare = _context.Appuntamenti
                     .Where(a => !a.SincronizzatoOutlook && a.StatoAppuntamento != "Annullato")
                     .ToList();
@@ -786,7 +921,6 @@ namespace ImmobiGestio.ViewModels
             }
         }
 
-        // Nuovo metodo per pulire i filtri
         private void ClearFiltri()
         {
             SearchText = string.Empty;
@@ -795,18 +929,17 @@ namespace ImmobiGestio.ViewModels
             SelectedDate = DateTime.Today;
         }
 
-        // Proprietà per la vista calendario
-        public string TitoloVista
+        public void RefreshAll()
         {
-            get
+            try
             {
-                return VistaCalendario switch
-                {
-                    "Giorno" => SelectedDate.ToString("dddd, dd MMMM yyyy"),
-                    "Settimana" => $"Settimana del {SelectedDate.AddDays(-(int)SelectedDate.DayOfWeek):dd MMM} - {SelectedDate.AddDays(6 - (int)SelectedDate.DayOfWeek):dd MMM yyyy}",
-                    "Mese" => SelectedDate.ToString("MMMM yyyy"),
-                    _ => SelectedDate.ToString("dd MMMM yyyy")
-                };
+                System.Diagnostics.Debug.WriteLine("=== REFRESH COMPLETO APPUNTAMENTI ===");
+                LoadAllData();
+                System.Diagnostics.Debug.WriteLine("Refresh completo completato");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Errore RefreshAll: {ex.Message}");
             }
         }
 
@@ -814,15 +947,219 @@ namespace ImmobiGestio.ViewModels
         {
             try
             {
-                if (!_isDeleting)
+                if (!_isDeleting && SelectedAppuntamento != null)
                 {
                     SaveCurrentAppuntamento();
                 }
                 _outlookService?.Disconnect();
+
+                System.Diagnostics.Debug.WriteLine("AppuntamentiViewModel: Cleanup completato");
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Errore nel salvataggio finale appuntamento: {ex.Message}");
+            }
+        }
+
+        // METODI HELPER PER VISTA OUTLOOK
+        public string GetColorePerTipo(string tipo)
+        {
+            return tipo switch
+            {
+                "Visita" => "#0078D4",      // Blu Outlook
+                "Incontro" => "#107C10",    // Verde
+                "Firma" => "#D83B01",       // Arancione/Rosso
+                "Valutazione" => "#8764B8", // Viola
+                "Sopralluogo" => "#E3008C", // Magenta
+                "Chiamata" => "#00BCF2",    // Azzurro
+                _ => "#0078D4"
+            };
+        }
+
+        public string GetColorePerStato(string stato)
+        {
+            return stato switch
+            {
+                "Programmato" => "#0078D4", // Blu
+                "Confermato" => "#107C10",  // Verde
+                "Completato" => "#8A8886",  // Grigio
+                "Annullato" => "#D83B01",   // Rosso
+                _ => "#0078D4"
+            };
+        }
+        private void GenerateMiniCalendarDays()
+        {
+            try
+            {
+                MiniCalendarDays.Clear();
+
+                var firstDayOfMonth = new DateTime(SelectedDate.Year, SelectedDate.Month, 1);
+                var lastDayOfMonth = firstDayOfMonth.AddMonths(1).AddDays(-1);
+
+                // Inizia dalla domenica precedente al primo giorno del mese
+                var startDate = firstDayOfMonth.AddDays(-(int)firstDayOfMonth.DayOfWeek);
+
+                // 42 giorni = 6 settimane per coprire tutti i casi
+                for (int i = 0; i < 42; i++)
+                {
+                    var currentDate = startDate.AddDays(i);
+
+                    var day = new MiniCalendarDay
+                    {
+                        Date = currentDate,
+                        Day = currentDate.Day,
+                        IsToday = currentDate.Date == DateTime.Today,
+                        IsSelected = currentDate.Date == SelectedDate.Date,
+                        IsCurrentMonth = currentDate.Month == SelectedDate.Month,
+                        IsWeekend = currentDate.DayOfWeek == DayOfWeek.Saturday ||
+                                   currentDate.DayOfWeek == DayOfWeek.Sunday
+                    };
+
+                    // Controlla se ci sono eventi in questo giorno
+                    day.HasEvents = Appuntamenti.Any(a => a.DataInizio.Date == currentDate.Date);
+                    day.EventCount = Appuntamenti.Count(a => a.DataInizio.Date == currentDate.Date);
+
+                    MiniCalendarDays.Add(day);
+                }
+
+                OnPropertyChanged(nameof(MiniCalendarDays));
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Errore GenerateMiniCalendarDays: {ex.Message}");
+            }
+        }
+        public class CalendarDay : INotifyPropertyChanged
+        {
+            private DateTime _date;
+            private int _dayNumber;
+            private bool _isToday = false;
+            private bool _isCurrentMonth = true;
+            private ObservableCollection<Appuntamento> _eventi = new();
+
+            public DateTime Date
+            {
+                get => _date;
+                set => SetProperty(ref _date, value);
+            }
+
+            public int DayNumber
+            {
+                get => _dayNumber;
+                set => SetProperty(ref _dayNumber, value);
+            }
+
+            public bool IsToday
+            {
+                get => _isToday;
+                set => SetProperty(ref _isToday, value);
+            }
+
+            public bool IsCurrentMonth
+            {
+                get => _isCurrentMonth;
+                set => SetProperty(ref _isCurrentMonth, value);
+            }
+
+            public ObservableCollection<Appuntamento> Eventi
+            {
+                get => _eventi;
+                set => SetProperty(ref _eventi, value);
+            }
+
+            public string BackgroundColor
+            {
+                get
+                {
+                    if (IsToday) return "#E3F2FD";
+                    return "White";
+                }
+            }
+
+            public string TextColor
+            {
+                get
+                {
+                    if (!IsCurrentMonth) return "#A19F9D";
+                    if (IsToday) return "#0078D4";
+                    return "#323130";
+                }
+            }
+
+            public string FontWeight
+            {
+                get
+                {
+                    if (IsToday) return "Bold";
+                    return "Normal";
+                }
+            }
+
+            public event PropertyChangedEventHandler? PropertyChanged;
+
+            protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+            {
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+            }
+
+            protected virtual bool SetProperty<T>(ref T storage, T value, [CallerMemberName] string? propertyName = null)
+            {
+                if (Equals(storage, value)) return false;
+                storage = value;
+                OnPropertyChanged(propertyName);
+                return true;
+            }
+        }
+        private void GenerateMainCalendar()
+        {
+            try
+            {
+                System.Diagnostics.Debug.WriteLine("=== GENERAZIONE CALENDARIO PRINCIPALE ===");
+
+                CalendarDays.Clear();
+
+                var firstDayOfMonth = new DateTime(SelectedDate.Year, SelectedDate.Month, 1);
+                var lastDayOfMonth = firstDayOfMonth.AddMonths(1).AddDays(-1);
+
+                // Inizia dalla domenica precedente al primo giorno del mese
+                var startDate = firstDayOfMonth.AddDays(-(int)firstDayOfMonth.DayOfWeek);
+
+                // 42 giorni = 6 settimane per coprire tutti i casi
+                for (int i = 0; i < 42; i++)
+                {
+                    var currentDate = startDate.AddDays(i);
+
+                    var calendarDay = new CalendarDay
+                    {
+                        Date = currentDate,
+                        DayNumber = currentDate.Day,
+                        IsToday = currentDate.Date == DateTime.Today,
+                        IsCurrentMonth = currentDate.Month == SelectedDate.Month
+                    };
+
+                    // Trova gli eventi per questo giorno
+                    var eventiDelGiorno = Appuntamenti
+                        .Where(a => a.DataInizio.Date == currentDate.Date)
+                        .OrderBy(a => a.DataInizio)
+                        .Take(3) // Massimo 3 eventi visibili per giorno
+                        .ToList();
+
+                    foreach (var evento in eventiDelGiorno)
+                    {
+                        calendarDay.Eventi.Add(evento);
+                    }
+
+                    CalendarDays.Add(calendarDay);
+
+                    System.Diagnostics.Debug.WriteLine($"Giorno {currentDate:dd/MM}: {eventiDelGiorno.Count} eventi");
+                }
+
+                OnPropertyChanged(nameof(CalendarDays));
+                System.Diagnostics.Debug.WriteLine($"Calendario principale generato: {CalendarDays.Count} giorni");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Errore GenerateMainCalendar: {ex.Message}");
             }
         }
     }
