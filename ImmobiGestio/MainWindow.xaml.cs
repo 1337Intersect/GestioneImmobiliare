@@ -1,8 +1,9 @@
-﻿using System.Windows;
+﻿using ImmobiGestio.Services;
 using ImmobiGestio.ViewModels;
 using System;
-using System.Windows.Threading;
 using System.ComponentModel;
+using System.Windows;
+using System.Windows.Threading;
 
 namespace ImmobiGestio
 {
@@ -26,6 +27,7 @@ namespace ImmobiGestio
                 System.Diagnostics.Debug.WriteLine($"Errore inizializzazione MainWindow: {ex}");
                 HandleCriticalError(ex);
             }
+
         }
 
         private void InitializeViewModel()
@@ -67,16 +69,19 @@ namespace ImmobiGestio
             }
         }
 
-        private void StatusTimer_Tick(object? sender, EventArgs e)
+        private void StatusTimer_Tick(object sender, EventArgs e)
         {
             try
             {
-                _viewModel?.RefreshStatusMessage();
+                // Cast esplicito per evitare problemi di compilazione
+                if (_viewModel is ViewModels.MainViewModel mainViewModel)
+                {
+                    mainViewModel.RefreshStatusMessage();
+                }
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Errore StatusTimer_Tick: {ex.Message}");
-                // Non bloccare per errori del timer
             }
         }
 
@@ -333,5 +338,23 @@ namespace ImmobiGestio
                 System.Diagnostics.Debug.WriteLine($"Errore ForceRefresh: {ex.Message}");
             }
         }
+        public void OnThemeChanged(AppTheme newTheme)
+        {
+            try
+            {
+                // Notifica ai ViewModel del cambio tema se necessario
+                System.Diagnostics.Debug.WriteLine($"MainWindow: Tema cambiato a {newTheme}");
+
+                // Qui puoi aggiungere logica specifica per il cambio tema se necessario
+                // Ad esempio, refresh di colori personalizzati o icone
+
+                _viewModel?.RefreshStatusMessage();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Errore OnThemeChanged MainWindow: {ex.Message}");
+            }
+        }
     }
+
 }

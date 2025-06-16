@@ -8,145 +8,19 @@
              Background="#F3F2F1">
 
     <UserControl.Resources>
-        <BooleanToVisibilityConverter x:Key="BoolToVisConverter"/>
-
-        <!-- Stili Outlook -->
-        <Style x:Key="OutlookToolbarButton" TargetType="Button">
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Padding" Value="12,8"/>
-            <Setter Property="FontSize" Value="13"/>
-            <Setter Property="Foreground" Value="#323130"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}" 
-                                CornerRadius="3"
-                                Padding="{TemplateBinding Padding}">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="#E1DFDD"/>
-                            </Trigger>
-                            <Trigger Property="IsPressed" Value="True">
-                                <Setter Property="Background" Value="#D2D0CE"/>
-                            </Trigger>
-                            <Trigger Property="IsEnabled" Value="False">
-                                <Setter Property="Foreground" Value="#A19F9D"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <!-- Calendar Cell Style -->
-        <Style x:Key="CalendarCell" TargetType="Border">
-            <Setter Property="BorderBrush" Value="#E1DFDD"/>
-            <Setter Property="BorderThickness" Value="0.5"/>
+        <!-- Tutti gli stili esistenti... mantieni quelli attuali -->
+        <Style x:Key="FilterButton" TargetType="Button">
             <Setter Property="Background" Value="White"/>
-            <Setter Property="MinHeight" Value="120"/>
+            <Setter Property="BorderBrush" Value="#E1DFDD"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="12,6"/>
+            <Setter Property="Margin" Value="0,0,8,0"/>
             <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="FontSize" Value="12"/>
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
                     <Setter Property="Background" Value="#F8F8F8"/>
                 </Trigger>
-            </Style.Triggers>
-        </Style>
-
-        <!-- Event in Calendar Style -->
-        <Style x:Key="CalendarEvent" TargetType="Border">
-            <Setter Property="Background" Value="#0078D4"/>
-            <Setter Property="CornerRadius" Value="3"/>
-            <Setter Property="Margin" Value="1"/>
-            <Setter Property="Padding" Value="4,2"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Style.Triggers>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#106EBE"/>
-                </Trigger>
-            </Style.Triggers>
-        </Style>
-
-        <!-- Form Controls -->
-        <Style x:Key="OutlookFormLabel" TargetType="TextBlock">
-            <Setter Property="FontSize" Value="13"/>
-            <Setter Property="Foreground" Value="#323130"/>
-            <Setter Property="Margin" Value="0,0,0,4"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
-        </Style>
-
-        <Style x:Key="OutlookFormTextBox" TargetType="TextBox">
-            <Setter Property="Background" Value="White"/>
-            <Setter Property="BorderBrush" Value="#8A8886"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Padding" Value="8,6"/>
-            <Setter Property="FontSize" Value="13"/>
-            <Setter Property="Margin" Value="0,0,0,12"/>
-            <Style.Triggers>
-                <Trigger Property="IsFocused" Value="True">
-                    <Setter Property="BorderBrush" Value="#0078D4"/>
-                    <Setter Property="BorderThickness" Value="2"/>
-                </Trigger>
-            </Style.Triggers>
-        </Style>
-
-        <Style x:Key="OutlookFormComboBox" TargetType="ComboBox">
-            <Setter Property="Background" Value="White"/>
-            <Setter Property="BorderBrush" Value="#8A8886"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Padding" Value="8,6"/>
-            <Setter Property="FontSize" Value="13"/>
-            <Setter Property="Margin" Value="0,0,0,12"/>
-        </Style>
-
-        <!-- Mini Calendar Day Style -->
-        <Style x:Key="MiniCalendarDay" TargetType="Button">
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Width" Value="28"/>
-            <Setter Property="Height" Value="24"/>
-            <Setter Property="FontSize" Value="11"/>
-            <Setter Property="Foreground" Value="#323130"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}" 
-                                CornerRadius="3">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="#E1DFDD"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <!-- Stile per mini calendario day con stati -->
-        <Style x:Key="MiniCalendarDayDynamic" TargetType="Button" BasedOn="{StaticResource MiniCalendarDay}">
-            <Style.Triggers>
-                <DataTrigger Binding="{Binding IsToday}" Value="True">
-                    <Setter Property="Background" Value="#0078D4"/>
-                    <Setter Property="Foreground" Value="White"/>
-                    <Setter Property="FontWeight" Value="Bold"/>
-                </DataTrigger>
-                <DataTrigger Binding="{Binding IsSelected}" Value="True">
-                    <Setter Property="Background" Value="#E3F2FD"/>
-                    <Setter Property="Foreground" Value="#0078D4"/>
-                    <Setter Property="FontWeight" Value="SemiBold"/>
-                </DataTrigger>
-                <DataTrigger Binding="{Binding IsCurrentMonth}" Value="False">
-                    <Setter Property="Foreground" Value="#A19F9D"/>
-                </DataTrigger>
-                <DataTrigger Binding="{Binding HasEvents}" Value="True">
-                    <Setter Property="FontWeight" Value="Bold"/>
-                </DataTrigger>
             </Style.Triggers>
         </Style>
     </UserControl.Resources>
@@ -159,9 +33,10 @@
         </Grid.RowDefinitions>
 
         <!-- Outlook-style Ribbon Toolbar -->
-        <Border Grid.Row="0" Background="White" BorderBrush="#E1DFDD" BorderThickness="0,0,0,1">
-            <Grid Height="60">
+        <Border Grid.Row="0" Background="White" BorderBrush="#E1DFDD" BorderThickness="0,0,0,1" Padding="16,12">
+            <Grid>
                 <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
@@ -588,7 +463,7 @@
                                         <Border Style="{StaticResource CalendarCell}" Background="{Binding BackgroundColor}">
                                             <Border.InputBindings>
                                                 <MouseBinding MouseAction="LeftDoubleClick" 
-                                                              Command="{Binding DataContext.AddAppuntamentoCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+                              Command="{Binding DataContext.AddAppuntamentoCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
                                             </Border.InputBindings>
 
                                             <Grid>
@@ -597,63 +472,95 @@
                                                     <RowDefinition Height="*"/>
                                                 </Grid.RowDefinitions>
 
-                                                <!-- Numero del giorno -->
+                                                <!-- Numero del giorno - CORRETTO -->
                                                 <TextBlock Grid.Row="0" 
-                                                           Text="{Binding DayNumber}" 
-                                                           FontSize="14" 
-                                                           FontWeight="{Binding FontWeight}" 
-                                                           Foreground="{Binding TextColor}" 
-                                                           HorizontalAlignment="Left"
-                                                           Margin="6,4,0,0"/>
+                           Text="{Binding DayNumber}" 
+                           FontSize="14" 
+                           FontWeight="{Binding FontWeight, Converter={StaticResource StringToFontWeightConverter}}" 
+                           Foreground="{Binding ForegroundColor}" 
+                           HorizontalAlignment="Left"
+                           Margin="6,4,0,0"/>
 
-                                                <!-- Eventi del giorno -->
+                                                <!-- Eventi del giorno - CORRETTO -->
                                                 <StackPanel Grid.Row="1" Margin="4,8,4,4" VerticalAlignment="Top">
-                                                    <ItemsControl ItemsSource="{Binding Eventi}">
+                                                    <ItemsControl ItemsSource="{Binding Events}">
                                                         <ItemsControl.ItemTemplate>
                                                             <DataTemplate>
-                                                                <Border Background="{Binding StatoColore}" 
-                                                                        CornerRadius="3" 
-                                                                        Padding="4,2" 
-                                                                        Margin="0,1"
-                                                                        Cursor="Hand">
+                                                                <!-- Border principale dell'evento SEMPLIFICATO -->
+                                                                <Border x:Name="EventBorder" 
+                                        CornerRadius="3" 
+                                        Padding="4,2" 
+                                        Margin="0,1"
+                                        Cursor="Hand"
+                                        BorderThickness="0"
+                                        BorderBrush="Transparent">
+
+                                                                    <!-- Background dinamico basato sullo stato -->
+                                                                    <Border.Background>
+                                                                        <SolidColorBrush Color="{Binding StatoColore, Converter={StaticResource HexToColorConverter}}"/>
+                                                                    </Border.Background>
+
+                                                                    <!-- Gestione eventi mouse SEMPLIFICATA -->
                                                                     <Border.InputBindings>
+                                                                        <MouseBinding MouseAction="LeftClick" 
+                                                      Command="{Binding DataContext.SelectAppuntamentoInCalendarCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                      CommandParameter="{Binding}"/>
                                                                         <MouseBinding MouseAction="LeftDoubleClick" 
-                                                                                      Command="{Binding DataContext.SelectAppuntamentoCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                                                      CommandParameter="{Binding}"/>
+                                                      Command="{Binding DataContext.EditAppuntamentoCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                      CommandParameter="{Binding}"/>
                                                                     </Border.InputBindings>
+
+                                                                    <!-- Contenuto evento -->
                                                                     <StackPanel>
                                                                         <TextBlock Text="{Binding Titolo}" 
-                                                                                   Foreground="White" 
-                                                                                   FontSize="9" 
-                                                                                   FontWeight="SemiBold"
-                                                                                   TextTrimming="CharacterEllipsis"/>
+                                                   Foreground="White" 
+                                                   FontSize="9" 
+                                                   FontWeight="SemiBold"
+                                                   TextTrimming="CharacterEllipsis"/>
                                                                         <TextBlock Text="{Binding DataInizio, StringFormat=HH:mm}" 
-                                                                                   Foreground="White" 
-                                                                                   FontSize="8"
-                                                                                   Opacity="0.9"/>
+                                                   Foreground="White" 
+                                                   FontSize="8"
+                                                   Opacity="0.9"/>
                                                                     </StackPanel>
+
+                                                                    <!-- Trigger semplici per mouse over -->
+                                                                    <Border.Style>
+                                                                        <Style TargetType="Border">
+                                                                            <Style.Triggers>
+                                                                                <Trigger Property="IsMouseOver" Value="True">
+                                                                                    <Setter Property="Opacity" Value="0.8"/>
+                                                                                </Trigger>
+                                                                            </Style.Triggers>
+                                                                        </Style>
+                                                                    </Border.Style>
                                                                 </Border>
                                                             </DataTemplate>
                                                         </ItemsControl.ItemTemplate>
                                                     </ItemsControl>
 
-                                                    <!-- Indicatore se ci sono più eventi -->
-                                                    <TextBlock Text="{Binding Eventi.Count, StringFormat='+{0} altri'}" 
-                                                               FontSize="8" 
-                                                               Foreground="#8A8886" 
-                                                               HorizontalAlignment="Center"
-                                                               Margin="0,2,0,0">
-                                                        <TextBlock.Style>
-                                                            <Style TargetType="TextBlock">
+                                                    <!-- Indicatore overflow SEMPLIFICATO -->
+                                                    <Border Background="#8A8886" 
+                            CornerRadius="3" 
+                            Padding="4,2" 
+                            Margin="0,1"
+                            HorizontalAlignment="Center">
+                                                        <Border.Style>
+                                                            <Style TargetType="Border">
                                                                 <Setter Property="Visibility" Value="Collapsed"/>
                                                                 <Style.Triggers>
-                                                                    <DataTrigger Binding="{Binding Eventi.Count}" Value="3">
+                                                                    <DataTrigger Binding="{Binding HasOverflow}" Value="True">
                                                                         <Setter Property="Visibility" Value="Visible"/>
                                                                     </DataTrigger>
                                                                 </Style.Triggers>
                                                             </Style>
-                                                        </TextBlock.Style>
-                                                    </TextBlock>
+                                                        </Border.Style>
+
+                                                        <TextBlock Text="{Binding OverflowCount, StringFormat='+{0} altri'}" 
+                                   FontSize="8" 
+                                   Foreground="White" 
+                                   FontWeight="SemiBold"
+                                   HorizontalAlignment="Center"/>
+                                                    </Border>
                                                 </StackPanel>
                                             </Grid>
                                         </Border>
@@ -682,21 +589,40 @@
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
                                         <Border Background="White" 
-                                                BorderBrush="#E1DFDD" 
-                                                BorderThickness="1" 
-                                                CornerRadius="6" 
-                                                Margin="0,0,0,8" 
-                                                Padding="16"
-                                                Cursor="Hand">
+        BorderBrush="#E1DFDD" 
+        BorderThickness="1" 
+        CornerRadius="6" 
+        Margin="0,0,0,8" 
+        Padding="16"
+        Cursor="Hand"
+        x:Name="AppuntamentoCard">
+
+                                            <!-- Effetto ombra di base -->
                                             <Border.Effect>
                                                 <DropShadowEffect Color="#000000" Opacity="0.1" ShadowDepth="2" BlurRadius="8"/>
                                             </Border.Effect>
+
+                                            <!-- RenderTransform per animazioni -->
+                                            <Border.RenderTransform>
+                                                <ScaleTransform ScaleX="1" ScaleY="1"/>
+                                            </Border.RenderTransform>
+                                            <Border.RenderTransformOrigin>
+                                                <Point X="0.5" Y="0.5"/>
+                                            </Border.RenderTransformOrigin>
+
+                                            <!-- Gestione eventi CORRETTA per la lista -->
                                             <Border.InputBindings>
+                                                <!-- Single click per selezione -->
+                                                <MouseBinding MouseAction="LeftClick" 
+                      Command="{Binding DataContext.SelectAppuntamentoInCalendarCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                      CommandParameter="{Binding}"/>
+                                                <!-- Double click per modifica -->
                                                 <MouseBinding MouseAction="LeftDoubleClick" 
-                                                              Command="{Binding DataContext.SelectAppuntamentoCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                              CommandParameter="{Binding}"/>
+                      Command="{Binding DataContext.EditAppuntamentoCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                      CommandParameter="{Binding}"/>
                                             </Border.InputBindings>
 
+                                            <!-- Il contenuto della card rimane lo stesso... -->
                                             <Grid>
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="Auto"/>
@@ -708,30 +634,30 @@
                                                 <StackPanel Grid.Column="0" Margin="0,0,16,0">
                                                     <Border Width="4" Height="40" Background="{Binding StatoColore}" CornerRadius="2"/>
                                                     <TextBlock Text="{Binding DataInizio, StringFormat=HH:mm}" 
-                                                               FontSize="12" 
-                                                               FontWeight="Bold" 
-                                                               Foreground="#323130" 
-                                                               HorizontalAlignment="Center"
-                                                               Margin="0,4,0,0"/>
+                       FontSize="12" 
+                       FontWeight="Bold" 
+                       Foreground="#323130" 
+                       HorizontalAlignment="Center"
+                       Margin="0,4,0,0"/>
                                                     <TextBlock Text="{Binding DataFine, StringFormat=HH:mm}" 
-                                                               FontSize="10" 
-                                                               Foreground="#8A8886" 
-                                                               HorizontalAlignment="Center"/>
+                       FontSize="10" 
+                       Foreground="#8A8886" 
+                       HorizontalAlignment="Center"/>
                                                 </StackPanel>
 
                                                 <!-- Contenuto principale -->
                                                 <StackPanel Grid.Column="1">
                                                     <TextBlock Text="{Binding Titolo}" 
-                                                               FontSize="16" 
-                                                               FontWeight="SemiBold" 
-                                                               Foreground="#323130"
-                                                               TextWrapping="Wrap"/>
+                       FontSize="16" 
+                       FontWeight="SemiBold" 
+                       Foreground="#323130"
+                       TextWrapping="Wrap"/>
 
                                                     <TextBlock Text="{Binding Descrizione}" 
-                                                               FontSize="13" 
-                                                               Foreground="#605E5C" 
-                                                               TextWrapping="Wrap"
-                                                               Margin="0,4,0,0">
+                       FontSize="13" 
+                       Foreground="#605E5C" 
+                       TextWrapping="Wrap"
+                       Margin="0,4,0,0">
                                                         <TextBlock.Style>
                                                             <Style TargetType="TextBlock">
                                                                 <Style.Triggers>
@@ -810,19 +736,19 @@
                                                 <!-- Azioni rapide -->
                                                 <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Top">
                                                     <Button Content="✏️" 
-                                                            Command="{Binding DataContext.SelectAppuntamentoCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                            CommandParameter="{Binding}"
-                                                            Width="32" Height="32"
-                                                            ToolTip="Modifica"
-                                                            Margin="0,0,4,0"
-                                                            Style="{StaticResource OutlookToolbarButton}"/>
+                    Command="{Binding DataContext.EditAppuntamentoCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                    CommandParameter="{Binding}"
+                    Width="32" Height="32"
+                    ToolTip="Modifica"
+                    Margin="0,0,4,0"
+                    Style="{StaticResource OutlookToolbarButton}"/>
 
                                                     <Button Content="✅" 
-                                                            Command="{Binding DataContext.CompletaAppuntamentoCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                            Width="32" Height="32"
-                                                            ToolTip="Completa"
-                                                            Background="#107C10"
-                                                            Foreground="White">
+                    Command="{Binding DataContext.CompletaAppuntamentoCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                    Width="32" Height="32"
+                    ToolTip="Completa"
+                    Background="#107C10"
+                    Foreground="White">
                                                         <Button.Style>
                                                             <Style TargetType="Button" BasedOn="{StaticResource OutlookToolbarButton}">
                                                                 <Style.Triggers>
@@ -835,6 +761,82 @@
                                                     </Button>
                                                 </StackPanel>
                                             </Grid>
+
+                                            <!-- Trigger per evidenziazione e animazioni -->
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Style.Triggers>
+                                                        <!-- Appuntamento selezionato -->
+                                                        <DataTrigger Binding="{Binding DataContext.SelectedAppuntamentoInCalendar, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="{Binding}">
+                                                            <Setter Property="BorderBrush" Value="#0078D4"/>
+                                                            <Setter Property="BorderThickness" Value="2"/>
+                                                            <Setter Property="Effect">
+                                                                <Setter.Value>
+                                                                    <DropShadowEffect Color="#0078D4" Opacity="0.4" ShadowDepth="0" BlurRadius="12"/>
+                                                                </Setter.Value>
+                                                            </Setter>
+                                                            <!-- Animazione di selezione -->
+                                                            <DataTrigger.EnterActions>
+                                                                <BeginStoryboard>
+                                                                    <Storyboard>
+                                                                        <DoubleAnimation Storyboard.TargetProperty="(Border.RenderTransform).(ScaleTransform.ScaleX)"
+                                               To="1.02" Duration="0:0:0.2">
+                                                                            <DoubleAnimation.EasingFunction>
+                                                                                <BackEase EasingMode="EaseOut"/>
+                                                                            </DoubleAnimation.EasingFunction>
+                                                                        </DoubleAnimation>
+                                                                        <DoubleAnimation Storyboard.TargetProperty="(Border.RenderTransform).(ScaleTransform.ScaleY)"
+                                               To="1.02" Duration="0:0:0.2">
+                                                                            <DoubleAnimation.EasingFunction>
+                                                                                <BackEase EasingMode="EaseOut"/>
+                                                                            </DoubleAnimation.EasingFunction>
+                                                                        </DoubleAnimation>
+                                                                    </Storyboard>
+                                                                </BeginStoryboard>
+                                                            </DataTrigger.EnterActions>
+                                                            <DataTrigger.ExitActions>
+                                                                <BeginStoryboard>
+                                                                    <Storyboard>
+                                                                        <DoubleAnimation Storyboard.TargetProperty="(Border.RenderTransform).(ScaleTransform.ScaleX)"
+                                               To="1.0" Duration="0:0:0.15"/>
+                                                                        <DoubleAnimation Storyboard.TargetProperty="(Border.RenderTransform).(ScaleTransform.ScaleY)"
+                                               To="1.0" Duration="0:0:0.15"/>
+                                                                    </Storyboard>
+                                                                </BeginStoryboard>
+                                                            </DataTrigger.ExitActions>
+                                                        </DataTrigger>
+
+                                                        <!-- Mouse over -->
+                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                            <Setter Property="Effect">
+                                                                <Setter.Value>
+                                                                    <DropShadowEffect Color="#000000" Opacity="0.2" ShadowDepth="4" BlurRadius="16"/>
+                                                                </Setter.Value>
+                                                            </Setter>
+                                                            <Trigger.EnterActions>
+                                                                <BeginStoryboard>
+                                                                    <Storyboard>
+                                                                        <DoubleAnimation Storyboard.TargetProperty="(Border.RenderTransform).(ScaleTransform.ScaleX)"
+                                               To="1.01" Duration="0:0:0.1"/>
+                                                                        <DoubleAnimation Storyboard.TargetProperty="(Border.RenderTransform).(ScaleTransform.ScaleY)"
+                                               To="1.01" Duration="0:0:0.1"/>
+                                                                    </Storyboard>
+                                                                </BeginStoryboard>
+                                                            </Trigger.EnterActions>
+                                                            <Trigger.ExitActions>
+                                                                <BeginStoryboard>
+                                                                    <Storyboard>
+                                                                        <DoubleAnimation Storyboard.TargetProperty="(Border.RenderTransform).(ScaleTransform.ScaleX)"
+                                               To="1.0" Duration="0:0:0.1"/>
+                                                                        <DoubleAnimation Storyboard.TargetProperty="(Border.RenderTransform).(ScaleTransform.ScaleY)"
+                                               To="1.0" Duration="0:0:0.1"/>
+                                                                    </Storyboard>
+                                                                </BeginStoryboard>
+                                                            </Trigger.ExitActions>
+                                                        </Trigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
                                         </Border>
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>

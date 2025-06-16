@@ -1,0 +1,183 @@
+﻿<!-- Crea questo file come SettingsWindow.xaml -->
+<Window x:Class="ImmobiGestio.Views.SettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Impostazioni - ImmobiGestio" 
+        Height="400" Width="500"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        Background="{StaticResource BackgroundBrush}">
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <StackPanel Grid.Row="0" Margin="0,0,0,20">
+            <TextBlock Text="⚙️ Impostazioni" 
+                       FontSize="24" 
+                       FontWeight="Light" 
+                       Foreground="{StaticResource TextPrimary}"/>
+            <TextBlock Text="Personalizza l'aspetto e il comportamento dell'applicazione" 
+                       FontSize="14" 
+                       Foreground="{StaticResource TextSecondary}"
+                       Margin="0,5,0,0"/>
+        </StackPanel>
+
+        <!-- Contenuto Impostazioni -->
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+
+                <!-- Sezione Aspetto -->
+                <Border Style="{StaticResource MinimalCard}" Margin="0,0,0,20">
+                    <StackPanel>
+                        <TextBlock Text="🎨 Aspetto" 
+                                   FontSize="18" 
+                                   FontWeight="SemiBold" 
+                                   Foreground="{StaticResource TextPrimary}"
+                                   Margin="0,0,0,15"/>
+
+                        <!-- Selezione Tema -->
+                        <Grid Margin="0,0,0,15">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock Grid.Column="0" 
+                                       Text="Tema:" 
+                                       VerticalAlignment="Center"
+                                       FontWeight="SemiBold"
+                                       Foreground="{StaticResource TextPrimary}"
+                                       Margin="0,0,15,0"/>
+
+							<ComboBox x:Name="ThemeComboBox">
+								<ComboBoxItem Content="🖥️ Segui sistema" Tag="System"/>
+								<ComboBoxItem Content="☀️ Chiaro" Tag="Light"/>
+								<ComboBoxItem Content="🌙 Scuro" Tag="Dark"/>
+							</ComboBox>
+                        </Grid>
+
+                        <!-- Informazioni tema corrente -->
+                        <Border Background="{StaticResource HoverBrush}" 
+                                CornerRadius="6" 
+                                Padding="12"
+                                Margin="0,10,0,0">
+                            <StackPanel>
+                                <TextBlock Text="ℹ️ Informazioni tema" 
+                                           FontWeight="SemiBold" 
+                                           FontSize="13"
+                                           Foreground="{StaticResource TextPrimary}"
+                                           Margin="0,0,0,8"/>
+
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+
+                                    <TextBlock Grid.Row="0" Grid.Column="0" 
+                                               Text="Tema selezionato:" 
+                                               FontSize="12" 
+                                               Foreground="{StaticResource TextSecondary}"
+                                               Margin="0,0,10,4"/>
+                                    <TextBlock Grid.Row="0" Grid.Column="1" 
+                                               Text="{Binding CurrentThemeDisplay}" 
+                                               FontSize="12" 
+                                               FontWeight="SemiBold"
+                                               Foreground="{StaticResource TextPrimary}"
+                                               Margin="0,0,0,4"/>
+
+                                    <TextBlock Grid.Row="1" Grid.Column="0" 
+                                               Text="Tema di sistema:" 
+                                               FontSize="12" 
+                                               Foreground="{StaticResource TextSecondary}"
+                                               Margin="0,0,10,4"/>
+                                    <TextBlock Grid.Row="1" Grid.Column="1" 
+                                               Text="{Binding SystemThemeDisplay}" 
+                                               FontSize="12" 
+                                               Foreground="{StaticResource TextPrimary}"
+                                               Margin="0,0,0,4"/>
+
+                                    <TextBlock Grid.Row="2" Grid.Column="0" 
+                                               Text="Modalità attiva:" 
+                                               FontSize="12" 
+                                               Foreground="{StaticResource TextSecondary}"
+                                               Margin="0,0,10,0"/>
+                                    <TextBlock Grid.Row="2" Grid.Column="1" 
+                                               Text="{Binding ActiveThemeDisplay}" 
+                                               FontSize="12" 
+                                               FontWeight="Bold"
+                                               Foreground="{StaticResource AccentBrush}"/>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </Border>
+
+                <!-- Sezione Applicazione -->
+                <Border Style="{StaticResource MinimalCard}">
+                    <StackPanel>
+                        <TextBlock Text="🔧 Applicazione" 
+                                   FontSize="18" 
+                                   FontWeight="SemiBold" 
+                                   Foreground="{StaticResource TextPrimary}"
+                                   Margin="0,0,0,15"/>
+
+                        <!-- Avvio automatico -->
+                        <CheckBox Content="Avvia con Windows (Non implementato)" 
+                                  IsEnabled="False"
+                                  Foreground="{StaticResource TextSecondary}"
+                                  Margin="0,0,0,10"/>
+
+                        <!-- Notifiche -->
+                        <CheckBox Content="Mostra notifiche per appuntamenti (Non implementato)" 
+                                  IsEnabled="False"
+                                  Foreground="{StaticResource TextSecondary}"
+                                  Margin="0,0,0,10"/>
+
+                        <!-- Auto-salvataggio -->
+                        <CheckBox Content="Salvataggio automatico ogni 5 minuti" 
+                                  IsChecked="True"
+                                  IsEnabled="False"
+                                  Foreground="{StaticResource TextSecondary}"/>
+                    </StackPanel>
+                </Border>
+
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Footer con pulsanti -->
+        <StackPanel Grid.Row="2" 
+                    Orientation="Horizontal" 
+                    HorizontalAlignment="Right" 
+                    Margin="0,20,0,0">
+
+            <Button Content="Test Tema" 
+                    Command="{Binding TestThemeCommand}"
+                    Style="{StaticResource MinimalButton}" 
+                    Background="{StaticResource InfoBrush}"
+                    Margin="0,0,10,0"/>
+
+            <Button Content="Ripristina" 
+                    Command="{Binding ResetThemeCommand}"
+                    Style="{StaticResource MinimalButton}" 
+                    Background="{StaticResource WarningBrush}"
+                    Margin="0,0,10,0"/>
+
+            <Button Content="OK" 
+                    Command="{Binding SaveAndCloseCommand}"
+                    Style="{StaticResource MinimalButton}" 
+                    Background="{StaticResource SuccessBrush}"
+                    IsDefault="True"/>
+        </StackPanel>
+    </Grid>
+</Window>

@@ -1,4 +1,5 @@
-﻿<Application x:Class="ImmobiGestio.App"
+﻿<!-- App.xaml aggiornato con tutti i converter e gestione temi -->
+<Application x:Class="ImmobiGestio.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:converters="clr-namespace:ImmobiGestio.Converters"
@@ -8,8 +9,26 @@
 
     <Application.Resources>
         <ResourceDictionary>
+            <!-- CONVERTERS -->
+            <converters:BoolToStyleConverter x:Key="BoolToStyleConverter"/>
+            <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+            <converters:DecimalToStringConverter x:Key="DecimalToStringConverter"/>
+            <converters:IntToStringConverter x:Key="IntToStringConverter"/>
+            <converters:NullableIntToStringConverter x:Key="NullableIntToStringConverter"/>
+            <converters:NullableDecimalToStringConverter x:Key="NullableDecimalToStringConverter"/>
+            <converters:NumericStringConverter x:Key="NumericStringConverter"/>
 
-            <!-- PALETTE MINIMAL -->
+            <!-- CALENDAR CONVERTERS -->
+            <converters:HexToColorConverter x:Key="HexToColorConverter"/>
+            <converters:AppuntamentoBorderConverter x:Key="AppuntamentoBorderConverter"/>
+            <converters:AppuntamentoBorderColorConverter x:Key="AppuntamentoBorderColorConverter"/>
+            <converters:GreaterThanConverter x:Key="GreaterThanConverter"/>
+            <converters:OverflowCountConverter x:Key="OverflowCountConverter"/>
+            <converters:AppuntamentoStateToColorConverter x:Key="AppuntamentoStateToColorConverter"/>
+            <converters:AppuntamentoSelectionVisibilityConverter x:Key="AppuntamentoSelectionVisibilityConverter"/>
+            <converters:StringToFontWeightConverter x:Key="StringToFontWeightConverter"/>
+
+            <!-- BASE BRUSHES -->
             <SolidColorBrush x:Key="BackgroundBrush" Color="#FAFAFA"/>
             <SolidColorBrush x:Key="SurfaceBrush" Color="#FFFFFF"/>
             <SolidColorBrush x:Key="PrimaryBrush" Color="#333333"/>
@@ -20,13 +39,11 @@
             <SolidColorBrush x:Key="BorderBrush" Color="#E5E5E5"/>
             <SolidColorBrush x:Key="HoverBrush" Color="#F5F5F5"/>
 
-            <!-- Converters -->
-            <converters:BoolToStyleConverter x:Key="BoolToStyleConverter"/>
-            <converters:DecimalToStringConverter x:Key="DecimalToStringConverter"/>
-            <converters:IntToStringConverter x:Key="IntToStringConverter"/>
-            <converters:NullableIntToStringConverter x:Key="NullableIntToStringConverter"/>
-            <converters:NullableDecimalToStringConverter x:Key="NullableDecimalToStringConverter"/>
-            <converters:NumericStringConverter x:Key="NumericStringConverter"/>
+            <!-- STATUS BRUSHES - CRITICO! -->
+            <SolidColorBrush x:Key="SuccessBrush" Color="#4CAF50"/>
+            <SolidColorBrush x:Key="WarningBrush" Color="#FF9800"/>
+            <SolidColorBrush x:Key="ErrorBrush" Color="#F44336"/>
+            <SolidColorBrush x:Key="InfoBrush" Color="#2196F3"/>
 
             <!-- TRANSIZIONE MINIMAL -->
             <Storyboard x:Key="FadeIn">
@@ -72,7 +89,8 @@
                     <Setter.Value>
                         <ControlTemplate TargetType="Button">
                             <Border Background="{TemplateBinding Background}"
-                                    Padding="{TemplateBinding Padding}">
+                                    Padding="{TemplateBinding Padding}"
+                                    CornerRadius="4">
                                 <ContentPresenter HorizontalAlignment="Center" 
                                                 VerticalAlignment="Center"/>
                             </Border>
@@ -82,6 +100,10 @@
                                 </Trigger>
                                 <Trigger Property="IsPressed" Value="True">
                                     <Setter Property="Background" Value="#003D7A"/>
+                                </Trigger>
+                                <Trigger Property="IsEnabled" Value="False">
+                                    <Setter Property="Background" Value="#CCCCCC"/>
+                                    <Setter Property="Foreground" Value="#666666"/>
                                 </Trigger>
                             </ControlTemplate.Triggers>
                         </ControlTemplate>
@@ -103,7 +125,8 @@
                     <Setter.Value>
                         <ControlTemplate TargetType="Button">
                             <Border Background="{TemplateBinding Background}" 
-                                    Margin="8,1">
+                                    Margin="8,1"
+                                    CornerRadius="4">
                                 <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
                                                 VerticalAlignment="Center"/>
                             </Border>
@@ -129,14 +152,17 @@
                 <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}"/>
                 <Setter Property="BorderThickness" Value="1"/>
                 <Setter Property="Background" Value="{StaticResource SurfaceBrush}"/>
+                <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
                 <Setter Property="Padding" Value="12,8"/>
                 <Setter Property="FontSize" Value="14"/>
+                <Setter Property="CaretBrush" Value="{StaticResource TextPrimary}"/>
                 <Setter Property="Template">
                     <Setter.Value>
                         <ControlTemplate TargetType="TextBox">
                             <Border Background="{TemplateBinding Background}"
                                     BorderBrush="{TemplateBinding BorderBrush}"
-                                    BorderThickness="{TemplateBinding BorderThickness}">
+                                    BorderThickness="{TemplateBinding BorderThickness}"
+                                    CornerRadius="4">
                                 <ScrollViewer x:Name="PART_ContentHost" 
                                             Margin="{TemplateBinding Padding}"
                                             VerticalAlignment="Center"/>
@@ -147,6 +173,7 @@
                                 </Trigger>
                                 <Trigger Property="IsFocused" Value="True">
                                     <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
+                                    <Setter Property="BorderThickness" Value="2"/>
                                 </Trigger>
                             </ControlTemplate.Triggers>
                         </ControlTemplate>
@@ -159,6 +186,7 @@
                 <Setter Property="Background" Value="{StaticResource SurfaceBrush}"/>
                 <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}"/>
                 <Setter Property="BorderThickness" Value="1"/>
+                <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
                 <Setter Property="Padding" Value="12,8"/>
                 <Setter Property="FontSize" Value="14"/>
                 <Setter Property="Template">
@@ -167,7 +195,8 @@
                             <Grid>
                                 <Border Background="{TemplateBinding Background}"
                                         BorderBrush="{TemplateBinding BorderBrush}"
-                                        BorderThickness="{TemplateBinding BorderThickness}"/>
+                                        BorderThickness="{TemplateBinding BorderThickness}"
+                                        CornerRadius="4"/>
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*"/>
@@ -189,6 +218,7 @@
                                     <Border Background="{StaticResource SurfaceBrush}"
                                             BorderBrush="{StaticResource BorderBrush}"
                                             BorderThickness="1"
+                                            CornerRadius="4"
                                             MinWidth="{TemplateBinding ActualWidth}">
                                         <ScrollViewer MaxHeight="200">
                                             <ItemsPresenter/>
@@ -196,6 +226,11 @@
                                     </Border>
                                 </Popup>
                             </Grid>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
                         </ControlTemplate>
                     </Setter.Value>
                 </Setter>
@@ -208,11 +243,63 @@
                 <Setter Property="BorderThickness" Value="1"/>
                 <Setter Property="Padding" Value="20"/>
                 <Setter Property="Margin" Value="0,0,0,12"/>
+                <Setter Property="CornerRadius" Value="8"/>
+            </Style>
+
+            <!-- OUTLOOK STYLE BUTTONS -->
+            <Style x:Key="OutlookToolbarButton" TargetType="Button">
+                <Setter Property="Background" Value="Transparent"/>
+                <Setter Property="BorderThickness" Value="0"/>
+                <Setter Property="Padding" Value="12,8"/>
+                <Setter Property="FontSize" Value="13"/>
+                <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
+                <Setter Property="Cursor" Value="Hand"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="Button">
+                            <Border Background="{TemplateBinding Background}" 
+                                    CornerRadius="3"
+                                    Padding="{TemplateBinding Padding}">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Background" Value="{StaticResource HoverBrush}"/>
+                                </Trigger>
+                                <Trigger Property="IsPressed" Value="True">
+                                    <Setter Property="Background" Value="{StaticResource BorderBrush}"/>
+                                </Trigger>
+                                <Trigger Property="IsEnabled" Value="False">
+                                    <Setter Property="Foreground" Value="{StaticResource TextMuted}"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <!-- FORM STYLES -->
+            <Style x:Key="OutlookFormLabel" TargetType="TextBlock">
+                <Setter Property="FontSize" Value="13"/>
+                <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
+                <Setter Property="Margin" Value="0,0,0,4"/>
+                <Setter Property="FontWeight" Value="SemiBold"/>
+            </Style>
+
+            <Style x:Key="OutlookFormTextBox" TargetType="TextBox" BasedOn="{StaticResource MinimalTextBox}">
+                <Setter Property="Margin" Value="0,0,0,12"/>
+                <Setter Property="Height" Value="34"/>
+            </Style>
+
+            <Style x:Key="OutlookFormComboBox" TargetType="ComboBox" BasedOn="{StaticResource MinimalComboBox}">
+                <Setter Property="Margin" Value="0,0,0,12"/>
+                <Setter Property="Height" Value="34"/>
             </Style>
 
             <!-- DATAGRID MINIMAL -->
             <Style x:Key="MinimalDataGrid" TargetType="DataGrid">
                 <Setter Property="Background" Value="{StaticResource SurfaceBrush}"/>
+                <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
                 <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}"/>
                 <Setter Property="BorderThickness" Value="1,0,0,0"/>
                 <Setter Property="GridLinesVisibility" Value="Horizontal"/>
@@ -223,6 +310,7 @@
                 <Setter Property="RowHeight" Value="40"/>
                 <Setter Property="FontSize" Value="14"/>
                 <Setter Property="AlternationCount" Value="2"/>
+                <Setter Property="AlternatingRowBackground" Value="{StaticResource BackgroundBrush}"/>
             </Style>
 
             <!-- CONTENTCONTROL ANIMATO MINIMAL -->

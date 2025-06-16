@@ -1,9 +1,8 @@
-﻿// Crea questo file come CalendarHelpers.cs nella cartella Models
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using System.Linq;
 
 namespace ImmobiGestio.Models
 {
@@ -70,32 +69,54 @@ namespace ImmobiGestio.Models
             set => SetProperty(ref _colonna, value);
         }
 
+        // ✅ PROPRIETÀ DI CONVENIENZA PER BINDING XAML
+        public string Titolo => Evento?.Titolo ?? "";
+        public DateTime DataInizio => Evento?.Inizio ?? DateTime.Now;
+        public DateTime DataFine => Evento?.Fine ?? DateTime.Now;
+        public string StatoColore => Evento?.Colore ?? "#2196F3";
+        public string TipoAppuntamento => Evento?.Tipo ?? "";
+        public string ClienteNome => Evento?.ClienteNome ?? "";
+        public string ImmobileTitolo => Evento?.ImmobileTitolo ?? "";
+
         // Proprietà calcolate
         public string DisplayText
         {
             get
             {
-                var text = Evento?.Titolo ?? "";
+                var text = Titolo;
                 if (text.Length > 25)
                     text = text.Substring(0, 22) + "...";
                 return text;
             }
         }
 
-        public string TimeText => Evento?.Inizio.ToString("HH:mm") ?? "";
+        public string TimeText => DataInizio.ToString("HH:mm");
 
         public string DurationText
         {
             get
             {
                 if (Evento == null) return "";
-                var duration = Evento.Fine - Evento.Inizio;
+                var duration = DataFine - DataInizio;
                 if (duration.TotalDays >= 1)
                     return "Tutto il giorno";
                 else if (duration.TotalHours >= 1)
                     return $"{duration.Hours}h {duration.Minutes}m";
                 else
                     return $"{duration.Minutes}m";
+            }
+        }
+
+        public string FullDisplayText
+        {
+            get
+            {
+                var text = Titolo;
+                if (!string.IsNullOrEmpty(ClienteNome))
+                    text += $" - {ClienteNome}";
+                if (!string.IsNullOrEmpty(ImmobileTitolo))
+                    text += $" ({ImmobileTitolo})";
+                return text;
             }
         }
 
@@ -111,6 +132,23 @@ namespace ImmobiGestio.Models
             if (Equals(storage, value)) return false;
             storage = value;
             OnPropertyChanged(propertyName);
+
+            // Notifica anche le proprietà calcolate quando cambia l'evento
+            if (propertyName == nameof(Evento))
+            {
+                OnPropertyChanged(nameof(Titolo));
+                OnPropertyChanged(nameof(DataInizio));
+                OnPropertyChanged(nameof(DataFine));
+                OnPropertyChanged(nameof(StatoColore));
+                OnPropertyChanged(nameof(TipoAppuntamento));
+                OnPropertyChanged(nameof(ClienteNome));
+                OnPropertyChanged(nameof(ImmobileTitolo));
+                OnPropertyChanged(nameof(DisplayText));
+                OnPropertyChanged(nameof(TimeText));
+                OnPropertyChanged(nameof(DurationText));
+                OnPropertyChanged(nameof(FullDisplayText));
+            }
+
             return true;
         }
     }
@@ -257,7 +295,7 @@ namespace ImmobiGestio.Models
     }
 
     /// <summary>
-    /// Rappresenta un giorno nel calendario principale
+    /// Rappresenta un giorno nel calendario principale - CLASSE COMPLETA
     /// </summary>
     public class CalendarDay : INotifyPropertyChanged
     {
@@ -304,13 +342,16 @@ namespace ImmobiGestio.Models
             set => SetProperty(ref _hasOverflow, value);
         }
 
-        // Proprietà calcolate
+        // ✅ PROPRIETÀ CALCOLATE - COMPLETE
         public int DayNumber => Date.Day;
         public string DayName => Date.ToString("ddd");
         public int EventCount => Events.Count;
-        public int VisibleEventCount => Math.Min(Events.Count, 3); // Massimo 3 eventi visibili
+        public int VisibleEventCount => Math.Min(Events.Count, 3);
         public int OverflowCount => Math.Max(0, Events.Count - 3);
+        public bool HasEvents => Events.Count > 0;
+        public bool IsWeekend => Date.DayOfWeek == DayOfWeek.Saturday || Date.DayOfWeek == DayOfWeek.Sunday;
 
+        // ✅ PROPRIETÀ STYLING - COMPLETE
         public string BackgroundColor
         {
             get
@@ -331,6 +372,43 @@ namespace ImmobiGestio.Models
             }
         }
 
+        public string ForegroundColor
+        {
+            get
+            {
+                if (IsToday) return "White";
+                if (!IsCurrentMonth) return "#A19F9D";
+                if (IsWeekend) return "#605E5C";
+                return "#323130";
+            }
+        }
+
+        public string FontWeight
+        {
+            get
+            {
+                if (IsToday) return "Bold";
+                if (IsSelected) return "SemiBold";
+                if (HasEvents) return "Medium";
+                return "Normal";
+            }
+        }
+
+        public string ToolTip
+        {
+            get
+            {
+                var tooltip = Date.ToString("dddd, dd MMMM yyyy");
+                if (HasEvents)
+                {
+                    var eventi = EventCount == 1 ? "evento" : "eventi";
+                    tooltip += $"\n{EventCount} {eventi}";
+                }
+                return tooltip;
+            }
+        }
+
+        // ✅ INotifyPropertyChanged IMPLEMENTATION
         public event PropertyChangedEventHandler? PropertyChanged;
 
         protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)

@@ -452,8 +452,22 @@ namespace ImmobiGestio.ViewModels
 
         private void ShowSettings()
         {
-            MessageBox.Show("Funzionalità Impostazioni - In sviluppo", "Info",
-                MessageBoxButton.OK, MessageBoxImage.Information);
+            try
+            {
+                var settingsWindow = new Views.SettingsWindow
+                {
+                    Owner = Application.Current.MainWindow,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner
+                };
+
+                settingsWindow.ShowDialog();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Errore apertura impostazioni: {ex.Message}");
+                MessageBox.Show($"Errore nell'apertura delle impostazioni: {ex.Message}",
+                               "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         #endregion
