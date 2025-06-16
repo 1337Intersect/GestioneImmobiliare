@@ -44,35 +44,14 @@ namespace ImmobiGestio.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            try
-            {
-                System.Diagnostics.Debug.WriteLine("=== CONFIGURAZIONE MODELLO DATABASE ===");
+            // Indici per performance query calendario
+            modelBuilder.Entity<Appuntamento>()
+                .HasIndex(a => new { a.DataInizio, a.StatoAppuntamento })
+                .HasDatabaseName("IX_Appuntamenti_DataInizio_Stato");
 
-                // Configurazione Immobile
-                ConfigureImmobile(modelBuilder);
-
-                // Configurazione Cliente
-                ConfigureCliente(modelBuilder);
-
-                // Configurazione Appuntamento - CRITICA!
-                ConfigureAppuntamento(modelBuilder);
-
-                // Configurazione DocumentoImmobile
-                ConfigureDocumentoImmobile(modelBuilder);
-
-                // Configurazione FotoImmobile
-                ConfigureFotoImmobile(modelBuilder);
-
-                // Configurazione ClienteImmobile
-                ConfigureClienteImmobile(modelBuilder);
-
-                System.Diagnostics.Debug.WriteLine("Configurazione modello completata");
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Errore OnModelCreating: {ex}");
-                throw;
-            }
+            modelBuilder.Entity<Appuntamento>()
+                .HasIndex(a => a.ClienteId)
+                .HasDatabaseName("IX_Appuntamenti_ClienteId");
         }
 
         private void ConfigureImmobile(ModelBuilder modelBuilder)

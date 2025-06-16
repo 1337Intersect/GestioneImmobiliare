@@ -4,6 +4,7 @@ using ImmobiGestio.Models;
 using ImmobiGestio.Services;
 using Microsoft.EntityFrameworkCore;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
@@ -29,6 +30,12 @@ namespace ImmobiGestio.ViewModels
         private bool _isOutlookConnected = false;
         private Appuntamento? _hoveredAppuntamento;
         private Appuntamento? _selectedAppuntamentoInCalendar;
+        private readonly System.Collections.Concurrent.ConcurrentDictionary<DateTime, List<CalendarDay>> _calendarCache
+            = new System.Collections.Concurrent.ConcurrentDictionary<DateTime, List<CalendarDay>>();
+
+        private readonly System.Collections.Concurrent.ConcurrentDictionary<DateTime, List<MiniCalendarDay>> _miniCalendarCache
+            = new System.Collections.Concurrent.ConcurrentDictionary<DateTime, List<MiniCalendarDay>>();
+
 
         public ObservableCollection<Appuntamento> Appuntamenti { get; set; } = new();
         public ObservableCollection<EventoCalendario> EventiCalendario { get; set; } = new();

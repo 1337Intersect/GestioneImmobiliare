@@ -322,6 +322,17 @@
                 </Style.Triggers>
             </Style>
 
+            <Style TargetType="ItemsControl">
+                <Setter Property="VirtualizingPanel.IsVirtualizing" Value="True"/>
+                <Setter Property="VirtualizingPanel.VirtualizationMode" Value="Recycling"/>
+                <Setter Property="ScrollViewer.CanContentScroll" Value="True"/>
+            </Style>
+
+            <Style TargetType="TextBlock">
+                <Setter Property="TextOptions.TextFormattingMode" Value="Display"/>
+                <Setter Property="TextOptions.TextRenderingMode" Value="Auto"/>
+            </Style>
+            
         </ResourceDictionary>
     </Application.Resources>
 
