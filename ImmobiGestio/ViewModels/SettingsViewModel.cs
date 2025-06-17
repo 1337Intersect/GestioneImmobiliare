@@ -1,11 +1,12 @@
-﻿using System;
-using System.Collections.ObjectModel;
-using System.Windows;
-using System.Windows.Input;
-using ImmobiGestio.Commands;
+﻿using ImmobiGestio.Commands;
 using ImmobiGestio.Models;
 using ImmobiGestio.Services;
 using Microsoft.Win32;
+using System;
+using System.Collections.ObjectModel;
+using System.IO;
+using System.Windows;
+using System.Windows.Input;
 
 namespace ImmobiGestio.ViewModels
 {
@@ -73,10 +74,27 @@ namespace ImmobiGestio.ViewModels
             InitializeCollections();
             InitializeCommands();
             LoadSettings();
+            InitializeTheme();
 
             // Sottoscrizione ai cambiamenti delle proprietà del Settings
             _settings.PropertyChanged += (s, e) => CheckForChanges();
         }
+
+        public string CurrentTheme
+        {
+            get => ThemeManager.Instance.CurrentTheme.ToString();
+            set
+            {
+                if (Enum.TryParse<Theme>(value, out var theme))
+                {
+                    ThemeManager.Instance.SetTheme(theme);
+                    _settings.AppTheme = value;
+                    OnPropertyChanged();
+                    CheckForChanges();
+                }
+            }
+        }
+
 
         private void InitializeCollections()
         {
@@ -154,6 +172,31 @@ namespace ImmobiGestio.ViewModels
             }
         }
 
+        private void InitializeTheme()
+        {
+            try
+            {
+                // Load current theme from ThemeManager
+                var currentTheme = ThemeManager.Instance.CurrentTheme.ToString();
+                _settings.AppTheme = currentTheme;
+
+                // Subscribe to theme changes
+                ThemeManager.Instance.ThemeChanged += OnThemeChanged;
+
+                System.Diagnostics.Debug.WriteLine($"Theme initialized: {currentTheme}");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error initializing theme: {ex.Message}");
+                _settings.AppTheme = "Auto";
+            }
+        }
+
+        private void OnThemeChanged(Theme newTheme)
+        {
+            _settings.AppTheme = newTheme.ToString();
+            OnPropertyChanged(nameof(CurrentTheme));
+        }
         private void SaveSettings(object? parameter)
         {
             try
@@ -370,7 +413,8 @@ namespace ImmobiGestio.ViewModels
                    settings1.LogLevel == settings2.LogLevel &&
                    settings1.LogToFile == settings2.LogToFile &&
                    settings1.LogFilePath == settings2.LogFilePath &&
-                   settings1.MaxLogFiles == settings2.MaxLogFiles;
+                   settings1.MaxLogFiles == settings2.MaxLogFiles &&
+                   settings1.AppTheme == settings2.AppTheme;
         }
 
         private SettingsModel CloneSettings(SettingsModel source)
@@ -409,20 +453,55 @@ namespace ImmobiGestio.ViewModels
         {
             try
             {
-                var dialog = new System.Windows.Forms.FolderBrowserDialog
+                // Using WPF OpenFolderDialog (available in .NET 8+)
+                var dialog = new Microsoft.Win32.OpenFolderDialog
                 {
-                    Description = description,
-                    SelectedPath = selectedPath,
-                    ShowNewFolderButton = true
+                    Title = description,
+                    InitialDirectory = !string.IsNullOrEmpty(selectedPath) && Directory.Exists(selectedPath)
+                        ? selectedPath
+                        : Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)
                 };
 
                 var result = dialog.ShowDialog();
-                return result == System.Windows.Forms.DialogResult.OK ? dialog.SelectedPath : string.Empty;
+                return result == true ? dialog.FolderName : string.Empty;
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Errore nella selezione cartella: {ex.Message}");
+
+                // Fallback: Use SaveFileDialog with a workaround
+                try
+                {
+                    var saveDialog = new Microsoft.Win32.SaveFileDialog
+                    {
+                        Title = description,
+                        FileName = "Seleziona questa cartella",
+                        Filter = "Cartella|*.folder",
+                        InitialDirectory = !string.IsNullOrEmpty(selectedPath) && Directory.Exists(selectedPath)
+                            ? selectedPath
+                            : Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)
+                    };
+
+                    if (saveDialog.ShowDialog() == true)
+                    {
+                        return System.IO.Path.GetDirectoryName(saveDialog.FileName) ?? string.Empty;
+                    }
+                }
+                catch (Exception fallbackEx)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Errore fallback selezione cartella: {fallbackEx.Message}");
+                    MessageBox.Show($"Errore nella selezione della cartella.\n\nInserisci manualmente il percorso o usa il percorso predefinito.\n\nErrore: {ex.Message}",
+                        "Errore Selezione Cartella", MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
+
                 return string.Empty;
+            }
+        }
+        ~SettingsViewModel()
+        {
+            if (ThemeManager.Instance != null)
+            {
+                ThemeManager.Instance.ThemeChanged -= OnThemeChanged;
             }
         }
     }

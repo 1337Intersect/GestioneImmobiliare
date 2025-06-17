@@ -1,7 +1,8 @@
-﻿using System;
-using System.Windows;
-using Microsoft.Win32;
+﻿using Microsoft.Win32;
+using System;
 using System.IO;
+using System.Windows;
+using System.Windows.Media;
 
 namespace ImmobiGestio.Services
 {
@@ -44,7 +45,6 @@ namespace ImmobiGestio.Services
 
         public bool IsSystemDarkMode => !_systemUsesLightTheme;
 
-        // ===== FIX: Add the missing LoadSavedTheme method =====
         public void LoadSavedTheme()
         {
             try
@@ -159,37 +159,32 @@ namespace ImmobiGestio.Services
                 var application = Application.Current;
                 if (application == null) return;
 
+                // Create basic fallback theme resources
                 var fallbackDict = new ResourceDictionary();
 
                 if (theme == Theme.Dark)
                 {
-                    // Dark theme colors
-                    fallbackDict["BackgroundBrush"] = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(32, 32, 32));
-                    fallbackDict["SurfaceBrush"] = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(45, 45, 45));
-                    fallbackDict["PrimaryBrush"] = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(200, 200, 200));
-                    fallbackDict["AccentBrush"] = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0, 120, 212));
-                    fallbackDict["TextPrimary"] = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(240, 240, 240));
-                    fallbackDict["TextSecondary"] = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(180, 180, 180));
-                    fallbackDict["TextMuted"] = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(120, 120, 120));
-                    fallbackDict["BorderBrush"] = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(60, 60, 60));
-                    fallbackDict["HoverBrush"] = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(55, 55, 55));
+                    fallbackDict["BackgroundBrush"] = new SolidColorBrush(Color.FromRgb(26, 26, 26));
+                    fallbackDict["SurfaceBrush"] = new SolidColorBrush(Color.FromRgb(45, 45, 45));
+                    fallbackDict["TextPrimary"] = new SolidColorBrush(Color.FromRgb(240, 240, 240));
+                    fallbackDict["TextSecondary"] = new SolidColorBrush(Color.FromRgb(180, 180, 180));
+                    fallbackDict["BorderBrush"] = new SolidColorBrush(Color.FromRgb(60, 60, 60));
+                    fallbackDict["AccentBrush"] = new SolidColorBrush(Color.FromRgb(0, 120, 212));
+                    fallbackDict["HoverBrush"] = new SolidColorBrush(Color.FromRgb(55, 55, 55));
                 }
                 else
                 {
-                    // Light theme colors
-                    fallbackDict["BackgroundBrush"] = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(250, 250, 250));
-                    fallbackDict["SurfaceBrush"] = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(255, 255, 255));
-                    fallbackDict["PrimaryBrush"] = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(51, 51, 51));
-                    fallbackDict["AccentBrush"] = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0, 102, 204));
-                    fallbackDict["TextPrimary"] = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(26, 26, 26));
-                    fallbackDict["TextSecondary"] = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(102, 102, 102));
-                    fallbackDict["TextMuted"] = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(153, 153, 153));
-                    fallbackDict["BorderBrush"] = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(229, 229, 229));
-                    fallbackDict["HoverBrush"] = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(245, 245, 245));
+                    fallbackDict["BackgroundBrush"] = new SolidColorBrush(Color.FromRgb(255, 255, 255));
+                    fallbackDict["SurfaceBrush"] = new SolidColorBrush(Color.FromRgb(250, 250, 250));
+                    fallbackDict["TextPrimary"] = new SolidColorBrush(Color.FromRgb(50, 49, 48));
+                    fallbackDict["TextSecondary"] = new SolidColorBrush(Color.FromRgb(96, 94, 92));
+                    fallbackDict["BorderBrush"] = new SolidColorBrush(Color.FromRgb(225, 223, 221));
+                    fallbackDict["AccentBrush"] = new SolidColorBrush(Color.FromRgb(0, 120, 212));
+                    fallbackDict["HoverBrush"] = new SolidColorBrush(Color.FromRgb(248, 248, 248));
                 }
 
                 application.Resources.MergedDictionaries.Add(fallbackDict);
-                System.Diagnostics.Debug.WriteLine("Tema di fallback applicato");
+                System.Diagnostics.Debug.WriteLine($"Tema fallback {theme} applicato");
             }
             catch (Exception ex)
             {
@@ -250,19 +245,17 @@ namespace ImmobiGestio.Services
             }
         }
 
-        // ===== FIX: Rename existing method to avoid conflicts =====
         private Theme LoadSavedThemeInternal()
         {
-            // Try loading from Settings.settings
+            // FIXED: Uncommented Settings integration
             try
             {
-                // If you have a Settings.settings file, use this:
-                // var settingsValue = Properties.Settings.Default.AppTheme;
-                // if (!string.IsNullOrEmpty(settingsValue) && Enum.TryParse<Theme>(settingsValue, out var theme))
-                // {
-                //     System.Diagnostics.Debug.WriteLine($"Tema caricato dalle Settings: {theme}");
-                //     return theme;
-                // }
+                var settingsValue = Properties.Settings.Default.AppTheme;
+                if (!string.IsNullOrEmpty(settingsValue) && Enum.TryParse<Theme>(settingsValue, out var theme))
+                {
+                    System.Diagnostics.Debug.WriteLine($"Tema caricato dalle Settings: {theme}");
+                    return theme;
+                }
             }
             catch (Exception ex)
             {
@@ -289,17 +282,18 @@ namespace ImmobiGestio.Services
             return Theme.Auto; // Default
         }
 
+        // FIXED: Also uncomment Settings saving in SaveThemePreference()
         private void SaveThemePreference(Theme theme)
         {
             try
             {
-                // Save to registry
+                // FIXED: Save to Settings first (primary method)
+                Properties.Settings.Default.AppTheme = theme.ToString();
+                Properties.Settings.Default.Save();
+
+                // Also save to registry as backup
                 using var key = Registry.CurrentUser.CreateSubKey(@"Software\ImmobiGestio");
                 key?.SetValue("Theme", theme.ToString());
-
-                // If you have Settings.settings, also save there:
-                // Properties.Settings.Default.AppTheme = theme.ToString();
-                // Properties.Settings.Default.Save();
 
                 System.Diagnostics.Debug.WriteLine($"Salvata preferenza tema: {theme}");
             }

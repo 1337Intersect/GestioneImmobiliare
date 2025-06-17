@@ -44,6 +44,9 @@ namespace ImmobiGestio.Models
         private string _logFilePath = "logs\\immobigestio.log";
         private int _maxLogFiles = 30;
 
+        //Sezione Theme
+        private string _appTheme = "Auto";
+
         // Proprietà Generale
         public string ApplicationName
         {
@@ -199,6 +202,13 @@ namespace ImmobiGestio.Models
         {
             get => _maxLogFiles;
             set => SetProperty(ref _maxLogFiles, value);
+        }
+
+        //Proprietà Theme
+        public string AppTheme
+        {
+            get => _appTheme;
+            set => SetProperty(ref _appTheme, value);
         }
 
         // Proprietà calcolate per visualizzazione

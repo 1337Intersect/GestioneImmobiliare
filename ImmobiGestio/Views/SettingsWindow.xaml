@@ -9,29 +9,34 @@
         Background="{DynamicResource BackgroundBrush}"
         Icon="{x:Null}">
 
+    <!-- REPLACE the Window.Resources section in SettingsWindow.xaml with this: -->
     <Window.Resources>
         <!-- Converters locali -->
         <converters:FileSizeConverter x:Key="FileSizeConverter"/>
         <converters:TimeIntervalConverter x:Key="TimeIntervalConverter"/>
+        <converters:TabVisibilityConverter x:Key="TabVisibilityConverter"/>
 
         <!-- Stili per i controlli minimal -->
         <Style x:Key="MinimalTextBox" TargetType="TextBox">
             <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
             <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Padding" Value="8,6"/>
+            <Setter Property="Padding" Value="8,8"/>
             <Setter Property="FontSize" Value="13"/>
             <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="TextBox">
                         <Border Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="3">
+                        BorderBrush="{TemplateBinding BorderBrush}"
+                        BorderThickness="{TemplateBinding BorderThickness}"
+                        CornerRadius="3">
                             <ScrollViewer x:Name="PART_ContentHost" 
-                                        Margin="{TemplateBinding Padding}"
-                                        VerticalAlignment="Center"/>
+                                Margin="{TemplateBinding Padding}"
+                                VerticalAlignment="Center"
+                                HorizontalScrollBarVisibility="Hidden"
+                                VerticalScrollBarVisibility="Hidden"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
@@ -54,75 +59,32 @@
             <Setter Property="Padding" Value="8,6"/>
             <Setter Property="FontSize" Value="13"/>
             <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="ComboBox">
-                        <Grid>
-                            <Border Background="{TemplateBinding Background}"
-                                    BorderBrush="{TemplateBinding BorderBrush}"
-                                    BorderThickness="{TemplateBinding BorderThickness}"
-                                    CornerRadius="3"/>
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-                                <ContentPresenter Grid.Column="0" 
-                                                Margin="{TemplateBinding Padding}"
-                                                VerticalAlignment="Center"
-                                                Content="{TemplateBinding SelectionBoxItem}"/>
-                                <Path Grid.Column="1" 
-                                      Data="M 0 0 L 4 4 L 8 0 Z" 
-                                      Fill="{DynamicResource TextSecondary}"
-                                      Margin="0,0,8,0"
-                                      VerticalAlignment="Center"/>
-                            </Grid>
-                            <Popup x:Name="PART_Popup" 
-                                   Placement="Bottom"
-                                   IsOpen="{TemplateBinding IsDropDownOpen}"
-                                   AllowsTransparency="True">
-                                <Border Background="{DynamicResource SurfaceBrush}"
-                                        BorderBrush="{DynamicResource BorderBrush}"
-                                        BorderThickness="1"
-                                        CornerRadius="3">
-                                    <ScrollViewer MaxHeight="200">
-                                        <ItemsPresenter/>
-                                    </ScrollViewer>
-                                </Border>
-                            </Popup>
-                        </Grid>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
         </Style>
 
+        <!-- Rest of styles remain the same -->
         <Style x:Key="MinimalButton" TargetType="Button">
             <Setter Property="Background" Value="{DynamicResource AccentBrush}"/>
             <Setter Property="Foreground" Value="White"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Padding" Value="16,8"/>
             <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontWeight" Value="Medium"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Border Background="{TemplateBinding Background}"
-                                CornerRadius="3"
-                                Padding="{TemplateBinding Padding}">
+                            Padding="{TemplateBinding Padding}"
+                            CornerRadius="4">
                             <ContentPresenter HorizontalAlignment="Center"
-                                            VerticalAlignment="Center"/>
+                                        VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Opacity" Value="0.8"/>
+                                <Setter Property="Opacity" Value="0.9"/>
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter Property="Opacity" Value="0.6"/>
+                                <Setter Property="Opacity" Value="0.8"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -130,23 +92,22 @@
             </Setter>
         </Style>
 
-        <!-- Stile per i tab buttons -->
         <Style x:Key="TabButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
             <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Padding" Value="20,12"/>
-            <Setter Property="FontSize" Value="14"/>
-            <Setter Property="Foreground" Value="{DynamicResource TextSecondary}"/>
+            <Setter Property="Padding" Value="16,12"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
             <Setter Property="HorizontalContentAlignment" Value="Left"/>
-            <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Border Background="{TemplateBinding Background}" 
-                                Padding="{TemplateBinding Padding}"
-                                CornerRadius="0">
+                            Padding="{TemplateBinding Padding}"
+                            CornerRadius="0">
                             <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
-                                            VerticalAlignment="Center"/>
+                                        VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
@@ -159,14 +120,12 @@
             </Setter>
         </Style>
 
-        <!-- Stile per tab button attivo -->
         <Style x:Key="TabButtonActiveStyle" TargetType="Button" BasedOn="{StaticResource TabButtonStyle}">
             <Setter Property="Background" Value="{DynamicResource AccentBrush}"/>
             <Setter Property="Foreground" Value="White"/>
             <Setter Property="FontWeight" Value="Medium"/>
         </Style>
 
-        <!-- Stile per le sezioni -->
         <Style x:Key="SectionHeaderStyle" TargetType="TextBlock">
             <Setter Property="FontSize" Value="16"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
@@ -174,7 +133,6 @@
             <Setter Property="Margin" Value="0,0,0,12"/>
         </Style>
 
-        <!-- Stile per le label -->
         <Style x:Key="SettingsLabelStyle" TargetType="TextBlock">
             <Setter Property="FontSize" Value="13"/>
             <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
@@ -182,10 +140,14 @@
             <Setter Property="VerticalAlignment" Value="Center"/>
         </Style>
 
-        <!-- Stile per i controlli -->
         <Style x:Key="SettingsTextBoxStyle" TargetType="TextBox" BasedOn="{StaticResource MinimalTextBox}">
             <Setter Property="Margin" Value="0,0,0,12"/>
-            <Setter Property="Height" Value="32"/>
+            <Setter Property="MinHeight" Value="32"/>
+            <!-- REMOVED fixed Height="32" -->
+            <Setter Property="MaxHeight" Value="80"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+            <Setter Property="AcceptsReturn" Value="False"/>
+            <Setter Property="VerticalScrollBarVisibility" Value="Auto"/>
         </Style>
 
         <Style x:Key="SettingsComboBoxStyle" TargetType="ComboBox" BasedOn="{StaticResource MinimalComboBox}">
@@ -200,7 +162,6 @@
             <Setter Property="VerticalAlignment" Value="Center"/>
         </Style>
 
-        <!-- Stile per i gruppi -->
         <Style x:Key="SettingsGroupStyle" TargetType="GroupBox">
             <Setter Property="Margin" Value="0,0,0,20"/>
             <Setter Property="Padding" Value="16"/>
@@ -234,6 +195,10 @@
                             Style="{StaticResource TabButtonActiveStyle}"
                             Command="{Binding SelectTabCommand}"
                             CommandParameter="Generale"/>
+                    <Button Content="Tema" 
+                            Style="{StaticResource TabButtonStyle}"
+                            Command="{Binding SelectTabCommand}"
+                            CommandParameter="Tema"/>
                     <Button Content="Percorsi" 
                             Style="{StaticResource TabButtonStyle}"
                             Command="{Binding SelectTabCommand}"
@@ -265,10 +230,11 @@
             <Border Grid.Column="1" Background="{DynamicResource BorderBrush}"/>
 
             <!-- Content Area -->
+            <!-- REPLACE the entire ScrollViewer content in SettingsWindow.xaml with this: -->
             <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto" Padding="20">
                 <StackPanel>
                     <!-- Sezione Generale -->
-                    <StackPanel x:Name="GeneraleTab">
+                    <StackPanel x:Name="GeneraleTab" Visibility="{Binding SelectedTab, Converter={StaticResource TabVisibilityConverter}, ConverterParameter=Generale}">
                         <TextBlock Text="Impostazioni Generali" Style="{StaticResource SectionHeaderStyle}"/>
 
                         <GroupBox Header="Applicazione" Style="{StaticResource SettingsGroupStyle}">
@@ -280,16 +246,59 @@
                                 <TextBox Text="{Binding Settings.ApplicationVersion}" Style="{StaticResource SettingsTextBoxStyle}" IsReadOnly="True"/>
 
                                 <TextBlock Text="Intervallo Salvataggio Automatico (secondi):" Style="{StaticResource SettingsLabelStyle}"/>
-                                <TextBox Text="{Binding Settings.AutoSaveInterval, Converter={StaticResource NumericConverter}}" Style="{StaticResource SettingsTextBoxStyle}"/>
+                                <TextBox Text="{Binding Settings.AutoSaveInterval, Converter={StaticResource NumericStringConverter}}" Style="{StaticResource SettingsTextBoxStyle}"/>
 
                                 <TextBlock Text="Intervallo Aggiornamento Status (secondi):" Style="{StaticResource SettingsLabelStyle}"/>
-                                <TextBox Text="{Binding Settings.StatusRefreshInterval, Converter={StaticResource NumericConverter}}" Style="{StaticResource SettingsTextBoxStyle}"/>
+                                <TextBox Text="{Binding Settings.StatusRefreshInterval, Converter={StaticResource NumericStringConverter}}" Style="{StaticResource SettingsTextBoxStyle}"/>
                             </StackPanel>
                         </GroupBox>
                     </StackPanel>
+                    <StackPanel x:Name="TemaTab" Visibility="Collapsed">
+                        <TextBlock Text="Impostazioni Tema" Style="{StaticResource SectionHeaderStyle}"/>
 
+                        <GroupBox Header="Aspetto" Style="{StaticResource SettingsGroupStyle}">
+                            <StackPanel>
+                                <TextBlock Text="Tema dell'applicazione:" Style="{StaticResource SettingsLabelStyle}"/>
+                                <ComboBox x:Name="ThemeComboBox" 
+                    Style="{StaticResource SettingsComboBoxStyle}"
+                    SelectedValue="{Binding Settings.AppTheme, Mode=TwoWay}"
+                    SelectionChanged="ThemeComboBox_SelectionChanged">
+                                    <ComboBoxItem Content="🌅 Chiaro" Tag="Light"/>
+                                    <ComboBoxItem Content="🌙 Scuro" Tag="Dark"/>
+                                    <ComboBoxItem Content="⚙️ Automatico (Sistema)" Tag="Auto"/>
+                                </ComboBox>
+
+                                <TextBlock Text="Il tema automatico seguirà le impostazioni del sistema operativo." 
+                     Style="{StaticResource SettingsLabelStyle}"
+                     FontStyle="Italic" 
+                     Opacity="0.8"
+                     Margin="0,4,0,12"/>
+
+                                <!-- Theme Preview -->
+                                <Border Background="{DynamicResource SurfaceBrush}" 
+                    BorderBrush="{DynamicResource BorderBrush}" 
+                    BorderThickness="1" 
+                    CornerRadius="4" 
+                    Padding="16" 
+                    Margin="0,8,0,12">
+                                    <StackPanel>
+                                        <TextBlock Text="Anteprima tema corrente" 
+                             Foreground="{DynamicResource TextPrimary}" 
+                             FontWeight="Medium"/>
+                                        <TextBlock Text="Testo secondario di esempio" 
+                             Foreground="{DynamicResource TextSecondary}" 
+                             FontSize="12" 
+                             Margin="0,4,0,8"/>
+                                        <Button Content="Pulsante di esempio" 
+                          Style="{StaticResource MinimalButton}" 
+                          HorizontalAlignment="Left"/>
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+                        </GroupBox>
+                    </StackPanel>
                     <!-- Sezione Percorsi -->
-                    <StackPanel x:Name="PercorsiTab" Visibility="Collapsed">
+                    <StackPanel x:Name="PercorsiTab" Visibility="{Binding SelectedTab, Converter={StaticResource TabVisibilityConverter}, ConverterParameter=Percorsi}">
                         <TextBlock Text="Percorsi e Cartelle" Style="{StaticResource SectionHeaderStyle}"/>
 
                         <GroupBox Header="Cartelle di Sistema" Style="{StaticResource SettingsGroupStyle}">
@@ -302,7 +311,7 @@
                                     </Grid.ColumnDefinitions>
                                     <TextBox Text="{Binding Settings.DocumentsPath}" Style="{StaticResource SettingsTextBoxStyle}" Grid.Column="0"/>
                                     <Button Content="Sfoglia" Style="{StaticResource MinimalButton}" Grid.Column="1" Margin="8,0,0,12"
-                                            Command="{Binding BrowseDocumentsPathCommand}"/>
+                                Command="{Binding BrowseDocumentsPathCommand}"/>
                                 </Grid>
 
                                 <TextBlock Text="Cartella Foto:" Style="{StaticResource SettingsLabelStyle}"/>
@@ -313,7 +322,7 @@
                                     </Grid.ColumnDefinitions>
                                     <TextBox Text="{Binding Settings.PhotosPath}" Style="{StaticResource SettingsTextBoxStyle}" Grid.Column="0"/>
                                     <Button Content="Sfoglia" Style="{StaticResource MinimalButton}" Grid.Column="1" Margin="8,0,0,12"
-                                            Command="{Binding BrowsePhotosPathCommand}"/>
+                                Command="{Binding BrowsePhotosPathCommand}"/>
                                 </Grid>
 
                                 <TextBlock Text="Cartella Backup:" Style="{StaticResource SettingsLabelStyle}"/>
@@ -324,14 +333,14 @@
                                     </Grid.ColumnDefinitions>
                                     <TextBox Text="{Binding Settings.BackupPath}" Style="{StaticResource SettingsTextBoxStyle}" Grid.Column="0"/>
                                     <Button Content="Sfoglia" Style="{StaticResource MinimalButton}" Grid.Column="1" Margin="8,0,0,12"
-                                            Command="{Binding BrowseBackupPathCommand}"/>
+                                Command="{Binding BrowseBackupPathCommand}"/>
                                 </Grid>
                             </StackPanel>
                         </GroupBox>
                     </StackPanel>
 
                     <!-- Sezione File -->
-                    <StackPanel x:Name="FileTab" Visibility="Collapsed">
+                    <StackPanel x:Name="FileTab" Visibility="{Binding SelectedTab, Converter={StaticResource TabVisibilityConverter}, ConverterParameter=File}">
                         <TextBlock Text="Gestione File" Style="{StaticResource SectionHeaderStyle}"/>
 
                         <GroupBox Header="Limiti Dimensioni" Style="{StaticResource SettingsGroupStyle}">
@@ -356,26 +365,26 @@
                     </StackPanel>
 
                     <!-- Sezione Backup -->
-                    <StackPanel x:Name="BackupTab" Visibility="Collapsed">
+                    <StackPanel x:Name="BackupTab" Visibility="{Binding SelectedTab, Converter={StaticResource TabVisibilityConverter}, ConverterParameter=Backup}">
                         <TextBlock Text="Backup e Sicurezza" Style="{StaticResource SectionHeaderStyle}"/>
 
                         <GroupBox Header="Backup Automatico" Style="{StaticResource SettingsGroupStyle}">
                             <StackPanel>
                                 <CheckBox Content="Abilita Backup Automatico" 
-                                         IsChecked="{Binding Settings.AutoBackupEnabled}" 
-                                         Style="{StaticResource SettingsCheckBoxStyle}"/>
+                             IsChecked="{Binding Settings.AutoBackupEnabled}" 
+                             Style="{StaticResource SettingsCheckBoxStyle}"/>
 
                                 <TextBlock Text="Giorni tra Backup:" Style="{StaticResource SettingsLabelStyle}"/>
-                                <TextBox Text="{Binding Settings.AutoBackupDays, Converter={StaticResource NumericConverter}}" Style="{StaticResource SettingsTextBoxStyle}"/>
+                                <TextBox Text="{Binding Settings.AutoBackupDays, Converter={StaticResource NumericStringConverter}}" Style="{StaticResource SettingsTextBoxStyle}"/>
 
                                 <TextBlock Text="Numero Massimo File Backup:" Style="{StaticResource SettingsLabelStyle}"/>
-                                <TextBox Text="{Binding Settings.MaxBackupFiles, Converter={StaticResource NumericConverter}}" Style="{StaticResource SettingsTextBoxStyle}"/>
+                                <TextBox Text="{Binding Settings.MaxBackupFiles, Converter={StaticResource NumericStringConverter}}" Style="{StaticResource SettingsTextBoxStyle}"/>
                             </StackPanel>
                         </GroupBox>
                     </StackPanel>
 
                     <!-- Sezione Email -->
-                    <StackPanel x:Name="EmailTab" Visibility="Collapsed">
+                    <StackPanel x:Name="EmailTab" Visibility="{Binding SelectedTab, Converter={StaticResource TabVisibilityConverter}, ConverterParameter=Email}">
                         <TextBlock Text="Configurazione Email" Style="{StaticResource SectionHeaderStyle}"/>
 
                         <GroupBox Header="Server SMTP" Style="{StaticResource SettingsGroupStyle}">
@@ -384,59 +393,58 @@
                                 <TextBox Text="{Binding Settings.SMTPServer}" Style="{StaticResource SettingsTextBoxStyle}"/>
 
                                 <TextBlock Text="Porta:" Style="{StaticResource SettingsLabelStyle}"/>
-                                <TextBox Text="{Binding Settings.SMTPPort, Converter={StaticResource NumericConverter}}" Style="{StaticResource SettingsTextBoxStyle}"/>
+                                <TextBox Text="{Binding Settings.SMTPPort, Converter={StaticResource NumericStringConverter}}" Style="{StaticResource SettingsTextBoxStyle}"/>
 
                                 <TextBlock Text="Username:" Style="{StaticResource SettingsLabelStyle}"/>
                                 <TextBox Text="{Binding Settings.SMTPUsername}" Style="{StaticResource SettingsTextBoxStyle}"/>
 
                                 <TextBlock Text="Password:" Style="{StaticResource SettingsLabelStyle}"/>
-                                <PasswordBox x:Name="PasswordBox" Style="{StaticResource SettingsTextBoxStyle}"/>
+                                <PasswordBox x:Name="PasswordBox"/>
 
                                 <TextBlock Text="Email Mittente:" Style="{StaticResource SettingsLabelStyle}"/>
                                 <TextBox Text="{Binding Settings.EmailFrom}" Style="{StaticResource SettingsTextBoxStyle}"/>
 
-                                <Button Content="Test Connessione" Style="{StaticResource MinimalButton}"
-                                        Command="{Binding TestEmailConnectionCommand}" Margin="0,8,0,0"/>
+                                <Button Content="Test Connessione" Style="{StaticResource MinimalButton}" 
+                            Command="{Binding TestEmailConnectionCommand}"/>
                             </StackPanel>
                         </GroupBox>
                     </StackPanel>
 
                     <!-- Sezione Outlook -->
-                    <StackPanel x:Name="OutlookTab" Visibility="Collapsed">
+                    <StackPanel x:Name="OutlookTab" Visibility="{Binding SelectedTab, Converter={StaticResource TabVisibilityConverter}, ConverterParameter=Outlook}">
                         <TextBlock Text="Integrazione Outlook" Style="{StaticResource SectionHeaderStyle}"/>
 
                         <GroupBox Header="Sincronizzazione" Style="{StaticResource SettingsGroupStyle}">
                             <StackPanel>
                                 <CheckBox Content="Abilita Integrazione Outlook" 
-                                         IsChecked="{Binding Settings.OutlookIntegrationEnabled}" 
-                                         Style="{StaticResource SettingsCheckBoxStyle}"/>
+                             IsChecked="{Binding Settings.OutlookIntegrationEnabled}" 
+                             Style="{StaticResource SettingsCheckBoxStyle}"/>
 
-                                <TextBlock Text="Intervallo Sincronizzazione (secondi):" Style="{StaticResource SettingsLabelStyle}"/>
-                                <TextBox Text="{Binding Settings.OutlookSyncInterval, Converter={StaticResource TimeIntervalConverter}}" Style="{StaticResource SettingsTextBoxStyle}"/>
+                                <TextBlock Text="Intervallo Sincronizzazione (minuti):" Style="{StaticResource SettingsLabelStyle}"/>
+                                <ComboBox ItemsSource="{Binding SyncIntervals}" 
+                             SelectedItem="{Binding Settings.OutlookSyncInterval}" 
+                             Style="{StaticResource SettingsComboBoxStyle}"/>
 
-                                <Button Content="Test Connessione Outlook" Style="{StaticResource MinimalButton}"
-                                        Command="{Binding TestOutlookConnectionCommand}" Margin="0,8,0,0"/>
+                                <Button Content="Test Connessione Outlook" Style="{StaticResource MinimalButton}" 
+                            Command="{Binding TestOutlookConnectionCommand}"/>
                             </StackPanel>
                         </GroupBox>
                     </StackPanel>
 
                     <!-- Sezione Logging -->
-                    <StackPanel x:Name="LoggingTab" Visibility="Collapsed">
+                    <StackPanel x:Name="LoggingTab" Visibility="{Binding SelectedTab, Converter={StaticResource TabVisibilityConverter}, ConverterParameter=Logging}">
                         <TextBlock Text="Sistema di Logging" Style="{StaticResource SectionHeaderStyle}"/>
 
                         <GroupBox Header="Configurazione Log" Style="{StaticResource SettingsGroupStyle}">
                             <StackPanel>
                                 <TextBlock Text="Livello Log:" Style="{StaticResource SettingsLabelStyle}"/>
-                                <ComboBox SelectedValue="{Binding Settings.LogLevel}" Style="{StaticResource SettingsComboBoxStyle}">
-                                    <ComboBoxItem Content="Debug"/>
-                                    <ComboBoxItem Content="Info"/>
-                                    <ComboBoxItem Content="Warning"/>
-                                    <ComboBoxItem Content="Error"/>
-                                </ComboBox>
+                                <ComboBox ItemsSource="{Binding LogLevels}" 
+                             SelectedItem="{Binding Settings.LogLevel}" 
+                             Style="{StaticResource SettingsComboBoxStyle}"/>
 
                                 <CheckBox Content="Salva Log su File" 
-                                         IsChecked="{Binding Settings.LogToFile}" 
-                                         Style="{StaticResource SettingsCheckBoxStyle}"/>
+                             IsChecked="{Binding Settings.LogToFile}" 
+                             Style="{StaticResource SettingsCheckBoxStyle}"/>
 
                                 <TextBlock Text="Percorso File Log:" Style="{StaticResource SettingsLabelStyle}"/>
                                 <Grid>
@@ -446,11 +454,11 @@
                                     </Grid.ColumnDefinitions>
                                     <TextBox Text="{Binding Settings.LogFilePath}" Style="{StaticResource SettingsTextBoxStyle}" Grid.Column="0"/>
                                     <Button Content="Sfoglia" Style="{StaticResource MinimalButton}" Grid.Column="1" Margin="8,0,0,12"
-                                            Command="{Binding BrowseLogFilePathCommand}"/>
+                                Command="{Binding BrowseLogFilePathCommand}"/>
                                 </Grid>
 
                                 <TextBlock Text="Numero Massimo File Log:" Style="{StaticResource SettingsLabelStyle}"/>
-                                <TextBox Text="{Binding Settings.MaxLogFiles, Converter={StaticResource NumericConverter}}" Style="{StaticResource SettingsTextBoxStyle}"/>
+                                <TextBox Text="{Binding Settings.MaxLogFiles, Converter={StaticResource NumericStringConverter}}" Style="{StaticResource SettingsTextBoxStyle}"/>
                             </StackPanel>
                         </GroupBox>
                     </StackPanel>

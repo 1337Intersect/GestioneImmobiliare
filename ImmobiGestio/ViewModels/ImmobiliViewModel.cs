@@ -186,6 +186,83 @@ namespace ImmobiGestio.ViewModels
             OnPropertyChanged(nameof(MaxDocumentSizeFormatted));
             OnPropertyChanged(nameof(MaxPhotoSizeFormatted));
         }
+        private void RefreshFileValidation()
+        {
+            try
+            {
+                System.Diagnostics.Debug.WriteLine("=== REFRESH FILE VALIDATION ===");
+
+                // Get current settings
+                var currentSettings = SettingsIntegrationHelper.CurrentSettings;
+
+                // If there's a selected property, validate its existing files against new settings
+                if (SelectedImmobile != null)
+                {
+                    // Validate existing documents
+                    if (SelectedImmobile.Documenti?.Any() == true)
+                    {
+                        var invalidDocs = new List<string>();
+                        foreach (var doc in SelectedImmobile.Documenti)
+                        {
+                            if (!string.IsNullOrEmpty(doc.NomeFile))
+                            {
+                                var extension = System.IO.Path.GetExtension(doc.NomeFile);
+                                if (!SettingsIntegrationHelper.IsDocumentFormatSupported(extension))
+                                {
+                                    invalidDocs.Add($"{doc.NomeFile} ({extension})");
+                                }
+                            }
+                        }
+
+                        if (invalidDocs.Any())
+                        {
+                            System.Diagnostics.Debug.WriteLine($"Documenti non più supportati: {string.Join(", ", invalidDocs)}");
+                            // Optionally show a warning to user about unsupported formats
+                            // MessageBox.Show($"Attenzione: Alcuni documenti hanno formati non più supportati:\n{string.Join("\n", invalidDocs)}", 
+                            //     "Formati Non Supportati", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        }
+                    }
+
+                    // Validate existing photos
+                    if (SelectedImmobile.Foto?.Any() == true)
+                    {
+                        var invalidPhotos = new List<string>();
+                        foreach (var foto in SelectedImmobile.Foto)
+                        {
+                            if (!string.IsNullOrEmpty(foto.NomeFile))
+                            {
+                                var extension = System.IO.Path.GetExtension(foto.NomeFile);
+                                if (!SettingsIntegrationHelper.IsImageFormatSupported(extension))
+                                {
+                                    invalidPhotos.Add($"{foto.NomeFile} ({extension})");
+                                }
+                            }
+                        }
+
+                        if (invalidPhotos.Any())
+                        {
+                            System.Diagnostics.Debug.WriteLine($"Foto non più supportate: {string.Join(", ", invalidPhotos)}");
+                            // Optionally show a warning to user about unsupported formats
+                            // MessageBox.Show($"Attenzione: Alcune foto hanno formati non più supportati:\n{string.Join("\n", invalidPhotos)}", 
+                            //     "Formati Non Supportati", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        }
+                    }
+                }
+
+                // Log current supported formats for debugging
+                System.Diagnostics.Debug.WriteLine($"Formati documenti supportati: {currentSettings.SupportedDocumentFormats}");
+                System.Diagnostics.Debug.WriteLine($"Formati immagini supportati: {currentSettings.SupportedImageFormats}");
+                System.Diagnostics.Debug.WriteLine($"Dimensione massima documenti: {currentSettings.MaxDocumentSizeFormatted}");
+                System.Diagnostics.Debug.WriteLine($"Dimensione massima foto: {currentSettings.MaxPhotoSizeFormatted}");
+
+                System.Diagnostics.Debug.WriteLine("RefreshFileValidation completato");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Errore RefreshFileValidation: {ex.Message}");
+            }
+        }
+
         private void InitializeCollections()
         {
             // Popolamento TipiDocumento
