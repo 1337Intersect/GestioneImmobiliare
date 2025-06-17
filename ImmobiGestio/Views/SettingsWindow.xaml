@@ -6,11 +6,129 @@
         Height="700" Width="900"
         WindowStartupLocation="CenterOwner"
         ResizeMode="CanResize"
-        Background="{StaticResource BackgroundBrush}"
+        Background="{DynamicResource BackgroundBrush}"
         Icon="{x:Null}">
 
     <Window.Resources>
-        <converters:NumericStringConverter x:Key="NumericConverter"/>
+        <!-- Converters locali -->
+        <converters:FileSizeConverter x:Key="FileSizeConverter"/>
+        <converters:TimeIntervalConverter x:Key="TimeIntervalConverter"/>
+
+        <!-- Stili per i controlli minimal -->
+        <Style x:Key="MinimalTextBox" TargetType="TextBox">
+            <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="8,6"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="3">
+                            <ScrollViewer x:Name="PART_ContentHost" 
+                                        Margin="{TemplateBinding Padding}"
+                                        VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                            </Trigger>
+                            <Trigger Property="IsFocused" Value="True">
+                                <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                                <Setter Property="BorderThickness" Value="2"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="MinimalComboBox" TargetType="ComboBox">
+            <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="8,6"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBox">
+                        <Grid>
+                            <Border Background="{TemplateBinding Background}"
+                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                    BorderThickness="{TemplateBinding BorderThickness}"
+                                    CornerRadius="3"/>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <ContentPresenter Grid.Column="0" 
+                                                Margin="{TemplateBinding Padding}"
+                                                VerticalAlignment="Center"
+                                                Content="{TemplateBinding SelectionBoxItem}"/>
+                                <Path Grid.Column="1" 
+                                      Data="M 0 0 L 4 4 L 8 0 Z" 
+                                      Fill="{DynamicResource TextSecondary}"
+                                      Margin="0,0,8,0"
+                                      VerticalAlignment="Center"/>
+                            </Grid>
+                            <Popup x:Name="PART_Popup" 
+                                   Placement="Bottom"
+                                   IsOpen="{TemplateBinding IsDropDownOpen}"
+                                   AllowsTransparency="True">
+                                <Border Background="{DynamicResource SurfaceBrush}"
+                                        BorderBrush="{DynamicResource BorderBrush}"
+                                        BorderThickness="1"
+                                        CornerRadius="3">
+                                    <ScrollViewer MaxHeight="200">
+                                        <ItemsPresenter/>
+                                    </ScrollViewer>
+                                </Border>
+                            </Popup>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="MinimalButton" TargetType="Button">
+            <Setter Property="Background" Value="{DynamicResource AccentBrush}"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="16,8"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                CornerRadius="3"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                            VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Opacity" Value="0.8"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter Property="Opacity" Value="0.6"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
 
         <!-- Stile per i tab buttons -->
         <Style x:Key="TabButtonStyle" TargetType="Button">
@@ -18,7 +136,7 @@
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Padding" Value="20,12"/>
             <Setter Property="FontSize" Value="14"/>
-            <Setter Property="Foreground" Value="{StaticResource TextSecondary}"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondary}"/>
             <Setter Property="HorizontalContentAlignment" Value="Left"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Template">
@@ -32,8 +150,8 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="{StaticResource HoverBrush}"/>
-                                <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
+                                <Setter Property="Background" Value="{DynamicResource HoverBrush}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -43,7 +161,7 @@
 
         <!-- Stile per tab button attivo -->
         <Style x:Key="TabButtonActiveStyle" TargetType="Button" BasedOn="{StaticResource TabButtonStyle}">
-            <Setter Property="Background" Value="{StaticResource AccentBrush}"/>
+            <Setter Property="Background" Value="{DynamicResource AccentBrush}"/>
             <Setter Property="Foreground" Value="White"/>
             <Setter Property="FontWeight" Value="Medium"/>
         </Style>
@@ -52,14 +170,14 @@
         <Style x:Key="SectionHeaderStyle" TargetType="TextBlock">
             <Setter Property="FontSize" Value="16"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
             <Setter Property="Margin" Value="0,0,0,12"/>
         </Style>
 
         <!-- Stile per le label -->
         <Style x:Key="SettingsLabelStyle" TargetType="TextBlock">
             <Setter Property="FontSize" Value="13"/>
-            <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
             <Setter Property="Margin" Value="0,0,0,4"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
         </Style>
@@ -78,7 +196,7 @@
         <Style x:Key="SettingsCheckBoxStyle" TargetType="CheckBox">
             <Setter Property="Margin" Value="0,0,0,12"/>
             <Setter Property="FontSize" Value="13"/>
-            <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
         </Style>
 
@@ -86,12 +204,12 @@
         <Style x:Key="SettingsGroupStyle" TargetType="GroupBox">
             <Setter Property="Margin" Value="0,0,0,20"/>
             <Setter Property="Padding" Value="16"/>
-            <Setter Property="Background" Value="{StaticResource SurfaceBrush}"/>
-            <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}"/>
+            <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="FontSize" Value="14"/>
             <Setter Property="FontWeight" Value="Medium"/>
-            <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
         </Style>
     </Window.Resources>
 
@@ -110,578 +228,251 @@
             </Grid.ColumnDefinitions>
 
             <!-- Sidebar Navigation -->
-            <Border Grid.Column="0" Background="{StaticResource SurfaceBrush}" 
-                    BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,1,0">
-                <StackPanel Margin="0,20,0,0">
-                    <TextBlock Text="CATEGORIE" FontSize="11" FontWeight="Bold" 
-                               Foreground="{StaticResource TextMuted}" Margin="20,0,0,12"/>
-
-                    <Button Content="⚙️ Generale" 
-                            Command="{Binding SelectTabCommand}" CommandParameter="Generale">
-                        <Button.Style>
-                            <Style TargetType="Button" BasedOn="{StaticResource TabButtonStyle}">
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding SelectedTab}" Value="Generale">
-                                        <Setter Property="Background" Value="{StaticResource AccentBrush}"/>
-                                        <Setter Property="Foreground" Value="White"/>
-                                        <Setter Property="FontWeight" Value="Medium"/>
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </Button.Style>
-                    </Button>
-
-                    <Button Content="📁 Percorsi" 
-                            Command="{Binding SelectTabCommand}" CommandParameter="Percorsi">
-                        <Button.Style>
-                            <Style TargetType="Button" BasedOn="{StaticResource TabButtonStyle}">
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding SelectedTab}" Value="Percorsi">
-                                        <Setter Property="Background" Value="{StaticResource AccentBrush}"/>
-                                        <Setter Property="Foreground" Value="White"/>
-                                        <Setter Property="FontWeight" Value="Medium"/>
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </Button.Style>
-                    </Button>
-
-                    <Button Content="📄 File" 
-                            Command="{Binding SelectTabCommand}" CommandParameter="File">
-                        <Button.Style>
-                            <Style TargetType="Button" BasedOn="{StaticResource TabButtonStyle}">
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding SelectedTab}" Value="File">
-                                        <Setter Property="Background" Value="{StaticResource AccentBrush}"/>
-                                        <Setter Property="Foreground" Value="White"/>
-                                        <Setter Property="FontWeight" Value="Medium"/>
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </Button.Style>
-                    </Button>
-
-                    <Button Content="💾 Backup" 
-                            Command="{Binding SelectTabCommand}" CommandParameter="Backup">
-                        <Button.Style>
-                            <Style TargetType="Button" BasedOn="{StaticResource TabButtonStyle}">
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding SelectedTab}" Value="Backup">
-                                        <Setter Property="Background" Value="{StaticResource AccentBrush}"/>
-                                        <Setter Property="Foreground" Value="White"/>
-                                        <Setter Property="FontWeight" Value="Medium"/>
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </Button.Style>
-                    </Button>
-
-                    <Button Content="📧 Email" 
-                            Command="{Binding SelectTabCommand}" CommandParameter="Email">
-                        <Button.Style>
-                            <Style TargetType="Button" BasedOn="{StaticResource TabButtonStyle}">
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding SelectedTab}" Value="Email">
-                                        <Setter Property="Background" Value="{StaticResource AccentBrush}"/>
-                                        <Setter Property="Foreground" Value="White"/>
-                                        <Setter Property="FontWeight" Value="Medium"/>
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </Button.Style>
-                    </Button>
-
-                    <Button Content="📅 Outlook" 
-                            Command="{Binding SelectTabCommand}" CommandParameter="Outlook">
-                        <Button.Style>
-                            <Style TargetType="Button" BasedOn="{StaticResource TabButtonStyle}">
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding SelectedTab}" Value="Outlook">
-                                        <Setter Property="Background" Value="{StaticResource AccentBrush}"/>
-                                        <Setter Property="Foreground" Value="White"/>
-                                        <Setter Property="FontWeight" Value="Medium"/>
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </Button.Style>
-                    </Button>
-
-                    <Button Content="📋 Logging" 
-                            Command="{Binding SelectTabCommand}" CommandParameter="Logging">
-                        <Button.Style>
-                            <Style TargetType="Button" BasedOn="{StaticResource TabButtonStyle}">
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding SelectedTab}" Value="Logging">
-                                        <Setter Property="Background" Value="{StaticResource AccentBrush}"/>
-                                        <Setter Property="Foreground" Value="White"/>
-                                        <Setter Property="FontWeight" Value="Medium"/>
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </Button.Style>
-                    </Button>
-
-                    <!-- Separator -->
-                    <Border Height="1" Background="{StaticResource BorderBrush}" Margin="20,20,20,16"/>
-
-                    <!-- Quick Actions -->
-                    <Button Content="🔄 Reset Default" 
-                            Command="{Binding ResetToDefaultCommand}"
+            <Border Grid.Column="0" Background="{DynamicResource SurfaceBrush}">
+                <StackPanel>
+                    <Button Content="Generale" 
+                            Style="{StaticResource TabButtonActiveStyle}"
+                            Command="{Binding SelectTabCommand}"
+                            CommandParameter="Generale"/>
+                    <Button Content="Percorsi" 
                             Style="{StaticResource TabButtonStyle}"
-                            Foreground="#D83B01"/>
-
-                    <Button Content="📤 Esporta" 
-                            Command="{Binding ExportSettingsCommand}"
-                            Style="{StaticResource TabButtonStyle}"/>
-
-                    <Button Content="📥 Importa" 
-                            Command="{Binding ImportSettingsCommand}"
-                            Style="{StaticResource TabButtonStyle}"/>
+                            Command="{Binding SelectTabCommand}"
+                            CommandParameter="Percorsi"/>
+                    <Button Content="File" 
+                            Style="{StaticResource TabButtonStyle}"
+                            Command="{Binding SelectTabCommand}"
+                            CommandParameter="File"/>
+                    <Button Content="Backup" 
+                            Style="{StaticResource TabButtonStyle}"
+                            Command="{Binding SelectTabCommand}"
+                            CommandParameter="Backup"/>
+                    <Button Content="Email" 
+                            Style="{StaticResource TabButtonStyle}"
+                            Command="{Binding SelectTabCommand}"
+                            CommandParameter="Email"/>
+                    <Button Content="Outlook" 
+                            Style="{StaticResource TabButtonStyle}"
+                            Command="{Binding SelectTabCommand}"
+                            CommandParameter="Outlook"/>
+                    <Button Content="Logging" 
+                            Style="{StaticResource TabButtonStyle}"
+                            Command="{Binding SelectTabCommand}"
+                            CommandParameter="Logging"/>
                 </StackPanel>
             </Border>
 
             <!-- Separator -->
-            <Border Grid.Column="1" Background="{StaticResource BorderBrush}"/>
+            <Border Grid.Column="1" Background="{DynamicResource BorderBrush}"/>
 
             <!-- Content Area -->
-            <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto" Padding="24">
-
-                <!-- Tab: Generale -->
+            <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto" Padding="20">
                 <StackPanel>
-                    <StackPanel.Style>
-                        <Style TargetType="StackPanel">
-                            <Setter Property="Visibility" Value="Collapsed"/>
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding SelectedTab}" Value="Generale">
-                                    <Setter Property="Visibility" Value="Visible"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </StackPanel.Style>
+                    <!-- Sezione Generale -->
+                    <StackPanel x:Name="GeneraleTab">
+                        <TextBlock Text="Impostazioni Generali" Style="{StaticResource SectionHeaderStyle}"/>
 
-                    <TextBlock Text="Impostazioni Generali" Style="{StaticResource H2}"/>
+                        <GroupBox Header="Applicazione" Style="{StaticResource SettingsGroupStyle}">
+                            <StackPanel>
+                                <TextBlock Text="Nome Applicazione:" Style="{StaticResource SettingsLabelStyle}"/>
+                                <TextBox Text="{Binding Settings.ApplicationName}" Style="{StaticResource SettingsTextBoxStyle}"/>
 
-                    <GroupBox Header="Informazioni Applicazione" Style="{StaticResource SettingsGroupStyle}">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="200"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                            </Grid.RowDefinitions>
+                                <TextBlock Text="Versione:" Style="{StaticResource SettingsLabelStyle}"/>
+                                <TextBox Text="{Binding Settings.ApplicationVersion}" Style="{StaticResource SettingsTextBoxStyle}" IsReadOnly="True"/>
 
-                            <TextBlock Grid.Row="0" Grid.Column="0" Text="Nome Applicazione:" Style="{StaticResource SettingsLabelStyle}"/>
-                            <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding Settings.ApplicationName, Mode=TwoWay}" Style="{StaticResource SettingsTextBoxStyle}"/>
+                                <TextBlock Text="Intervallo Salvataggio Automatico (secondi):" Style="{StaticResource SettingsLabelStyle}"/>
+                                <TextBox Text="{Binding Settings.AutoSaveInterval, Converter={StaticResource NumericConverter}}" Style="{StaticResource SettingsTextBoxStyle}"/>
 
-                            <TextBlock Grid.Row="1" Grid.Column="0" Text="Versione:" Style="{StaticResource SettingsLabelStyle}"/>
-                            <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding Settings.ApplicationVersion, Mode=TwoWay}" Style="{StaticResource SettingsTextBoxStyle}" IsReadOnly="True" Background="#F5F5F5"/>
-                        </Grid>
-                    </GroupBox>
+                                <TextBlock Text="Intervallo Aggiornamento Status (secondi):" Style="{StaticResource SettingsLabelStyle}"/>
+                                <TextBox Text="{Binding Settings.StatusRefreshInterval, Converter={StaticResource NumericConverter}}" Style="{StaticResource SettingsTextBoxStyle}"/>
+                            </StackPanel>
+                        </GroupBox>
+                    </StackPanel>
 
-                    <GroupBox Header="Intervalli Automatici" Style="{StaticResource SettingsGroupStyle}">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="200"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="100"/>
-                            </Grid.ColumnDefinitions>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                            </Grid.RowDefinitions>
+                    <!-- Sezione Percorsi -->
+                    <StackPanel x:Name="PercorsiTab" Visibility="Collapsed">
+                        <TextBlock Text="Percorsi e Cartelle" Style="{StaticResource SectionHeaderStyle}"/>
 
-                            <TextBlock Grid.Row="0" Grid.Column="0" Text="Salvataggio Automatico:" Style="{StaticResource SettingsLabelStyle}"/>
-                            <ComboBox Grid.Row="0" Grid.Column="1" 
-                                      ItemsSource="{Binding AutoSaveIntervals}"
-                                      SelectedItem="{Binding Settings.AutoSaveInterval, Mode=TwoWay}"
-                                      Style="{StaticResource SettingsComboBoxStyle}"/>
-                            <TextBlock Grid.Row="0" Grid.Column="2" Text="{Binding Settings.AutoSaveIntervalFormatted}" 
-                                       Style="{StaticResource SettingsLabelStyle}" Foreground="{StaticResource TextMuted}" FontSize="11"/>
+                        <GroupBox Header="Cartelle di Sistema" Style="{StaticResource SettingsGroupStyle}">
+                            <StackPanel>
+                                <TextBlock Text="Cartella Documenti:" Style="{StaticResource SettingsLabelStyle}"/>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBox Text="{Binding Settings.DocumentsPath}" Style="{StaticResource SettingsTextBoxStyle}" Grid.Column="0"/>
+                                    <Button Content="Sfoglia" Style="{StaticResource MinimalButton}" Grid.Column="1" Margin="8,0,0,12"
+                                            Command="{Binding BrowseDocumentsPathCommand}"/>
+                                </Grid>
 
-                            <TextBlock Grid.Row="1" Grid.Column="0" Text="Aggiornamento Status:" Style="{StaticResource SettingsLabelStyle}"/>
-                            <ComboBox Grid.Row="1" Grid.Column="1" 
-                                      ItemsSource="{Binding RefreshIntervals}"
-                                      SelectedItem="{Binding Settings.StatusRefreshInterval, Mode=TwoWay}"
-                                      Style="{StaticResource SettingsComboBoxStyle}"/>
-                            <TextBlock Grid.Row="1" Grid.Column="2" Text="{Binding Settings.StatusRefreshIntervalFormatted}" 
-                                       Style="{StaticResource SettingsLabelStyle}" Foreground="{StaticResource TextMuted}" FontSize="11"/>
-                        </Grid>
-                    </GroupBox>
+                                <TextBlock Text="Cartella Foto:" Style="{StaticResource SettingsLabelStyle}"/>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBox Text="{Binding Settings.PhotosPath}" Style="{StaticResource SettingsTextBoxStyle}" Grid.Column="0"/>
+                                    <Button Content="Sfoglia" Style="{StaticResource MinimalButton}" Grid.Column="1" Margin="8,0,0,12"
+                                            Command="{Binding BrowsePhotosPathCommand}"/>
+                                </Grid>
+
+                                <TextBlock Text="Cartella Backup:" Style="{StaticResource SettingsLabelStyle}"/>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBox Text="{Binding Settings.BackupPath}" Style="{StaticResource SettingsTextBoxStyle}" Grid.Column="0"/>
+                                    <Button Content="Sfoglia" Style="{StaticResource MinimalButton}" Grid.Column="1" Margin="8,0,0,12"
+                                            Command="{Binding BrowseBackupPathCommand}"/>
+                                </Grid>
+                            </StackPanel>
+                        </GroupBox>
+                    </StackPanel>
+
+                    <!-- Sezione File -->
+                    <StackPanel x:Name="FileTab" Visibility="Collapsed">
+                        <TextBlock Text="Gestione File" Style="{StaticResource SectionHeaderStyle}"/>
+
+                        <GroupBox Header="Limiti Dimensioni" Style="{StaticResource SettingsGroupStyle}">
+                            <StackPanel>
+                                <TextBlock Text="Dimensione Massima Documenti:" Style="{StaticResource SettingsLabelStyle}"/>
+                                <TextBox Text="{Binding Settings.MaxDocumentSize, Converter={StaticResource FileSizeConverter}}" Style="{StaticResource SettingsTextBoxStyle}"/>
+
+                                <TextBlock Text="Dimensione Massima Foto:" Style="{StaticResource SettingsLabelStyle}"/>
+                                <TextBox Text="{Binding Settings.MaxPhotoSize, Converter={StaticResource FileSizeConverter}}" Style="{StaticResource SettingsTextBoxStyle}"/>
+                            </StackPanel>
+                        </GroupBox>
+
+                        <GroupBox Header="Formati Supportati" Style="{StaticResource SettingsGroupStyle}">
+                            <StackPanel>
+                                <TextBlock Text="Formati Documenti:" Style="{StaticResource SettingsLabelStyle}"/>
+                                <TextBox Text="{Binding Settings.SupportedDocumentFormats}" Style="{StaticResource SettingsTextBoxStyle}"/>
+
+                                <TextBlock Text="Formati Immagini:" Style="{StaticResource SettingsLabelStyle}"/>
+                                <TextBox Text="{Binding Settings.SupportedImageFormats}" Style="{StaticResource SettingsTextBoxStyle}"/>
+                            </StackPanel>
+                        </GroupBox>
+                    </StackPanel>
+
+                    <!-- Sezione Backup -->
+                    <StackPanel x:Name="BackupTab" Visibility="Collapsed">
+                        <TextBlock Text="Backup e Sicurezza" Style="{StaticResource SectionHeaderStyle}"/>
+
+                        <GroupBox Header="Backup Automatico" Style="{StaticResource SettingsGroupStyle}">
+                            <StackPanel>
+                                <CheckBox Content="Abilita Backup Automatico" 
+                                         IsChecked="{Binding Settings.AutoBackupEnabled}" 
+                                         Style="{StaticResource SettingsCheckBoxStyle}"/>
+
+                                <TextBlock Text="Giorni tra Backup:" Style="{StaticResource SettingsLabelStyle}"/>
+                                <TextBox Text="{Binding Settings.AutoBackupDays, Converter={StaticResource NumericConverter}}" Style="{StaticResource SettingsTextBoxStyle}"/>
+
+                                <TextBlock Text="Numero Massimo File Backup:" Style="{StaticResource SettingsLabelStyle}"/>
+                                <TextBox Text="{Binding Settings.MaxBackupFiles, Converter={StaticResource NumericConverter}}" Style="{StaticResource SettingsTextBoxStyle}"/>
+                            </StackPanel>
+                        </GroupBox>
+                    </StackPanel>
+
+                    <!-- Sezione Email -->
+                    <StackPanel x:Name="EmailTab" Visibility="Collapsed">
+                        <TextBlock Text="Configurazione Email" Style="{StaticResource SectionHeaderStyle}"/>
+
+                        <GroupBox Header="Server SMTP" Style="{StaticResource SettingsGroupStyle}">
+                            <StackPanel>
+                                <TextBlock Text="Server SMTP:" Style="{StaticResource SettingsLabelStyle}"/>
+                                <TextBox Text="{Binding Settings.SMTPServer}" Style="{StaticResource SettingsTextBoxStyle}"/>
+
+                                <TextBlock Text="Porta:" Style="{StaticResource SettingsLabelStyle}"/>
+                                <TextBox Text="{Binding Settings.SMTPPort, Converter={StaticResource NumericConverter}}" Style="{StaticResource SettingsTextBoxStyle}"/>
+
+                                <TextBlock Text="Username:" Style="{StaticResource SettingsLabelStyle}"/>
+                                <TextBox Text="{Binding Settings.SMTPUsername}" Style="{StaticResource SettingsTextBoxStyle}"/>
+
+                                <TextBlock Text="Password:" Style="{StaticResource SettingsLabelStyle}"/>
+                                <PasswordBox x:Name="PasswordBox" Style="{StaticResource SettingsTextBoxStyle}"/>
+
+                                <TextBlock Text="Email Mittente:" Style="{StaticResource SettingsLabelStyle}"/>
+                                <TextBox Text="{Binding Settings.EmailFrom}" Style="{StaticResource SettingsTextBoxStyle}"/>
+
+                                <Button Content="Test Connessione" Style="{StaticResource MinimalButton}"
+                                        Command="{Binding TestEmailConnectionCommand}" Margin="0,8,0,0"/>
+                            </StackPanel>
+                        </GroupBox>
+                    </StackPanel>
+
+                    <!-- Sezione Outlook -->
+                    <StackPanel x:Name="OutlookTab" Visibility="Collapsed">
+                        <TextBlock Text="Integrazione Outlook" Style="{StaticResource SectionHeaderStyle}"/>
+
+                        <GroupBox Header="Sincronizzazione" Style="{StaticResource SettingsGroupStyle}">
+                            <StackPanel>
+                                <CheckBox Content="Abilita Integrazione Outlook" 
+                                         IsChecked="{Binding Settings.OutlookIntegrationEnabled}" 
+                                         Style="{StaticResource SettingsCheckBoxStyle}"/>
+
+                                <TextBlock Text="Intervallo Sincronizzazione (secondi):" Style="{StaticResource SettingsLabelStyle}"/>
+                                <TextBox Text="{Binding Settings.OutlookSyncInterval, Converter={StaticResource TimeIntervalConverter}}" Style="{StaticResource SettingsTextBoxStyle}"/>
+
+                                <Button Content="Test Connessione Outlook" Style="{StaticResource MinimalButton}"
+                                        Command="{Binding TestOutlookConnectionCommand}" Margin="0,8,0,0"/>
+                            </StackPanel>
+                        </GroupBox>
+                    </StackPanel>
+
+                    <!-- Sezione Logging -->
+                    <StackPanel x:Name="LoggingTab" Visibility="Collapsed">
+                        <TextBlock Text="Sistema di Logging" Style="{StaticResource SectionHeaderStyle}"/>
+
+                        <GroupBox Header="Configurazione Log" Style="{StaticResource SettingsGroupStyle}">
+                            <StackPanel>
+                                <TextBlock Text="Livello Log:" Style="{StaticResource SettingsLabelStyle}"/>
+                                <ComboBox SelectedValue="{Binding Settings.LogLevel}" Style="{StaticResource SettingsComboBoxStyle}">
+                                    <ComboBoxItem Content="Debug"/>
+                                    <ComboBoxItem Content="Info"/>
+                                    <ComboBoxItem Content="Warning"/>
+                                    <ComboBoxItem Content="Error"/>
+                                </ComboBox>
+
+                                <CheckBox Content="Salva Log su File" 
+                                         IsChecked="{Binding Settings.LogToFile}" 
+                                         Style="{StaticResource SettingsCheckBoxStyle}"/>
+
+                                <TextBlock Text="Percorso File Log:" Style="{StaticResource SettingsLabelStyle}"/>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBox Text="{Binding Settings.LogFilePath}" Style="{StaticResource SettingsTextBoxStyle}" Grid.Column="0"/>
+                                    <Button Content="Sfoglia" Style="{StaticResource MinimalButton}" Grid.Column="1" Margin="8,0,0,12"
+                                            Command="{Binding BrowseLogFilePathCommand}"/>
+                                </Grid>
+
+                                <TextBlock Text="Numero Massimo File Log:" Style="{StaticResource SettingsLabelStyle}"/>
+                                <TextBox Text="{Binding Settings.MaxLogFiles, Converter={StaticResource NumericConverter}}" Style="{StaticResource SettingsTextBoxStyle}"/>
+                            </StackPanel>
+                        </GroupBox>
+                    </StackPanel>
                 </StackPanel>
-
-                <!-- Tab: Percorsi -->
-				<StackPanel>
-					<StackPanel.Style>
-						<Style TargetType="StackPanel">
-							<Setter Property="Visibility" Value="Collapsed"/>
-							<Style.Triggers>
-								<DataTrigger Binding="{Binding SelectedTab}" Value="Percorsi">
-									<Setter Property="Visibility" Value="Visible"/>
-								</DataTrigger>
-							</Style.Triggers>
-						</Style>
-					</StackPanel.Style>
-
-					<TextBlock Text="Configurazione Percorsi" Style="{StaticResource H2}"/>
-
-					<GroupBox Header="Cartelle di Sistema" Style="{StaticResource SettingsGroupStyle}">
-						<Grid>
-							<Grid.ColumnDefinitions>
-								<ColumnDefinition Width="120"/>
-								<ColumnDefinition Width="*"/>
-								<ColumnDefinition Width="Auto"/>
-							</Grid.ColumnDefinitions>
-							<Grid.RowDefinitions>
-								<RowDefinition Height="Auto"/>
-								<RowDefinition Height="Auto"/>
-								<RowDefinition Height="Auto"/>
-							</Grid.RowDefinitions>
-
-							<TextBlock Grid.Row="0" Grid.Column="0" Text="Documenti:" Style="{StaticResource SettingsLabelStyle}"/>
-							<TextBox Grid.Row="0" Grid.Column="1" Text="{Binding Settings.DocumentsPath, Mode=TwoWay}" Style="{StaticResource SettingsTextBoxStyle}"/>
-							<Button Grid.Row="0" Grid.Column="2" Content="📁" Width="32" Height="32"
-                                    Command="{Binding BrowseDocumentsPathCommand}"
-                                    Style="{StaticResource MinimalButton}" Margin="8,0,0,12"/>
-
-							<TextBlock Grid.Row="1" Grid.Column="0" Text="Foto:" Style="{StaticResource SettingsLabelStyle}"/>
-							<TextBox Grid.Row="1" Grid.Column="1" Text="{Binding Settings.PhotosPath, Mode=TwoWay}" Style="{StaticResource SettingsTextBoxStyle}"/>
-							<Button Grid.Row="1" Grid.Column="2" Content="📁" Width="32" Height="32"
-                                    Command="{Binding BrowsePhotosPathCommand}"
-                                    Style="{StaticResource MinimalButton}" Margin="8,0,0,12"/>
-
-							<TextBlock Grid.Row="2" Grid.Column="0" Text="Backup:" Style="{StaticResource SettingsLabelStyle}"/>
-							<TextBox Grid.Row="2" Grid.Column="1" Text="{Binding Settings.BackupPath, Mode=TwoWay}" Style="{StaticResource SettingsTextBoxStyle}"/>
-							<Button Grid.Row="2" Grid.Column="2" Content="📁" Width="32" Height="32"
-                                    Command="{Binding BrowseBackupPathCommand}"
-                                    Style="{StaticResource MinimalButton}" Margin="8,0,0,12"/>
-						</Grid>
-					</GroupBox>
-				</StackPanel>
-
-                <!-- Tab: File -->
-                <StackPanel>
-                    <StackPanel.Style>
-                        <Style TargetType="StackPanel">
-                            <Setter Property="Visibility" Value="Collapsed"/>
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding SelectedTab}" Value="File">
-                                    <Setter Property="Visibility" Value="Visible"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </StackPanel.Style>
-
-                    <TextBlock Text="Gestione File" Style="{StaticResource H2}"/>
-
-                    <GroupBox Header="Dimensioni Massime" Style="{StaticResource SettingsGroupStyle}">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="150"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="100"/>
-                            </Grid.ColumnDefinitions>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                            </Grid.RowDefinitions>
-
-                            <TextBlock Grid.Row="0" Grid.Column="0" Text="Documenti:" Style="{StaticResource SettingsLabelStyle}"/>
-                            <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding Settings.MaxDocumentSize, Mode=TwoWay, Converter={StaticResource NumericConverter}}" Style="{StaticResource SettingsTextBoxStyle}"/>
-                            <TextBlock Grid.Row="0" Grid.Column="2" Text="{Binding Settings.MaxDocumentSizeFormatted}" 
-                                       Style="{StaticResource SettingsLabelStyle}" Foreground="{StaticResource TextMuted}" FontSize="11"/>
-
-                            <TextBlock Grid.Row="1" Grid.Column="0" Text="Foto:" Style="{StaticResource SettingsLabelStyle}"/>
-                            <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding Settings.MaxPhotoSize, Mode=TwoWay, Converter={StaticResource NumericConverter}}" Style="{StaticResource SettingsTextBoxStyle}"/>
-                            <TextBlock Grid.Row="1" Grid.Column="2" Text="{Binding Settings.MaxPhotoSizeFormatted}" 
-                                       Style="{StaticResource SettingsLabelStyle}" Foreground="{StaticResource TextMuted}" FontSize="11"/>
-                        </Grid>
-                    </GroupBox>
-
-                    <GroupBox Header="Formati Supportati" Style="{StaticResource SettingsGroupStyle}">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="150"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                            </Grid.RowDefinitions>
-
-                            <TextBlock Grid.Row="0" Grid.Column="0" Text="Documenti:" Style="{StaticResource SettingsLabelStyle}"/>
-                            <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding Settings.SupportedDocumentFormats, Mode=TwoWay}" Style="{StaticResource SettingsTextBoxStyle}"/>
-
-                            <TextBlock Grid.Row="1" Grid.Column="0" Text="Immagini:" Style="{StaticResource SettingsLabelStyle}"/>
-                            <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding Settings.SupportedImageFormats, Mode=TwoWay}" Style="{StaticResource SettingsTextBoxStyle}"/>
-                        </Grid>
-                    </GroupBox>
-                </StackPanel>
-
-                <!-- Tab: Backup -->
-                <StackPanel>
-                    <StackPanel.Style>
-                        <Style TargetType="StackPanel">
-                            <Setter Property="Visibility" Value="Collapsed"/>
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding SelectedTab}" Value="Backup">
-                                    <Setter Property="Visibility" Value="Visible"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </StackPanel.Style>
-
-                    <TextBlock Text="Configurazione Backup" Style="{StaticResource H2}"/>
-
-                    <GroupBox Header="Backup Automatico" Style="{StaticResource SettingsGroupStyle}">
-                        <StackPanel>
-                            <CheckBox Content="Abilita backup automatico" 
-                                      IsChecked="{Binding Settings.AutoBackupEnabled, Mode=TwoWay}"
-                                      Style="{StaticResource SettingsCheckBoxStyle}"/>
-
-                            <Grid IsEnabled="{Binding Settings.AutoBackupEnabled}">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="200"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                </Grid.RowDefinitions>
-
-                                <TextBlock Grid.Row="0" Grid.Column="0" Text="Frequenza backup (giorni):" Style="{StaticResource SettingsLabelStyle}"/>
-                                <ComboBox Grid.Row="0" Grid.Column="1" 
-                                          ItemsSource="{Binding BackupDays}"
-                                          SelectedItem="{Binding Settings.AutoBackupDays, Mode=TwoWay}"
-                                          Style="{StaticResource SettingsComboBoxStyle}"/>
-
-                                <TextBlock Grid.Row="1" Grid.Column="0" Text="Massimo file backup:" Style="{StaticResource SettingsLabelStyle}"/>
-                                <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding Settings.MaxBackupFiles, Mode=TwoWay, Converter={StaticResource NumericConverter}}" Style="{StaticResource SettingsTextBoxStyle}"/>
-                            </Grid>
-                        </StackPanel>
-                    </GroupBox>
-                </StackPanel>
-
-                <!-- Tab: Email -->
-                <StackPanel>
-                    <StackPanel.Style>
-                        <Style TargetType="StackPanel">
-                            <Setter Property="Visibility" Value="Collapsed"/>
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding SelectedTab}" Value="Email">
-                                    <Setter Property="Visibility" Value="Visible"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </StackPanel.Style>
-
-                    <TextBlock Text="Configurazione Email" Style="{StaticResource H2}"/>
-
-                    <GroupBox Header="Server SMTP" Style="{StaticResource SettingsGroupStyle}">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="150"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                            </Grid.RowDefinitions>
-
-                            <TextBlock Grid.Row="0" Grid.Column="0" Text="Server SMTP:" Style="{StaticResource SettingsLabelStyle}"/>
-                            <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding Settings.SMTPServer, Mode=TwoWay}" Style="{StaticResource SettingsTextBoxStyle}" Margin="0,0,8,12"/>
-
-                            <TextBlock Grid.Row="1" Grid.Column="0" Text="Porta:" Style="{StaticResource SettingsLabelStyle}"/>
-                            <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding Settings.SMTPPort, Mode=TwoWay, Converter={StaticResource NumericConverter}}" Style="{StaticResource SettingsTextBoxStyle}" Margin="0,0,8,12"/>
-
-                            <TextBlock Grid.Row="2" Grid.Column="0" Text="Username:" Style="{StaticResource SettingsLabelStyle}"/>
-                            <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding Settings.SMTPUsername, Mode=TwoWay}" Style="{StaticResource SettingsTextBoxStyle}" Margin="0,0,8,12"/>
-
-                            <TextBlock Grid.Row="3" Grid.Column="0" Text="Password:" Style="{StaticResource SettingsLabelStyle}"/>
-                            <PasswordBox Grid.Row="3" Grid.Column="1" Style="{StaticResource SettingsTextBoxStyle}" Margin="0,0,8,12"/>
-
-                            <TextBlock Grid.Row="4" Grid.Column="0" Text="Email mittente:" Style="{StaticResource SettingsLabelStyle}"/>
-                            <TextBox Grid.Row="4" Grid.Column="1" Text="{Binding Settings.EmailFrom, Mode=TwoWay}" Style="{StaticResource SettingsTextBoxStyle}" Margin="0,0,8,12"/>
-
-                            <Button Grid.Row="5" Grid.Column="1" Content="🔍 Testa Connessione" 
-                                    Command="{Binding TestEmailConnectionCommand}"
-                                    Style="{StaticResource MinimalButton}"
-                                    HorizontalAlignment="Left"
-                                    Margin="0,8,0,0"/>
-                        </Grid>
-                    </GroupBox>
-                </StackPanel>
-
-                <!-- Tab: Outlook -->
-                <StackPanel>
-                    <StackPanel.Style>
-                        <Style TargetType="StackPanel">
-                            <Setter Property="Visibility" Value="Collapsed"/>
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding SelectedTab}" Value="Outlook">
-                                    <Setter Property="Visibility" Value="Visible"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </StackPanel.Style>
-
-                    <TextBlock Text="Integrazione Outlook" Style="{StaticResource H2}"/>
-
-                    <GroupBox Header="Sincronizzazione Outlook" Style="{StaticResource SettingsGroupStyle}">
-                        <StackPanel>
-                            <CheckBox Content="Abilita integrazione con Microsoft Outlook" 
-                                      IsChecked="{Binding Settings.OutlookIntegrationEnabled, Mode=TwoWay}"
-                                      Style="{StaticResource SettingsCheckBoxStyle}"/>
-
-                            <Grid IsEnabled="{Binding Settings.OutlookIntegrationEnabled}">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="200"/>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="100"/>
-                                </Grid.ColumnDefinitions>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                </Grid.RowDefinitions>
-
-                                <TextBlock Grid.Row="0" Grid.Column="0" Text="Intervallo sincronizzazione:" Style="{StaticResource SettingsLabelStyle}"/>
-                                <ComboBox Grid.Row="0" Grid.Column="1" 
-                                          ItemsSource="{Binding SyncIntervals}"
-                                          SelectedItem="{Binding Settings.OutlookSyncInterval, Mode=TwoWay}"
-                                          Style="{StaticResource SettingsComboBoxStyle}"/>
-                                <TextBlock Grid.Row="0" Grid.Column="2" Text="{Binding Settings.OutlookSyncIntervalFormatted}" 
-                                           Style="{StaticResource SettingsLabelStyle}" Foreground="{StaticResource TextMuted}" FontSize="11"/>
-
-                                <Button Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Content="🔍 Testa Connessione Outlook" 
-                                        Command="{Binding TestOutlookConnectionCommand}"
-                                        Style="{StaticResource MinimalButton}"
-                                        HorizontalAlignment="Left"
-                                        Margin="0,8,0,0"/>
-                            </Grid>
-                        </StackPanel>
-                    </GroupBox>
-                </StackPanel>
-
-                <!-- Tab: Logging -->
-                <StackPanel>
-                    <StackPanel.Style>
-                        <Style TargetType="StackPanel">
-                            <Setter Property="Visibility" Value="Collapsed"/>
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding SelectedTab}" Value="Logging">
-                                    <Setter Property="Visibility" Value="Visible"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </StackPanel.Style>
-
-                    <TextBlock Text="Configurazione Logging" Style="{StaticResource H2}"/>
-
-                    <GroupBox Header="Sistema di Log" Style="{StaticResource SettingsGroupStyle}">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="150"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                            </Grid.RowDefinitions>
-
-                            <TextBlock Grid.Row="0" Grid.Column="0" Text="Livello Log:" Style="{StaticResource SettingsLabelStyle}"/>
-                            <ComboBox Grid.Row="0" Grid.Column="1" 
-                                      ItemsSource="{Binding LogLevels}"
-                                      SelectedItem="{Binding Settings.LogLevel, Mode=TwoWay}"
-                                      Style="{StaticResource SettingsComboBoxStyle}" Margin="0,0,8,12"/>
-
-                            <CheckBox Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" Content="Salva log su file" 
-                                      IsChecked="{Binding Settings.LogToFile, Mode=TwoWay}"
-                                      Style="{StaticResource SettingsCheckBoxStyle}"/>
-
-                            <TextBlock Grid.Row="2" Grid.Column="0" Text="Percorso file log:" Style="{StaticResource SettingsLabelStyle}"
-                                       IsEnabled="{Binding Settings.LogToFile}"/>
-                            <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding Settings.LogFilePath, Mode=TwoWay}" Style="{StaticResource SettingsTextBoxStyle}"
-                                     IsEnabled="{Binding Settings.LogToFile}"/>
-                            <Button Grid.Row="2" Grid.Column="2" Content="📁" Width="32" Height="32" 
-                                    Command="{Binding BrowseLogFilePathCommand}"
-                                    Style="{StaticResource MinimalButton}" Margin="8,0,0,12"
-                                    IsEnabled="{Binding Settings.LogToFile}"/>
-
-                            <TextBlock Grid.Row="3" Grid.Column="0" Text="Massimo file log:" Style="{StaticResource SettingsLabelStyle}"
-                                       IsEnabled="{Binding Settings.LogToFile}"/>
-                            <TextBox Grid.Row="3" Grid.Column="1" Text="{Binding Settings.MaxLogFiles, Mode=TwoWay, Converter={StaticResource NumericConverter}}" Style="{StaticResource SettingsTextBoxStyle}"
-                                     IsEnabled="{Binding Settings.LogToFile}" Margin="0,0,8,12"/>
-                        </Grid>
-                    </GroupBox>
-                </StackPanel>
-
             </ScrollViewer>
         </Grid>
 
         <!-- Footer Buttons -->
-        <Border Grid.Row="1" Background="{StaticResource SurfaceBrush}" 
-                BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,1,0,0"
-                Padding="24,16">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-
-                <!-- Change Indicator -->
-                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                    <Ellipse Width="8" Height="8" Fill="#FF9800" Margin="0,0,8,0">
-                        <Ellipse.Style>
-                            <Style TargetType="Ellipse">
-                                <Setter Property="Visibility" Value="Collapsed"/>
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding HasChanges}" Value="True">
-                                        <Setter Property="Visibility" Value="Visible"/>
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </Ellipse.Style>
-                    </Ellipse>
-                    <TextBlock Text="Ci sono modifiche non salvate" FontSize="12" Foreground="#FF9800">
-                        <TextBlock.Style>
-                            <Style TargetType="TextBlock">
-                                <Setter Property="Visibility" Value="Collapsed"/>
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding HasChanges}" Value="True">
-                                        <Setter Property="Visibility" Value="Visible"/>
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </TextBlock.Style>
-                    </TextBlock>
-                </StackPanel>
-
-                <!-- Buttons -->
-                <StackPanel Grid.Column="1" Orientation="Horizontal">
-                    <Button Content="Annulla" 
-                            Command="{Binding CancelCommand}"
-                            Style="{StaticResource MinimalButton}"
-                            Background="Transparent"
-                            Foreground="{StaticResource TextSecondary}"
-                            BorderBrush="{StaticResource BorderBrush}"
-                            BorderThickness="1"
-                            Margin="0,0,12,0"/>
-
-                    <Button Content="💾 Salva Impostazioni" 
-                            Command="{Binding SaveCommand}"
-                            Style="{StaticResource MinimalButton}"
-                            IsDefault="True"/>
-                </StackPanel>
-            </Grid>
+        <Border Grid.Row="1" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0" Padding="20">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Content="Reset Default" Style="{StaticResource MinimalButton}" 
+                        Background="{DynamicResource TextMuted}" Margin="0,0,12,0"
+                        Command="{Binding ResetToDefaultCommand}"/>
+                <Button Content="Esporta Impostazioni" Style="{StaticResource MinimalButton}" 
+                        Background="{DynamicResource TextSecondary}" Margin="0,0,12,0"
+                        Command="{Binding ExportSettingsCommand}"/>
+                <Button Content="Annulla" Style="{StaticResource MinimalButton}" 
+                        Background="{DynamicResource TextSecondary}" Margin="0,0,12,0"
+                        Command="{Binding CancelCommand}"/>
+                <Button Content="Salva" Style="{StaticResource MinimalButton}"
+                        Command="{Binding SaveCommand}"/>
+            </StackPanel>
         </Border>
     </Grid>
 </Window>

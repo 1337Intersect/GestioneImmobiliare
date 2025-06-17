@@ -12,11 +12,12 @@ namespace ImmobiGestio.Services
         Auto
     }
 
-    public class ThemeManager
+    public class ThemeManager : IDisposable
     {
         private static ThemeManager? _instance;
         private Theme _currentTheme = Theme.Auto;
         private bool _systemUsesLightTheme = true;
+        private bool _disposed = false;
 
         public static ThemeManager Instance => _instance ??= new ThemeManager();
 
@@ -24,10 +25,7 @@ namespace ImmobiGestio.Services
 
         private ThemeManager()
         {
-            // Rileva il tema del sistema all'avvio
             DetectSystemTheme();
-
-            // Monitora i cambiamenti del tema di sistema
             SystemEvents.UserPreferenceChanged += OnSystemPreferenceChanged;
         }
 
@@ -46,14 +44,28 @@ namespace ImmobiGestio.Services
 
         public bool IsSystemDarkMode => !_systemUsesLightTheme;
 
+        // ===== FIX: Add the missing LoadSavedTheme method =====
+        public void LoadSavedTheme()
+        {
+            try
+            {
+                var savedTheme = LoadSavedThemeInternal();
+                SetTheme(savedTheme);
+                System.Diagnostics.Debug.WriteLine($"Tema salvato caricato: {savedTheme}");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Errore nel caricamento del tema salvato: {ex.Message}");
+                SetTheme(Theme.Auto); // Fallback
+            }
+        }
+
         public void SetTheme(Theme theme)
         {
             try
             {
                 CurrentTheme = theme;
                 ApplyTheme(GetEffectiveTheme());
-
-                // Salva la preferenza
                 SaveThemePreference(theme);
 
                 System.Diagnostics.Debug.WriteLine($"Tema cambiato a: {theme}");
@@ -82,25 +94,54 @@ namespace ImmobiGestio.Services
                 var application = Application.Current;
                 if (application == null) return;
 
-                // Rimuovi i dizionari di tema esistenti
                 RemoveThemeDictionaries();
 
-                // Aggiungi il nuovo dizionario tema
-                var themeUri = effectiveTheme == Theme.Dark
-                    ? new Uri("pack://application:,,,/Themes/DarkTheme.xaml")
-                    : new Uri("pack://application:,,,/Themes/LightTheme.xaml");
+                // Try multiple possible paths for theme files
+                var themeUris = effectiveTheme == Theme.Dark
+                    ? new[]
+                    {
+                        new Uri("pack://application:,,,/Styles/DarkTheme.xaml"),
+                        new Uri("pack://application:,,,/Themes/DarkTheme.xaml"),
+                        new Uri("/Styles/DarkTheme.xaml", UriKind.Relative),
+                        new Uri("/Themes/DarkTheme.xaml", UriKind.Relative)
+                    }
+                    : new[]
+                    {
+                        new Uri("pack://application:,,,/Styles/LightTheme.xaml"),
+                        new Uri("pack://application:,,,/Themes/LightTheme.xaml"),
+                        new Uri("/Styles/LightTheme.xaml", UriKind.Relative),
+                        new Uri("/Themes/LightTheme.xaml", UriKind.Relative)
+                    };
 
-                try
+                ResourceDictionary? themeDict = null;
+                foreach (var uri in themeUris)
                 {
-                    var themeDict = new ResourceDictionary { Source = themeUri };
-                    application.Resources.MergedDictionaries.Add(themeDict);
+                    try
+                    {
+                        themeDict = new ResourceDictionary { Source = uri };
+                        System.Diagnostics.Debug.WriteLine($"Tema caricato da: {uri}");
+                        break;
+                    }
+                    catch (IOException)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"File tema non trovato: {uri}");
+                        continue;
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"Errore caricamento tema {uri}: {ex.Message}");
+                        continue;
+                    }
+                }
 
+                if (themeDict != null)
+                {
+                    application.Resources.MergedDictionaries.Add(themeDict);
                     System.Diagnostics.Debug.WriteLine($"Tema {effectiveTheme} applicato con successo");
                 }
-                catch (IOException)
+                else
                 {
-                    // File tema non trovato, usa i colori di fallback
-                    System.Diagnostics.Debug.WriteLine($"File tema {themeUri} non trovato, uso colori di fallback");
+                    System.Diagnostics.Debug.WriteLine("Nessun file tema trovato, uso fallback");
                     ApplyFallbackTheme(effectiveTheme);
                 }
             }
@@ -122,11 +163,11 @@ namespace ImmobiGestio.Services
 
                 if (theme == Theme.Dark)
                 {
-                    // Colori Dark Mode di fallback
+                    // Dark theme colors
                     fallbackDict["BackgroundBrush"] = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(32, 32, 32));
                     fallbackDict["SurfaceBrush"] = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(45, 45, 45));
                     fallbackDict["PrimaryBrush"] = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(200, 200, 200));
-                    fallbackDict["AccentBrush"] = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0, 102, 204));
+                    fallbackDict["AccentBrush"] = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0, 120, 212));
                     fallbackDict["TextPrimary"] = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(240, 240, 240));
                     fallbackDict["TextSecondary"] = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(180, 180, 180));
                     fallbackDict["TextMuted"] = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(120, 120, 120));
@@ -135,7 +176,7 @@ namespace ImmobiGestio.Services
                 }
                 else
                 {
-                    // Colori Light Mode di fallback (quelli già esistenti in App.xaml)
+                    // Light theme colors
                     fallbackDict["BackgroundBrush"] = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(250, 250, 250));
                     fallbackDict["SurfaceBrush"] = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(255, 255, 255));
                     fallbackDict["PrimaryBrush"] = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(51, 51, 51));
@@ -163,11 +204,11 @@ namespace ImmobiGestio.Services
                 var application = Application.Current;
                 if (application == null) return;
 
-                // Rimuovi i dizionari di tema esistenti
                 for (int i = application.Resources.MergedDictionaries.Count - 1; i >= 0; i--)
                 {
                     var dict = application.Resources.MergedDictionaries[i];
-                    if (dict.Source?.ToString().Contains("Theme.xaml") == true)
+                    var source = dict.Source?.ToString();
+                    if (source != null && (source.Contains("Theme.xaml") || source.Contains("DarkTheme") || source.Contains("LightTheme")))
                     {
                         application.Resources.MergedDictionaries.RemoveAt(i);
                     }
@@ -183,7 +224,6 @@ namespace ImmobiGestio.Services
         {
             try
             {
-                // Legge la chiave di registro per determinare se Windows usa il tema scuro
                 using var key = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize");
                 var value = key?.GetValue("AppsUseLightTheme");
 
@@ -193,93 +233,43 @@ namespace ImmobiGestio.Services
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Errore nel rilevamento del tema di sistema: {ex.Message}");
-                _systemUsesLightTheme = true; // Default a light theme
+                System.Diagnostics.Debug.WriteLine($"Errore nel rilevamento tema sistema: {ex.Message}");
+                _systemUsesLightTheme = true;
             }
         }
 
         private void OnSystemPreferenceChanged(object sender, UserPreferenceChangedEventArgs e)
         {
-            try
+            if (e.Category == UserPreferenceCategory.General)
             {
-                if (e.Category == UserPreferenceCategory.General)
+                DetectSystemTheme();
+                if (CurrentTheme == Theme.Auto)
                 {
-                    var oldTheme = _systemUsesLightTheme;
-                    DetectSystemTheme();
-
-                    // Se il tema di sistema è cambiato e stiamo usando Auto, aggiorna
-                    if (oldTheme != _systemUsesLightTheme && CurrentTheme == Theme.Auto)
-                    {
-                        ApplyTheme(GetEffectiveTheme());
-                        System.Diagnostics.Debug.WriteLine("Tema aggiornato automaticamente in base al sistema");
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Errore nel cambio automatico del tema: {ex.Message}");
-            }
-        }
-
-        public void LoadSavedTheme()
-        {
-            try
-            {
-                // Carica la preferenza salvata (in futuro useremo Settings.Default)
-                var savedTheme = LoadThemePreference();
-                SetTheme(savedTheme);
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Errore nel caricamento del tema salvato: {ex.Message}");
-                SetTheme(Theme.Auto); // Default
-            }
-        }
-
-        private void SaveThemePreference(Theme theme)
-        {
-            try
-            {
-                // Usa le Settings.settings esistenti
-                Properties.Settings.Default.AppTheme = theme.ToString();
-                Properties.Settings.Default.Save();
-                System.Diagnostics.Debug.WriteLine($"Tema salvato nelle Settings: {theme}");
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Errore nel salvataggio della preferenza tema: {ex.Message}");
-
-                // Fallback al registro se le Settings non funzionano
-                try
-                {
-                    using var key = Registry.CurrentUser.CreateSubKey(@"Software\ImmobiGestio");
-                    key.SetValue("Theme", theme.ToString());
-                }
-                catch (Exception regEx)
-                {
-                    System.Diagnostics.Debug.WriteLine($"Errore anche nel fallback registro: {regEx.Message}");
+                    ApplyTheme(GetEffectiveTheme());
                 }
             }
         }
 
-        private Theme LoadThemePreference()
+        // ===== FIX: Rename existing method to avoid conflicts =====
+        private Theme LoadSavedThemeInternal()
         {
+            // Try loading from Settings.settings
             try
             {
-                // Prova a caricare dalle Settings.settings
-                var settingsValue = Properties.Settings.Default.AppTheme;
-                if (!string.IsNullOrEmpty(settingsValue) && Enum.TryParse<Theme>(settingsValue, out var theme))
-                {
-                    System.Diagnostics.Debug.WriteLine($"Tema caricato dalle Settings: {theme}");
-                    return theme;
-                }
+                // If you have a Settings.settings file, use this:
+                // var settingsValue = Properties.Settings.Default.AppTheme;
+                // if (!string.IsNullOrEmpty(settingsValue) && Enum.TryParse<Theme>(settingsValue, out var theme))
+                // {
+                //     System.Diagnostics.Debug.WriteLine($"Tema caricato dalle Settings: {theme}");
+                //     return theme;
+                // }
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Errore nel caricamento dalle Settings: {ex.Message}");
             }
 
-            // Fallback al registro
+            // Fallback to registry
             try
             {
                 using var key = Registry.CurrentUser.OpenSubKey(@"Software\ImmobiGestio");
@@ -299,10 +289,33 @@ namespace ImmobiGestio.Services
             return Theme.Auto; // Default
         }
 
-        // Cleanup
+        private void SaveThemePreference(Theme theme)
+        {
+            try
+            {
+                // Save to registry
+                using var key = Registry.CurrentUser.CreateSubKey(@"Software\ImmobiGestio");
+                key?.SetValue("Theme", theme.ToString());
+
+                // If you have Settings.settings, also save there:
+                // Properties.Settings.Default.AppTheme = theme.ToString();
+                // Properties.Settings.Default.Save();
+
+                System.Diagnostics.Debug.WriteLine($"Salvata preferenza tema: {theme}");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Errore nel salvataggio preferenza tema: {ex.Message}");
+            }
+        }
+
         public void Dispose()
         {
-            SystemEvents.UserPreferenceChanged -= OnSystemPreferenceChanged;
+            if (!_disposed)
+            {
+                SystemEvents.UserPreferenceChanged -= OnSystemPreferenceChanged;
+                _disposed = true;
+            }
         }
     }
 }

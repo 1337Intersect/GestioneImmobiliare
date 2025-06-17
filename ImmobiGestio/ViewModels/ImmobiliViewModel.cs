@@ -1148,6 +1148,7 @@ namespace ImmobiGestio.ViewModels
         public decimal ValoreTotale => Immobili.Where(i => i.StatoVendita == "Disponibile").Sum(i => i.Prezzo);
         public decimal PrezzoMedio => ImmobiliDisponibili > 0 ? ValoreTotale / ImmobiliDisponibili : 0;
 
+
         public void OnApplicationClosing()
         {
             try
