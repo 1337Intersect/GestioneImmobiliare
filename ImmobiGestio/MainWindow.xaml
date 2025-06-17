@@ -30,123 +30,94 @@
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <!-- SIDEBAR MINIMAL -->
+        <!-- FIXED SIDEBAR -->
         <Border Grid.Column="0" 
                 Background="{StaticResource SurfaceBrush}" 
                 BorderBrush="{StaticResource BorderBrush}" 
                 BorderThickness="0,0,1,0">
-
             <Grid>
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="60"/>
+                    <!-- Header - Same as main header -->
                     <RowDefinition Height="*"/>
+                    <!-- Navigation -->
                     <RowDefinition Height="Auto"/>
+                    <!-- Footer -->
                 </Grid.RowDefinitions>
 
-                <!-- HEADER MINIMAL -->
+                <!-- HEADER SECTION - SAME HEIGHT AS MAIN HEADER -->
                 <Border Grid.Row="0" 
                         Background="{StaticResource BackgroundBrush}"
                         BorderBrush="{StaticResource BorderBrush}"
                         BorderThickness="0,0,0,1"
-                        Padding="20">
-                    <StackPanel>
-                        <TextBlock Text="ImmobiGestio" 
-                                   FontSize="18" 
-                                   FontWeight="Medium" 
+                        Height="60">
+                    <StackPanel VerticalAlignment="Center" Margin="20,0">
+                        <TextBlock Text="🏠 ImmobiGestio" 
+                                   FontSize="16" 
+                                   FontWeight="SemiBold" 
                                    Foreground="{StaticResource TextPrimary}"/>
                         <TextBlock Text="Gestione Immobiliare" 
-                                   FontSize="11" 
+                                   FontSize="10" 
                                    Foreground="{StaticResource TextMuted}" 
                                    Margin="0,2,0,0"/>
                     </StackPanel>
                 </Border>
 
-                <!-- NAVIGATION MINIMAL -->
-                <StackPanel Grid.Row="1" Margin="0,12,0,0">
+                <!-- NAVIGATION SECTION -->
+                <ScrollViewer Grid.Row="1" 
+                              VerticalScrollBarVisibility="Auto" 
+                              HorizontalScrollBarVisibility="Disabled">
+                    <StackPanel Margin="0,16,0,16">
 
-                    <Button Content="Dashboard" 
-                            Command="{Binding NavigateToDashboardCommand}">
-                        <Button.Style>
-                            <Style TargetType="Button" BasedOn="{StaticResource SidebarButtonStyle}">
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding IsDashboardActive}" Value="True">
-                                        <Setter Property="Background" Value="{StaticResource AccentBrush}"/>
-                                        <Setter Property="Foreground" Value="White"/>
-                                        <Setter Property="FontWeight" Value="Medium"/>
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </Button.Style>
-                    </Button>
+                        <!-- Main Navigation -->
+                        <TextBlock Text="NAVIGAZIONE" 
+                                   FontSize="10" 
+                                   FontWeight="SemiBold"
+                                   Foreground="{StaticResource TextMuted}" 
+                                   Margin="20,0,0,8"/>
 
-                    <Button Content="Immobili" 
-                            Command="{Binding NavigateToImmobiliCommand}">
-                        <Button.Style>
-                            <Style TargetType="Button" BasedOn="{StaticResource SidebarButtonStyle}">
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding IsImmobiliActive}" Value="True">
-                                        <Setter Property="Background" Value="{StaticResource AccentBrush}"/>
-                                        <Setter Property="Foreground" Value="White"/>
-                                        <Setter Property="FontWeight" Value="Medium"/>
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </Button.Style>
-                    </Button>
+                        <Button Content="🏠 Dashboard" 
+                                Command="{Binding NavigateToDashboardCommand}"
+                                Style="{StaticResource SidebarButtonStyle}"/>
 
-                    <Button Content="Clienti" 
-                            Command="{Binding NavigateToClientiCommand}">
-                        <Button.Style>
-                            <Style TargetType="Button" BasedOn="{StaticResource SidebarButtonStyle}">
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding IsClientiActive}" Value="True">
-                                        <Setter Property="Background" Value="{StaticResource AccentBrush}"/>
-                                        <Setter Property="Foreground" Value="White"/>
-                                        <Setter Property="FontWeight" Value="Medium"/>
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </Button.Style>
-                    </Button>
+                        <Button Content="🏢 Immobili" 
+                                Command="{Binding NavigateToImmobiliCommand}"
+                                Style="{StaticResource SidebarButtonStyle}"/>
 
-                    <Button Content="Appuntamenti" 
-                            Command="{Binding NavigateToAppuntamentiCommand}">
-                        <Button.Style>
-                            <Style TargetType="Button" BasedOn="{StaticResource SidebarButtonStyle}">
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding IsAppuntamentiActive}" Value="True">
-                                        <Setter Property="Background" Value="{StaticResource AccentBrush}"/>
-                                        <Setter Property="Foreground" Value="White"/>
-                                        <Setter Property="FontWeight" Value="Medium"/>
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </Button.Style>
-                    </Button>
+                        <Button Content="👥 Clienti" 
+                                Command="{Binding NavigateToClientiCommand}"
+                                Style="{StaticResource SidebarButtonStyle}"/>
 
-                    <!-- SEPARATOR -->
-                    <Border Height="1" 
-                            Background="{StaticResource BorderBrush}" 
-                            Margin="16,16"/>
+                        <Button Content="📅 Appuntamenti" 
+                                Command="{Binding NavigateToAppuntamentiCommand}"
+                                Style="{StaticResource SidebarButtonStyle}"/>
 
-                    <!-- QUICK ACTIONS -->
-                    <TextBlock Text="Azioni Rapide" 
-                               Style="{StaticResource Caption}" 
-                               Margin="20,0,0,8"/>
+                        <!-- SEPARATOR -->
+                        <Border Height="1" 
+                                Background="{StaticResource BorderBrush}" 
+                                Margin="16,20,16,16"/>
 
-                    <Button Content="+ Nuovo Immobile" 
-                            Command="{Binding QuickAddImmobileCommand}"
-                            Style="{StaticResource SidebarButtonStyle}"/>
+                        <!-- QUICK ACTIONS -->
+                        <TextBlock Text="AZIONI RAPIDE" 
+                                   FontSize="10" 
+                                   FontWeight="SemiBold"
+                                   Foreground="{StaticResource TextMuted}" 
+                                   Margin="20,0,0,8"/>
 
-                    <Button Content="+ Nuovo Cliente" 
-                            Command="{Binding QuickAddClienteCommand}"
-                            Style="{StaticResource SidebarButtonStyle}"/>
+                        <Button Content="+ Nuovo Immobile" 
+                                Command="{Binding QuickAddImmobileCommand}"
+                                Style="{StaticResource SidebarButtonStyle}"/>
 
-                    <Button Content="+ Nuovo Appuntamento" 
-                            Command="{Binding QuickAddAppuntamentoCommand}"
-                            Style="{StaticResource SidebarButtonStyle}"/>
+                        <Button Content="+ Nuovo Cliente" 
+                                Command="{Binding QuickAddClienteCommand}"
+                                Style="{StaticResource SidebarButtonStyle}"/>
 
-                </StackPanel>
+                        <Button Content="+ Nuovo Appuntamento" 
+                                Command="{Binding QuickAddAppuntamentoCommand}"
+                                Style="{StaticResource SidebarButtonStyle}"/>
+
+                    </StackPanel>
+                </ScrollViewer>
 
                 <!-- FOOTER STATUS -->
                 <Border Grid.Row="2" 
@@ -155,15 +126,21 @@
                         BorderThickness="0,1,0,0"
                         Padding="16,12">
                     <StackPanel>
-                        <TextBlock Text="Sistema Online" 
-                                   FontSize="11" 
-                                   Foreground="#4CAF50" 
-                                   FontWeight="Medium"/>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                            <Ellipse Width="8" Height="8" 
+                                     Fill="#4CAF50" 
+                                     VerticalAlignment="Center"
+                                     Margin="0,0,8,0"/>
+                            <TextBlock Text="Sistema Online" 
+                                       FontSize="11" 
+                                       Foreground="#4CAF50" 
+                                       FontWeight="Medium"
+                                       VerticalAlignment="Center"/>
+                        </StackPanel>
                         <TextBlock Text="{Binding StatusMessage}" 
                                    FontSize="10" 
                                    Foreground="{StaticResource TextMuted}" 
-                                   TextWrapping="Wrap" 
-                                   Margin="0,4,0,0"/>
+                                   TextWrapping="Wrap"/>
                     </StackPanel>
                 </Border>
             </Grid>

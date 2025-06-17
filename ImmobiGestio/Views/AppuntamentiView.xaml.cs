@@ -26,7 +26,7 @@ namespace ImmobiGestio.Views
                 // Aggiorna il mini calendario quando la vista viene caricata
                 if (DataContext is AppuntamentiViewModel viewModel)
                 {
-                    MiniCalendarDays.ItemsSource = viewModel.MiniCalendarDays;
+                    //MiniCalendarDays.ItemsSource = viewModel.MiniCalendarDays;
                 }
             }
             catch (System.Exception ex)

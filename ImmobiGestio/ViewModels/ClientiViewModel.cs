@@ -88,6 +88,8 @@ namespace ImmobiGestio.ViewModels
         public ICommand? InviaEmailCommand { get; set; }
         public ICommand? ChiamaClienteCommand { get; set; }
         public ICommand? EsportaClientiCommand { get; set; }
+        public ICommand SelectClienteCommand { get; set; }
+        public bool IsClientSelected => SelectedCliente != null;
 
         public ClientiViewModel(ImmobiliContext context)
         {
@@ -152,6 +154,7 @@ namespace ImmobiGestio.ViewModels
                 InviaEmailCommand = new RelayCommand(InviaEmail, _ => SelectedCliente != null && !string.IsNullOrEmpty(SelectedCliente.Email));
                 ChiamaClienteCommand = new RelayCommand(ChiamaCliente, _ => SelectedCliente != null && (!string.IsNullOrEmpty(SelectedCliente.Telefono) || !string.IsNullOrEmpty(SelectedCliente.Cellulare)));
                 EsportaClientiCommand = new RelayCommand(EsportaClienti);
+                SelectClienteCommand = new RelayCommand(cliente => SelectedCliente = (Cliente?)cliente);
 
                 System.Diagnostics.Debug.WriteLine("Comandi clienti inizializzati");
             }

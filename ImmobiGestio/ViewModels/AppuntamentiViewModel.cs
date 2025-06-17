@@ -27,6 +27,8 @@ namespace ImmobiGestio.ViewModels
         private string _vistaCalendario = "Mese";
         private bool _isDeleting = false;
         private bool _isOutlookConnected = false;
+        public bool IsListView { get; set; } = false;
+        public bool IsCalendarView { get; set; } = true;
 
         public ObservableCollection<Appuntamento> Appuntamenti { get; set; } = new();
         public ObservableCollection<EventoCalendario> EventiCalendario { get; set; } = new();
@@ -173,6 +175,8 @@ namespace ImmobiGestio.ViewModels
         public ICommand? SetFiltroStatoCommand { get; set; }
         public ICommand? SelectDateCommand { get; set; }
         public ICommand? RefreshCommand { get; set; }
+        public ICommand PreviousMonthCommand { get; set; }
+        public ICommand NextMonthCommand { get; set; }
         public ObservableCollection<MiniCalendarDay> MiniCalendarDays { get; set; } = new();
 
 
@@ -248,6 +252,8 @@ namespace ImmobiGestio.ViewModels
             NextPeriodCommand = new RelayCommand(NextPeriod);
             TodayCommand = new RelayCommand(_ => { SelectedDate = DateTime.Today; });
             EsportaCalendarioCommand = new RelayCommand(EsportaCalendario);
+            PreviousMonthCommand = new RelayCommand(_ => SelectedDate = SelectedDate.AddMonths(-1));
+            NextMonthCommand = new RelayCommand(_ => SelectedDate = SelectedDate.AddMonths(1));
             SetFiltroTipoCommand = new RelayCommand(param => {
                 if (param is string tipo)
                 {

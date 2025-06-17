@@ -6,252 +6,459 @@
              mc:Ignorable="d"
              d:DesignHeight="700" d:DesignWidth="1200">
 
-	<UserControl.Resources>
-		<BooleanToVisibilityConverter x:Key="BoolToVisConverter"/>
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+    </UserControl.Resources>
 
-		<Style TargetType="Button">
-			<Setter Property="Margin" Value="5"/>
-			<Setter Property="Padding" Value="10,5"/>
-			<Setter Property="Background" Value="#FF2196F3"/>
-			<Setter Property="Foreground" Value="White"/>
-			<Setter Property="BorderThickness" Value="0"/>
-			<Setter Property="Cursor" Value="Hand"/>
-			<Style.Triggers>
-				<Trigger Property="IsEnabled" Value="False">
-					<Setter Property="Background" Value="#FFCCCCCC"/>
-					<Setter Property="Foreground" Value="#FF666666"/>
-				</Trigger>
-			</Style.Triggers>
-		</Style>
+    <Grid Background="{StaticResource BackgroundBrush}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
 
-		<Style TargetType="TextBox">
-			<Setter Property="Margin" Value="5"/>
-			<Setter Property="Padding" Value="5"/>
-			<Setter Property="BorderBrush" Value="#FFCCCCCC"/>
-			<Setter Property="BorderThickness" Value="1"/>
-			<Style.Triggers>
-				<Trigger Property="IsFocused" Value="True">
-					<Setter Property="BorderBrush" Value="#FF2196F3"/>
-					<Setter Property="BorderThickness" Value="2"/>
-				</Trigger>
-			</Style.Triggers>
-		</Style>
+        <!-- MODERN HEADER BAR -->
+        <Border Grid.Row="0" 
+                Background="{StaticResource SurfaceBrush}" 
+                Padding="24,16" 
+                Effect="{StaticResource CardShadow}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
 
-		<Style TargetType="ComboBox">
-			<Setter Property="Margin" Value="5"/>
-			<Setter Property="Padding" Value="5"/>
-		</Style>
+                <!-- Title and Search -->
+                <StackPanel Grid.Column="0">
+                    <TextBlock Text="Gestione Clienti" 
+                               FontSize="20" 
+                               FontWeight="SemiBold" 
+                               Foreground="{StaticResource TextPrimaryBrush}"
+                               Margin="0,0,0,8"/>
+                    <StackPanel Orientation="Horizontal">
+                        <Border Background="{StaticResource BackgroundBrush}" 
+                                CornerRadius="8" 
+                                Padding="12,8"
+                                Width="300">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE721;" 
+                                          FontFamily="Segoe MDL2 Assets" 
+                                          FontSize="14" 
+                                          Foreground="{StaticResource TextMutedBrush}"
+                                          VerticalAlignment="Center"
+                                          Margin="0,0,8,0"/>
+                                <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                                        Background="Transparent"
+                                        BorderThickness="0"
+                                        FontSize="14"
+                                        VerticalAlignment="Center"
+                                        Width="250"/>
+                            </StackPanel>
+                        </Border>
+                        <TextBlock Text="{Binding Clienti.Count, StringFormat='{}{0} clienti'}"
+                                  FontSize="12"
+                                  Foreground="{StaticResource TextMutedBrush}"
+                                  VerticalAlignment="Center"
+                                  Margin="16,0,0,0"/>
+                    </StackPanel>
+                </StackPanel>
 
-		<Style TargetType="Label">
-			<Setter Property="Margin" Value="5,5,5,0"/>
-			<Setter Property="FontWeight" Value="Bold"/>
-		</Style>
-	</UserControl.Resources>
+                <!-- Action Buttons -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button Content="Nuovo Cliente" 
+                            Command="{Binding AddClienteCommand}"
+                            Style="{StaticResource ModernButtonPrimary}"
+                            Margin="0,0,8,0"/>
+                    <Button Content="Salva Modifiche" 
+                            Command="{Binding SaveClienteCommand}"
+                            Background="{StaticResource SuccessBrush}"
+                            Style="{StaticResource ModernButtonPrimary}"/>
+                </StackPanel>
+            </Grid>
+        </Border>
 
-	<Grid>
-		<Grid.RowDefinitions>
-			<RowDefinition Height="Auto"/>
-			<RowDefinition Height="*"/>
-		</Grid.RowDefinitions>
+        <!-- MAIN CONTENT -->
+        <Grid Grid.Row="1" Margin="24,16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="350"/>
+                <ColumnDefinition Width="24"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
 
-		<!-- Toolbar -->
-		<StackPanel Grid.Row="0" Orientation="Horizontal" Background="#FFF5F5F5" Margin="5">
-			<Button Content="👤 Nuovo Cliente" Command="{Binding AddClienteCommand}"
-                    Background="#FF4CAF50" FontWeight="Bold"/>
-			<Button Content="💾 Salva" Command="{Binding SaveClienteCommand}"
-                    Background="#FFFF9800"/>
-			<Button Content="🗑️ Elimina" Command="{Binding DeleteClienteCommand}"
-                    Background="#FFF44336"/>
-			<Separator Margin="10,0"/>
-			<Label Content="🔍" VerticalAlignment="Center" Foreground="#FF666666"/>
-			<TextBox x:Name="SearchBox" Width="200" Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
-                     VerticalAlignment="Center" Margin="5,0"
-                     ToolTip="Cerca per nome, cognome o email"/>
-		</StackPanel>
+            <!-- CLIENTS LIST -->
+            <Border Grid.Column="0" Style="{StaticResource ContentCardStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
 
-		<!-- Main Content -->
-		<Grid Grid.Row="1">
-			<Grid.ColumnDefinitions>
-				<ColumnDefinition Width="400"/>
-				<ColumnDefinition Width="5"/>
-				<ColumnDefinition Width="*"/>
-			</Grid.ColumnDefinitions>
+                    <TextBlock Grid.Row="0" 
+                               Text="Lista Clienti" 
+                               FontSize="16" 
+                               FontWeight="SemiBold"
+                               Margin="0,0,0,16"
+                               Foreground="{StaticResource TextPrimaryBrush}"/>
 
-			<!-- Lista Clienti -->
-			<GroupBox Grid.Column="0" Header="👥 Lista Clienti" Margin="5">
-				<Grid>
-					<Grid.RowDefinitions>
-						<RowDefinition Height="*"/>
-						<RowDefinition Height="Auto"/>
-					</Grid.RowDefinitions>
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                        <ItemsControl ItemsSource="{Binding Clienti}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="{StaticResource BackgroundBrush}"
+                                            CornerRadius="8"
+                                            Margin="0,0,0,8"
+                                            Padding="16,12"
+                                            Cursor="Hand">
+                                        <Border.InputBindings>
+                                            <MouseBinding Gesture="LeftClick" 
+                                                         Command="{Binding RelativeSource={RelativeSource AncestorType=UserControl}, Path=DataContext.SelectClienteCommand}"
+                                                         CommandParameter="{Binding}"/>
+                                        </Border.InputBindings>
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Setter Property="Background" Value="{StaticResource BackgroundBrush}"/>
+                                                <Style.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter Property="Background" Value="#F0F0F0"/>
+                                                    </Trigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
 
-					<ListBox Grid.Row="0" ItemsSource="{Binding Clienti}" SelectedItem="{Binding SelectedCliente}">
-						<ListBox.ItemTemplate>
-							<DataTemplate>
-								<Border BorderBrush="#FFEEEEEE" BorderThickness="0,0,0,1" Padding="5">
-									<StackPanel>
-										<TextBlock Text="{Binding NomeCompleto}" FontWeight="Bold" FontSize="14"/>
-										<TextBlock Text="{Binding Email}" FontSize="11" Foreground="Gray"/>
-										<StackPanel Orientation="Horizontal" Margin="0,2">
-											<TextBlock Text="{Binding TipoCliente}" FontWeight="Bold" Foreground="Blue"/>
-											<TextBlock Text=" • " Foreground="Gray"/>
-											<TextBlock Text="{Binding StatoCliente}" FontSize="10" Foreground="Green"/>
-										</StackPanel>
-										<TextBlock Text="{Binding DataInserimento, StringFormat=dd/MM/yyyy}" FontSize="9" Foreground="Gray"/>
-									</StackPanel>
-								</Border>
-							</DataTemplate>
-						</ListBox.ItemTemplate>
-					</ListBox>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
 
-					<TextBlock Grid.Row="1" Text="{Binding Clienti.Count, StringFormat=Totale: {0} clienti}"
-                               Margin="5" FontSize="10" Foreground="Gray" HorizontalAlignment="Right"/>
-				</Grid>
-			</GroupBox>
+                                            <!-- Client Avatar -->
+                                            <Border Grid.Column="0" 
+                                                    Background="{StaticResource PrimaryLightBrush}"
+                                                    CornerRadius="20"
+                                                    Width="40" Height="40"
+                                                    Margin="0,0,12,0">
+                                                <TextBlock Text="&#xE77B;" 
+                                                          FontFamily="Segoe MDL2 Assets" 
+                                                          FontSize="20"
+                                                          Foreground="{StaticResource PrimaryBrush}"
+                                                          HorizontalAlignment="Center"
+                                                          VerticalAlignment="Center"/>
+                                            </Border>
 
-			<GridSplitter Grid.Column="1" HorizontalAlignment="Stretch" Background="LightGray"/>
+                                            <!-- Client Info -->
+                                            <StackPanel Grid.Column="1">
+                                                <TextBlock Text="{Binding NomeCompleto}" 
+                                                           FontWeight="SemiBold" 
+                                                           FontSize="14"
+                                                           Foreground="{StaticResource TextPrimaryBrush}"/>
+                                                <TextBlock Text="{Binding Email}" 
+                                                           FontSize="12" 
+                                                           Foreground="{StaticResource TextMutedBrush}"
+                                                           Margin="0,2,0,0"/>
+                                                <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                                                    <Border Background="{StaticResource SuccessLightBrush}" 
+                                                            CornerRadius="4" 
+                                                            Padding="6,2">
+                                                        <TextBlock Text="{Binding TipoCliente}" 
+                                                                   FontSize="10" 
+                                                                   FontWeight="Medium"
+                                                                   Foreground="{StaticResource SuccessBrush}"/>
+                                                    </Border>
+                                                </StackPanel>
+                                            </StackPanel>
 
-			<!-- Dettagli Cliente -->
-			<ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto">
-				<Grid>
-					<Grid.Style>
-						<Style TargetType="Grid">
-							<Setter Property="IsEnabled" Value="True"/>
-							<Style.Triggers>
-								<DataTrigger Binding="{Binding SelectedCliente}" Value="{x:Null}">
-									<Setter Property="IsEnabled" Value="False"/>
-								</DataTrigger>
-							</Style.Triggers>
-						</Style>
-					</Grid.Style>
+                                            <!-- Status Indicator -->
+                                            <Ellipse Grid.Column="2" 
+                                                     Width="8" Height="8"
+                                                     Fill="{StaticResource SuccessBrush}"
+                                                     VerticalAlignment="Top"
+                                                     Margin="0,4,0,0"/>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
 
-					<!-- Placeholder quando nessun cliente è selezionato -->
-					<StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-						<StackPanel.Style>
-							<Style TargetType="StackPanel">
-								<Setter Property="Visibility" Value="Collapsed"/>
-								<Style.Triggers>
-									<DataTrigger Binding="{Binding SelectedCliente}" Value="{x:Null}">
-										<Setter Property="Visibility" Value="Visible"/>
-									</DataTrigger>
-								</Style.Triggers>
-							</Style>
-						</StackPanel.Style>
-						<TextBlock Text="👤" FontSize="48" HorizontalAlignment="Center" Foreground="#FFCCCCCC"/>
-						<TextBlock Text="Seleziona un cliente dalla lista" FontSize="16" HorizontalAlignment="Center"
-                                   Foreground="#FF666666" Margin="0,10"/>
-						<TextBlock Text="oppure crea un nuovo cliente" FontSize="12" HorizontalAlignment="Center"
-                                   Foreground="#FF999999"/>
-					</StackPanel>
+            <!-- CLIENT DETAILS -->
+            <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto">
+                <Grid>
+                    <!-- Empty State -->
+                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                        <StackPanel.Style>
+                            <Style TargetType="StackPanel">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding SelectedCliente}" Value="{x:Null}">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </StackPanel.Style>
 
-					<!-- Content when cliente is selected -->
-					<StackPanel DataContext="{Binding SelectedCliente}">
-						<StackPanel.Style>
-							<Style TargetType="StackPanel">
-								<Setter Property="Visibility" Value="Visible"/>
-								<Style.Triggers>
-									<DataTrigger Binding="{Binding}" Value="{x:Null}">
-										<Setter Property="Visibility" Value="Collapsed"/>
-									</DataTrigger>
-								</Style.Triggers>
-							</Style>
-						</StackPanel.Style>
+                        <Border Background="{StaticResource BackgroundBrush}"
+                                CornerRadius="50"
+                                Width="100" Height="100"
+                                Margin="0,0,0,24">
+                            <TextBlock Text="&#xE77B;" 
+                                      FontFamily="Segoe MDL2 Assets" 
+                                      FontSize="48"
+                                      Foreground="{StaticResource TextMutedBrush}"
+                                      HorizontalAlignment="Center"
+                                      VerticalAlignment="Center"/>
+                        </Border>
+                        <TextBlock Text="Seleziona un cliente" 
+                                   FontSize="18" 
+                                   FontWeight="Medium"
+                                   Foreground="{StaticResource TextSecondaryBrush}"
+                                   HorizontalAlignment="Center"
+                                   Margin="0,0,0,8"/>
+                        <TextBlock Text="Clicca su un cliente dalla lista per visualizzarne i dettagli" 
+                                   FontSize="14" 
+                                   Foreground="{StaticResource TextMutedBrush}"
+                                   HorizontalAlignment="Center"
+                                   TextAlignment="Center"/>
+                    </StackPanel>
 
-						<!-- Dati Anagrafici -->
-						<GroupBox Header="👤 Dati Anagrafici" Margin="5">
-							<Grid>
-								<Grid.ColumnDefinitions>
-									<ColumnDefinition Width="*"/>
-									<ColumnDefinition Width="*"/>
-								</Grid.ColumnDefinitions>
-								<Grid.RowDefinitions>
-									<RowDefinition Height="Auto"/>
-									<RowDefinition Height="Auto"/>
-									<RowDefinition Height="Auto"/>
-									<RowDefinition Height="Auto"/>
-									<RowDefinition Height="Auto"/>
-									<RowDefinition Height="Auto"/>
-								</Grid.RowDefinitions>
+                    <!-- Client Details Form -->
+                    <StackPanel DataContext="{Binding SelectedCliente}">
+                        <StackPanel.Style>
+                            <Style TargetType="StackPanel">
+                                <Setter Property="Visibility" Value="Visible"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding}" Value="{x:Null}">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </StackPanel.Style>
 
-								<Label Grid.Row="0" Grid.Column="0" Content="Nome:"/>
-								<TextBox Grid.Row="0" Grid.Column="1"
-                                         Text="{Binding Nome, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"/>
+                        <!-- Client Header -->
+                        <Border Style="{StaticResource ContentCardStyle}" Margin="0,0,0,16">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
 
-								<Label Grid.Row="1" Grid.Column="0" Content="Cognome:"/>
-								<TextBox Grid.Row="1" Grid.Column="1"
-                                         Text="{Binding Cognome, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"/>
+                                <Border Grid.Column="0" 
+                                        Background="{StaticResource PrimaryLightBrush}"
+                                        CornerRadius="30"
+                                        Width="60" Height="60"
+                                        Margin="0,0,16,0">
+                                    <TextBlock Text="&#xE77B;" 
+                                              FontFamily="Segoe MDL2 Assets" 
+                                              FontSize="30"
+                                              Foreground="{StaticResource PrimaryBrush}"
+                                              HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"/>
+                                </Border>
 
-								<Label Grid.Row="2" Grid.Column="0" Content="Email:"/>
-								<TextBox Grid.Row="2" Grid.Column="1"
-                                         Text="{Binding Email, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"/>
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding NomeCompleto}" 
+                                               FontSize="20" 
+                                               FontWeight="SemiBold"
+                                               Foreground="{StaticResource TextPrimaryBrush}"/>
+                                    <TextBlock Text="{Binding Email}" 
+                                               FontSize="14" 
+                                               Foreground="{StaticResource TextMutedBrush}"
+                                               Margin="0,4,0,0"/>
+                                    <TextBlock Text="{Binding DataInserimento, StringFormat='Cliente dal {0:dd/MM/yyyy}'}" 
+                                               FontSize="12" 
+                                               Foreground="{StaticResource TextMutedBrush}"
+                                               Margin="0,4,0,0"/>
+                                </StackPanel>
 
-								<Label Grid.Row="3" Grid.Column="0" Content="Telefono:"/>
-								<TextBox Grid.Row="3" Grid.Column="1"
-                                         Text="{Binding Telefono, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"/>
+                                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Button Content="&#xE715;" 
+                                            ToolTip="Invia Email"
+                                            FontFamily="Segoe MDL2 Assets"
+                                            Style="{StaticResource ModernButtonPrimary}"
+                                            Background="{StaticResource PurpleBrush}"
+                                            Width="40" Height="40"
+                                            Margin="0,0,8,0"
+                                            Command="{Binding RelativeSource={RelativeSource AncestorType=UserControl}, Path=DataContext.InviaEmailCommand}"/>
+                                    <Button Content="&#xE717;" 
+                                            ToolTip="Chiama Cliente"
+                                            FontFamily="Segoe MDL2 Assets"
+                                            Style="{StaticResource ModernButtonPrimary}"
+                                            Background="{StaticResource SuccessBrush}"
+                                            Width="40" Height="40"
+                                            Command="{Binding RelativeSource={RelativeSource AncestorType=UserControl}, Path=DataContext.ChiamaClienteCommand}"/>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
 
-								<Label Grid.Row="4" Grid.Column="0" Content="Tipo Cliente:"/>
-								<ComboBox Grid.Row="4" Grid.Column="1"
-                                          ItemsSource="{Binding RelativeSource={RelativeSource AncestorType=UserControl}, Path=DataContext.TipiCliente}"
-                                          SelectedItem="{Binding TipoCliente, Mode=TwoWay}"/>
+                        <!-- Basic Information -->
+                        <Border Style="{StaticResource ContentCardStyle}" Margin="0,0,0,16">
+                            <StackPanel>
+                                <TextBlock Text="Informazioni Personali" 
+                                           FontSize="16" 
+                                           FontWeight="SemiBold"
+                                           Margin="0,0,0,16"
+                                           Foreground="{StaticResource TextPrimaryBrush}"/>
 
-								<Label Grid.Row="5" Grid.Column="0" Content="Stato:"/>
-								<ComboBox Grid.Row="5" Grid.Column="1"
-                                          ItemsSource="{Binding RelativeSource={RelativeSource AncestorType=UserControl}, Path=DataContext.StatiCliente}"
-                                          SelectedItem="{Binding StatoCliente, Mode=TwoWay}"/>
-							</Grid>
-						</GroupBox>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
 
-						<!-- Budget e Preferenze -->
-						<GroupBox Header="💰 Budget e Preferenze" Margin="5">
-							<Grid>
-								<Grid.ColumnDefinitions>
-									<ColumnDefinition Width="*"/>
-									<ColumnDefinition Width="*"/>
-								</Grid.ColumnDefinitions>
-								<Grid.RowDefinitions>
-									<RowDefinition Height="Auto"/>
-									<RowDefinition Height="Auto"/>
-									<RowDefinition Height="Auto"/>
-								</Grid.RowDefinitions>
+                                    <!-- Row 1 -->
+                                    <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,8,0">
+                                        <TextBlock Text="Nome" 
+                                                   FontSize="12" 
+                                                   FontWeight="Medium"
+                                                   Foreground="{StaticResource TextSecondaryBrush}"
+                                                   Margin="0,0,0,4"/>
+                                        <TextBox Text="{Binding Nome, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
+                                                 Padding="12,8"
+                                                 BorderBrush="{StaticResource DividerBrush}"/>
+                                    </StackPanel>
 
-								<Label Grid.Row="0" Grid.Column="0" Content="Budget Min (€):"/>
-								<TextBox Grid.Row="0" Grid.Column="1"
-                                         Text="{Binding BudgetMin, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay, StringFormat=N0}"/>
+                                    <StackPanel Grid.Row="0" Grid.Column="1" Margin="8,0,0,0">
+                                        <TextBlock Text="Cognome" 
+                                                   FontSize="12" 
+                                                   FontWeight="Medium"
+                                                   Foreground="{StaticResource TextSecondaryBrush}"
+                                                   Margin="0,0,0,4"/>
+                                        <TextBox Text="{Binding Cognome, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
+                                                 Padding="12,8"
+                                                 BorderBrush="{StaticResource DividerBrush}"/>
+                                    </StackPanel>
 
-								<Label Grid.Row="1" Grid.Column="0" Content="Budget Max (€):"/>
-								<TextBox Grid.Row="1" Grid.Column="1"
-                                         Text="{Binding BudgetMax, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay, StringFormat=N0}"/>
+                                    <!-- Row 2 -->
+                                    <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,12,8,0">
+                                        <TextBlock Text="Email" 
+                                                   FontSize="12" 
+                                                   FontWeight="Medium"
+                                                   Foreground="{StaticResource TextSecondaryBrush}"
+                                                   Margin="0,0,0,4"/>
+                                        <TextBox Text="{Binding Email, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
+                                                 Padding="12,8"
+                                                 BorderBrush="{StaticResource DividerBrush}"/>
+                                    </StackPanel>
 
-								<Label Grid.Row="2" Grid.Column="0" Content="Zone Preferite:"/>
-								<TextBox Grid.Row="2" Grid.Column="1"
-                                         Text="{Binding PreferenzeZone, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"/>
-							</Grid>
-						</GroupBox>
+                                    <StackPanel Grid.Row="1" Grid.Column="1" Margin="8,12,0,0">
+                                        <TextBlock Text="Telefono" 
+                                                   FontSize="12" 
+                                                   FontWeight="Medium"
+                                                   Foreground="{StaticResource TextSecondaryBrush}"
+                                                   Margin="0,0,0,4"/>
+                                        <TextBox Text="{Binding Telefono, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
+                                                 Padding="12,8"
+                                                 BorderBrush="{StaticResource DividerBrush}"/>
+                                    </StackPanel>
 
-						<!-- Note -->
-						<GroupBox Header="📝 Note" Margin="5">
-							<TextBox Text="{Binding Note, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
-                                     Height="80" TextWrapping="Wrap" AcceptsReturn="True"
-                                     VerticalScrollBarVisibility="Auto" Margin="5"/>
-						</GroupBox>
+                                    <!-- Row 3 - WPF COMPATIBLE COMBOBOXES -->
+                                    <StackPanel Grid.Row="2" Grid.Column="0" Margin="0,12,8,0">
+                                        <TextBlock Text="Tipo Cliente" 
+                                                   FontSize="12" 
+                                                   FontWeight="Medium"
+                                                   Foreground="{StaticResource TextSecondaryBrush}"
+                                                   Margin="0,0,0,4"/>
+                                        <ComboBox ItemsSource="{Binding RelativeSource={RelativeSource AncestorType=UserControl}, Path=DataContext.TipiCliente}"
+                                                  SelectedItem="{Binding TipoCliente, Mode=TwoWay}"
+                                                  Padding="12,8"
+                                                  BorderBrush="{StaticResource DividerBrush}"/>
+                                    </StackPanel>
 
-						<!-- Azioni Rapide -->
-						<GroupBox Header="⚡ Azioni Rapide" Margin="5">
-							<StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-								<Button Content="📧 Email"
-                                        Command="{Binding RelativeSource={RelativeSource AncestorType=UserControl}, Path=DataContext.InviaEmailCommand}"
-                                        Background="#FF9C27B0"/>
-								<Button Content="📞 Chiama"
-                                        Command="{Binding RelativeSource={RelativeSource AncestorType=UserControl}, Path=DataContext.ChiamaClienteCommand}"
-                                        Background="#FF673AB7"/>
-								<Button Content="📅 Appuntamento"
-                                        Command="{Binding RelativeSource={RelativeSource AncestorType=UserControl}, Path=DataContext.AddAppuntamentoCommand}"
-                                        Background="#FF4CAF50"/>
-							</StackPanel>
-						</GroupBox>
-					</StackPanel>
-				</Grid>
-			</ScrollViewer>
-		</Grid>
-	</Grid>
+                                    <StackPanel Grid.Row="2" Grid.Column="1" Margin="8,12,0,0">
+                                        <TextBlock Text="Stato" 
+                                                   FontSize="12" 
+                                                   FontWeight="Medium"
+                                                   Foreground="{StaticResource TextSecondaryBrush}"
+                                                   Margin="0,0,0,4"/>
+                                        <ComboBox ItemsSource="{Binding RelativeSource={RelativeSource AncestorType=UserControl}, Path=DataContext.StatiCliente}"
+                                                  SelectedItem="{Binding StatoCliente, Mode=TwoWay}"
+                                                  Padding="12,8"
+                                                  BorderBrush="{StaticResource DividerBrush}"/>
+                                    </StackPanel>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Budget and Preferences -->
+                        <Border Style="{StaticResource ContentCardStyle}" Margin="0,0,0,16">
+                            <StackPanel>
+                                <TextBlock Text="Budget e Preferenze" 
+                                           FontSize="16" 
+                                           FontWeight="SemiBold"
+                                           Margin="0,0,0,16"
+                                           Foreground="{StaticResource TextPrimaryBrush}"/>
+
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <StackPanel Grid.Column="0" Margin="0,0,8,0">
+                                        <TextBlock Text="Budget Minimo (€)" 
+                                                   FontSize="12" 
+                                                   FontWeight="Medium"
+                                                   Foreground="{StaticResource TextSecondaryBrush}"
+                                                   Margin="0,0,0,4"/>
+                                        <TextBox Text="{Binding BudgetMin, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay, StringFormat=N0}"
+                                                 Padding="12,8"
+                                                 BorderBrush="{StaticResource DividerBrush}"/>
+                                    </StackPanel>
+
+                                    <StackPanel Grid.Column="1" Margin="8,0,0,0">
+                                        <TextBlock Text="Budget Massimo (€)" 
+                                                   FontSize="12" 
+                                                   FontWeight="Medium"
+                                                   Foreground="{StaticResource TextSecondaryBrush}"
+                                                   Margin="0,0,0,4"/>
+                                        <TextBox Text="{Binding BudgetMax, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay, StringFormat=N0}"
+                                                 Padding="12,8"
+                                                 BorderBrush="{StaticResource DividerBrush}"/>
+                                    </StackPanel>
+                                </Grid>
+
+                                <StackPanel Margin="0,12,0,0">
+                                    <TextBlock Text="Zone Preferite" 
+                                               FontSize="12" 
+                                               FontWeight="Medium"
+                                               Foreground="{StaticResource TextSecondaryBrush}"
+                                               Margin="0,0,0,4"/>
+                                    <TextBox Text="{Binding PreferenzeZone, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
+                                             Padding="12,8"
+                                             BorderBrush="{StaticResource DividerBrush}"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Notes -->
+                        <Border Style="{StaticResource ContentCardStyle}">
+                            <StackPanel>
+                                <TextBlock Text="Note" 
+                                           FontSize="16" 
+                                           FontWeight="SemiBold"
+                                           Margin="0,0,0,16"
+                                           Foreground="{StaticResource TextPrimaryBrush}"/>
+
+                                <TextBox Text="{Binding Note, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
+                                         Height="100" 
+                                         TextWrapping="Wrap" 
+                                         AcceptsReturn="True"
+                                         VerticalScrollBarVisibility="Auto"
+                                         Padding="12,8"
+                                         BorderBrush="{StaticResource DividerBrush}"/>
+                            </StackPanel>
+                        </Border>
+
+                    </StackPanel>
+                </Grid>
+            </ScrollViewer>
+        </Grid>
+    </Grid>
 </UserControl>
