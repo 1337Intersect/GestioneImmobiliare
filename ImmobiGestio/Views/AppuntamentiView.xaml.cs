@@ -1,20 +1,21 @@
 using System.Windows.Controls;
-using System.Windows;
 using System.Windows.Input;
+using System.Windows;
 using ImmobiGestio.ViewModels;
 using ImmobiGestio.Models;
-using System;
-using System.ComponentModel;
 
 namespace ImmobiGestio.Views
 {
+    /// <summary>
+    /// Logica di interazione per AppuntamentiView.xaml
+    /// </summary>
     public partial class AppuntamentiView : UserControl
     {
-        private AppuntamentiViewModel? ViewModel => DataContext as AppuntamentiViewModel;
-
         public AppuntamentiView()
         {
             InitializeComponent();
+
+            // Inizializza il mini calendario con i giorni
             Loaded += AppuntamentiView_Loaded;
         }
 
@@ -22,311 +23,206 @@ namespace ImmobiGestio.Views
         {
             try
             {
-                // Configura il mini calendario quando la vista è caricata
-                SetupMiniCalendar();
-
-                // Configura il calendario principale
-                SetupMainCalendar();
-
-                System.Diagnostics.Debug.WriteLine("AppuntamentiView caricato correttamente");
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Errore AppuntamentiView_Loaded: {ex.Message}");
-            }
-        }
-
-        private void SetupMiniCalendar()
-        {
-            try
-            {
-                if (ViewModel != null)
+                // Aggiorna il mini calendario quando la vista viene caricata
+                if (DataContext is AppuntamentiViewModel viewModel)
                 {
-                    // Forza la generazione del mini calendario
-                    ViewModel.LoadAllData();
-
-                    // Il binding è già impostato nel XAML
-                    System.Diagnostics.Debug.WriteLine("MiniCalendar setup completato");
+                    MiniCalendarDays.ItemsSource = viewModel.MiniCalendarDays;
                 }
             }
-            catch (Exception ex)
+            catch (System.Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Errore SetupMiniCalendar: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Errore nel caricamento AppuntamentiView: {ex.Message}");
             }
         }
 
-        private void SetupMainCalendar()
+        // Gestisce il click sui giorni del calendario principale per evitare conflitti con eventi
+        private void CalendarDay_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             try
             {
-                if (ViewModel != null)
+                if (sender is FrameworkElement element)
                 {
-                    // Il binding è già impostato nel XAML
-                    // Qui possiamo aggiungere gestori di eventi aggiuntivi se necessario
-                    UpdateCalendarVisibility();
-                    System.Diagnostics.Debug.WriteLine("MainCalendar setup completato");
-                }
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Errore SetupMainCalendar: {ex.Message}");
-            }
-        }
+                    // Se il click è su un evento specifico, non creare un nuovo appuntamento
+                    var hitTest = element.InputHitTest(e.GetPosition(element));
 
-        private void UpdateCalendarVisibility()
-        {
-            try
-            {
-                if (ViewModel != null)
-                {
-                    // La visibilità è gestita dai trigger nel XAML
-                    // Qui possiamo solo fare log o logica aggiuntiva se necessario
-                    System.Diagnostics.Debug.WriteLine($"Vista calendario: {ViewModel.VistaCalendario}");
-                }
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Errore UpdateCalendarVisibility: {ex.Message}");
-            }
-        }
-
-        // Gestori di eventi per interazioni personalizzate
-        private void OnCalendarCellDoubleClick(object sender, MouseButtonEventArgs e)
-        {
-            try
-            {
-                if (e.ClickCount == 2 && ViewModel != null)
-                {
-                    // Crea un nuovo appuntamento nella data selezionata
-                    ViewModel.AddAppuntamentoCommand?.Execute(null);
-                }
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Errore OnCalendarCellDoubleClick: {ex.Message}");
-            }
-        }
-
-        private void OnAppuntamentoDoubleClick(object sender, MouseButtonEventArgs e)
-        {
-            try
-            {
-                if (e.ClickCount == 2 && sender is FrameworkElement element)
-                {
-                    if (element.DataContext is Appuntamento appuntamento && ViewModel != null)
+                    // Controlla se l'hit test ha colpito un evento (border con evento)
+                    var eventBorder = FindParent<Border>(hitTest as DependencyObject);
+                    if (eventBorder?.DataContext is Appuntamento)
                     {
-                        // Seleziona l'appuntamento per la modifica
-                        ViewModel.SelectedAppuntamento = appuntamento;
+                        // È un click su un evento esistente, non procedere con la creazione
+                        e.Handled = true;
+                        return;
                     }
                 }
             }
-            catch (Exception ex)
+            catch (System.Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Errore OnAppuntamentoDoubleClick: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Errore CalendarDay_PreviewMouseLeftButtonDown: {ex.Message}");
             }
         }
 
-        private void OnMiniCalendarDayClick(object sender, RoutedEventArgs e)
+        // Gestisce il double click su eventi esistenti
+        private void AppuntamentoEvent_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
             try
             {
-                if (sender is Button button && ViewModel != null)
+                e.Handled = true; // CRITICO: Previene la propagazione
+
+                if (sender is FrameworkElement element &&
+                    element.DataContext is Appuntamento appuntamento &&
+                    DataContext is AppuntamentiViewModel viewModel)
                 {
-                    // Il CommandParameter è già impostato correttamente nel XAML
-                    // Non c'è bisogno di gestire manualmente questo evento
-                    System.Diagnostics.Debug.WriteLine("MiniCalendar day clicked");
+                    // Seleziona l'appuntamento senza creare uno nuovo
+                    viewModel.SelectedAppuntamento = appuntamento;
+                    System.Diagnostics.Debug.WriteLine($"Appuntamento selezionato: {appuntamento.Titolo}");
                 }
             }
-            catch (Exception ex)
+            catch (System.Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Errore OnMiniCalendarDayClick: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Errore AppuntamentoEvent_MouseDoubleClick: {ex.Message}");
             }
         }
 
-        // Gestione del cambio di vista
-        private void OnVistaCalendarioChanged(object sender, SelectionChangedEventArgs e)
+        // Gestisce il double click su celle vuote del calendario
+        private void CalendarCell_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
             try
             {
-                UpdateCalendarVisibility();
-
-                if (ViewModel != null)
+                // Solo se non è stato gestito da un evento figlio
+                if (!e.Handled && DataContext is AppuntamentiViewModel viewModel)
                 {
-                    // Ricarica gli eventi per la nuova vista
-                    ViewModel.LoadEventiCalendario();
+                    viewModel.AddAppuntamentoCommand?.Execute(null);
+                    System.Diagnostics.Debug.WriteLine("Nuovo appuntamento creato da cella vuota");
                 }
             }
-            catch (Exception ex)
+            catch (System.Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Errore OnVistaCalendarioChanged: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Errore CalendarCell_MouseDoubleClick: {ex.Message}");
             }
         }
 
-        // Gestione scroll del mouse per navigazione rapida
-        private void OnCalendarMouseWheel(object sender, MouseWheelEventArgs e)
+        // Gestisce l'hover effect per gli eventi
+        private void AppuntamentoEvent_MouseEnter(object sender, MouseEventArgs e)
         {
             try
             {
-                if (ViewModel != null && Keyboard.Modifiers == ModifierKeys.Control)
+                if (sender is Border border)
                 {
-                    // Ctrl + scroll per navigare tra i periodi
-                    if (e.Delta > 0)
+                    // Salva il colore originale se non già salvato
+                    if (!border.Tag?.ToString()?.StartsWith("OriginalColor:") == true)
                     {
-                        ViewModel.PreviousPeriodCommand?.Execute(null);
+                        var originalBrush = border.Background;
+                        border.Tag = $"OriginalColor:{originalBrush}";
                     }
-                    else
+
+                    // Applica l'effetto hover - colore più scuro
+                    if (border.Background is System.Windows.Media.SolidColorBrush brush)
                     {
-                        ViewModel.NextPeriodCommand?.Execute(null);
+                        var color = brush.Color;
+                        var darkerColor = System.Windows.Media.Color.FromArgb(
+                            color.A,
+                            (byte)(color.R * 0.8),
+                            (byte)(color.G * 0.8),
+                            (byte)(color.B * 0.8)
+                        );
+                        border.Background = new System.Windows.Media.SolidColorBrush(darkerColor);
                     }
 
-                    e.Handled = true;
+                    // Aggiungi ombra o bordo per evidenziare
+                    border.BorderThickness = new Thickness(2);
+                    border.BorderBrush = System.Windows.Media.Brushes.White;
                 }
             }
-            catch (Exception ex)
+            catch (System.Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Errore OnCalendarMouseWheel: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Errore AppuntamentoEvent_MouseEnter: {ex.Message}");
             }
         }
 
-        // Gestione tasti di scelta rapida
-        private void OnKeyDown(object sender, KeyEventArgs e)
+        // Rimuove l'hover effect
+        private void AppuntamentoEvent_MouseLeave(object sender, MouseEventArgs e)
         {
             try
             {
-                if (ViewModel != null)
+                if (sender is Border border && border.Tag?.ToString()?.StartsWith("OriginalColor:") == true)
                 {
-                    switch (e.Key)
+                    // Ripristina il colore originale
+                    var tagString = border.Tag.ToString();
+                    var originalBrushString = tagString.Substring("OriginalColor:".Length);
+
+                    // Per semplicità, ripristiniamo dal DataContext
+                    if (border.DataContext is Appuntamento appuntamento)
                     {
-                        case Key.T when Keyboard.Modifiers == ModifierKeys.Control:
-                            // Ctrl+T = Oggi
-                            ViewModel.TodayCommand?.Execute(null);
-                            e.Handled = true;
-                            break;
+                        var colorString = appuntamento.StatoColore;
+                        if (System.Windows.Media.ColorConverter.ConvertFromString(colorString) is System.Windows.Media.Color color)
+                        {
+                            border.Background = new System.Windows.Media.SolidColorBrush(color);
+                        }
+                    }
 
-                        case Key.N when Keyboard.Modifiers == ModifierKeys.Control:
-                            // Ctrl+N = Nuovo appuntamento
-                            ViewModel.AddAppuntamentoCommand?.Execute(null);
-                            e.Handled = true;
-                            break;
+                    // Rimuovi il bordo
+                    border.BorderThickness = new Thickness(0);
+                    border.BorderBrush = null;
+                }
+            }
+            catch (System.Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Errore AppuntamentoEvent_MouseLeave: {ex.Message}");
+            }
+        }
 
-                        case Key.S when Keyboard.Modifiers == ModifierKeys.Control:
-                            // Ctrl+S = Salva
-                            ViewModel.SaveAppuntamentoCommand?.Execute(null);
-                            e.Handled = true;
-                            break;
+        // Helper method per trovare il parent di un tipo specifico
+        private static T FindParent<T>(DependencyObject child) where T : DependencyObject
+        {
+            DependencyObject parentObject = System.Windows.Media.VisualTreeHelper.GetParent(child);
 
-                        case Key.F5:
-                            // F5 = Aggiorna
-                            ViewModel.RefreshCommand?.Execute(null);
-                            e.Handled = true;
-                            break;
+            if (parentObject == null) return null;
 
-                        case Key.Left when Keyboard.Modifiers == ModifierKeys.Alt:
-                            // Alt+Left = Periodo precedente
-                            ViewModel.PreviousPeriodCommand?.Execute(null);
-                            e.Handled = true;
-                            break;
+            if (parentObject is T parent)
+                return parent;
+            else
+                return FindParent<T>(parentObject);
+        }
 
-                        case Key.Right when Keyboard.Modifiers == ModifierKeys.Alt:
-                            // Alt+Right = Periodo successivo
-                            ViewModel.NextPeriodCommand?.Execute(null);
-                            e.Handled = true;
-                            break;
+        // Gestisce il cambio di selezione nel mini calendario
+        private void MiniCalendarDay_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (sender is Button button &&
+                    button.DataContext is MiniCalendarDay day &&
+                    DataContext is AppuntamentiViewModel viewModel)
+                {
+                    viewModel.SelectedDate = day.Date;
+                    System.Diagnostics.Debug.WriteLine($"Data selezionata: {day.Date:dd/MM/yyyy}");
+                }
+            }
+            catch (System.Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Errore MiniCalendarDay_Click: {ex.Message}");
+            }
+        }
 
-                        case Key.D1 when Keyboard.Modifiers == ModifierKeys.Control:
-                            // Ctrl+1 = Vista giorno
-                            ViewModel.VistaCalendario = "Giorno";
-                            e.Handled = true;
-                            break;
+        // Previene il double click su eventi dalla lista di propagare al container
+        private void EventListItem_PreviewMouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            try
+            {
+                // Questo gestisce il double click nella vista lista (giorno/settimana)
+                if (sender is FrameworkElement element && element.DataContext is Appuntamento appuntamento)
+                {
+                    e.Handled = true; // Previene la propagazione
 
-                        case Key.D2 when Keyboard.Modifiers == ModifierKeys.Control:
-                            // Ctrl+2 = Vista settimana
-                            ViewModel.VistaCalendario = "Settimana";
-                            e.Handled = true;
-                            break;
-
-                        case Key.D3 when Keyboard.Modifiers == ModifierKeys.Control:
-                            // Ctrl+3 = Vista mese
-                            ViewModel.VistaCalendario = "Mese";
-                            e.Handled = true;
-                            break;
+                    if (DataContext is AppuntamentiViewModel viewModel)
+                    {
+                        viewModel.SelectedAppuntamento = appuntamento;
+                        System.Diagnostics.Debug.WriteLine($"Appuntamento selezionato dalla lista: {appuntamento.Titolo}");
                     }
                 }
             }
-            catch (Exception ex)
+            catch (System.Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Errore OnKeyDown: {ex.Message}");
-            }
-        }
-
-        // Aggiorna la visibilità quando cambia il DataContext
-        private void OnDataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
-        {
-            try
-            {
-                if (e.NewValue is AppuntamentiViewModel viewModel)
-                {
-                    // Setup quando il ViewModel cambia
-                    SetupMiniCalendar();
-                    SetupMainCalendar();
-
-                    // Sottoscrivi agli eventi del ViewModel se necessario
-                    viewModel.PropertyChanged += ViewModel_PropertyChanged;
-                }
-
-                if (e.OldValue is AppuntamentiViewModel oldViewModel)
-                {
-                    // Cleanup del vecchio ViewModel
-                    oldViewModel.PropertyChanged -= ViewModel_PropertyChanged;
-                }
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Errore OnDataContextChanged: {ex.Message}");
-            }
-        }
-
-        private void ViewModel_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
-        {
-            try
-            {
-                // Reagisci ai cambiamenti del ViewModel
-                switch (e.PropertyName)
-                {
-                    case nameof(AppuntamentiViewModel.VistaCalendario):
-                        UpdateCalendarVisibility();
-                        break;
-
-                    case nameof(AppuntamentiViewModel.SelectedDate):
-                        // Aggiorna il mini calendario quando cambia la data
-                        SetupMiniCalendar();
-                        break;
-
-                    case nameof(AppuntamentiViewModel.Appuntamenti):
-                        // Rigenera il mini calendario quando cambiano gli appuntamenti
-                        SetupMiniCalendar();
-                        break;
-                }
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Errore ViewModel_PropertyChanged: {ex.Message}");
-            }
-        }
-
-        // Cleanup quando la vista viene scaricata
-        private void OnUnloaded(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                if (ViewModel != null)
-                {
-                    ViewModel.PropertyChanged -= ViewModel_PropertyChanged;
-                }
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Errore OnUnloaded: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Errore EventListItem_PreviewMouseDoubleClick: {ex.Message}");
             }
         }
     }

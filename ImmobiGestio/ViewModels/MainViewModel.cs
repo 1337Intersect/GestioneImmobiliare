@@ -62,6 +62,7 @@ namespace ImmobiGestio.ViewModels
         public ICommand? BackupDatabaseCommand { get; set; }
         public ICommand? RestoreDatabaseCommand { get; set; }
         public ICommand? SettingsCommand { get; set; }
+        public ICommand? OpenSettingsTabCommand { get; set; }
 
         // Proprietà per la UI
         public bool IsDashboardActive => CurrentView == "Dashboard";
@@ -145,6 +146,17 @@ namespace ImmobiGestio.ViewModels
             SettingsCommand = new RelayCommand(_ => ShowSettings());
 
             System.Diagnostics.Debug.WriteLine("Comandi inizializzati");
+
+            OpenSettingsTabCommand = new RelayCommand(param => {
+                if (param is string tabName)
+                {
+                    ShowSettingsTab(tabName);
+                }
+                else
+                {
+                    ShowSettings();
+                }
+            });
         }
 
         private void SetupNavigationEvents()
@@ -452,10 +464,155 @@ namespace ImmobiGestio.ViewModels
 
         private void ShowSettings()
         {
-            MessageBox.Show("Funzionalità Impostazioni - In sviluppo", "Info",
-                MessageBoxButton.OK, MessageBoxImage.Information);
+            try
+            {
+                System.Diagnostics.Debug.WriteLine("=== APERTURA FINESTRA IMPOSTAZIONI ===");
+
+                // Trova la finestra principale
+                var mainWindow = Application.Current.MainWindow;
+
+                // Apri la finestra delle impostazioni
+                var result = ImmobiGestio.Views.SettingsWindow.ShowSettingsDialog(mainWindow);
+
+                if (result == true)
+                {
+                    System.Diagnostics.Debug.WriteLine("Impostazioni salvate - aggiornamento applicazione");
+
+                    // Ricarica le impostazioni nell'applicazione
+                    RefreshApplicationSettings();
+
+                    // Mostra messaggio di successo
+                    MessageBox.Show("Impostazioni aggiornate con successo!\n\n" +
+                                   "Alcune modifiche potrebbero richiedere il riavvio dell'applicazione.",
+                        "Impostazioni Salvate", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine("Finestra impostazioni chiusa senza salvare");
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Errore ShowSettings: {ex.Message}");
+                MessageBox.Show($"Errore nell'apertura delle impostazioni: {ex.Message}",
+                    "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
+        private void RefreshApplicationSettings()
+        {
+            try
+            {
+                System.Diagnostics.Debug.WriteLine("=== AGGIORNAMENTO IMPOSTAZIONI APPLICAZIONE ===");
+
+                // Ricarica le impostazioni dal servizio
+                var settingsService = ImmobiGestio.Services.SettingsService.Instance;
+                var newSettings = settingsService.LoadSettings();
+
+                // Aggiorna i timer se necessario
+                UpdateTimersFromSettings(newSettings);
+
+                // Notifica ai ViewModels dei cambiamenti
+                NotifyViewModelsOfSettingsChange(newSettings);
+
+                // Aggiorna la status bar
+                RefreshStatusMessage();
+
+                System.Diagnostics.Debug.WriteLine("Aggiornamento impostazioni completato");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Errore RefreshApplicationSettings: {ex.Message}");
+            }
+        }
+
+        private void UpdateTimersFromSettings(ImmobiGestio.Models.SettingsModel settings)
+        {
+            try
+            {
+                // Questo metodo può essere utilizzato per aggiornare timer nell'applicazione
+                // basandosi sulle nuove impostazioni
+
+                System.Diagnostics.Debug.WriteLine($"Timer aggiornati:");
+                System.Diagnostics.Debug.WriteLine($"- AutoSave: {settings.AutoSaveIntervalFormatted}");
+                System.Diagnostics.Debug.WriteLine($"- StatusRefresh: {settings.StatusRefreshIntervalFormatted}");
+
+                // Se hai timer nell'applicazione principale, aggiornali qui
+                // Esempio:
+                // if (_autoSaveTimer != null)
+                // {
+                //     _autoSaveTimer.Interval = TimeSpan.FromSeconds(settings.AutoSaveInterval);
+                // }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Errore UpdateTimersFromSettings: {ex.Message}");
+            }
+        }
+
+        private void NotifyViewModelsOfSettingsChange(ImmobiGestio.Models.SettingsModel settings)
+        {
+            try
+            {
+                // Notifica ai ViewModels che le impostazioni sono cambiate
+
+                // Esempio per ImmobiliViewModel - aggiorna i limiti file
+                if (ImmobiliViewModel != null)
+                {
+                    System.Diagnostics.Debug.WriteLine("Notifica impostazioni a ImmobiliViewModel");
+                    // ImmobiliViewModel.UpdateFileSettings(settings);
+                }
+
+                // Esempio per AppuntamentiViewModel - aggiorna integrazione Outlook
+                if (AppuntamentiViewModel != null)
+                {
+                    System.Diagnostics.Debug.WriteLine("Notifica impostazioni a AppuntamentiViewModel");
+                    // AppuntamentiViewModel.UpdateOutlookSettings(settings);
+                }
+
+                // Altri ViewModels...
+
+                System.Diagnostics.Debug.WriteLine("Notifiche impostazioni inviate a tutti i ViewModels");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Errore NotifyViewModelsOfSettingsChange: {ex.Message}");
+            }
+        }
+
+        public void ShowSettingsTab(string tabName)
+        {
+            try
+            {
+                System.Diagnostics.Debug.WriteLine($"=== APERTURA IMPOSTAZIONI TAB: {tabName} ===");
+
+                var mainWindow = Application.Current.MainWindow;
+                var settingsWindow = new ImmobiGestio.Views.SettingsWindow();
+
+                if (mainWindow != null)
+                {
+                    settingsWindow.Owner = mainWindow;
+                }
+
+                // Focalizza sul tab richiesto
+                settingsWindow.FocusOnTab(tabName);
+
+                var result = settingsWindow.ShowDialog();
+
+                if (result == true)
+                {
+                    RefreshApplicationSettings();
+                    MessageBox.Show("Impostazioni aggiornate con successo!",
+                        "Successo", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Errore ShowSettingsTab: {ex.Message}");
+                MessageBox.Show($"Errore nell'apertura delle impostazioni: {ex.Message}",
+                    "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
         #endregion
 
         // Proprietà per la status bar

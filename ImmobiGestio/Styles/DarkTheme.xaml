@@ -1,0 +1,126 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+	<!-- Dark Theme Color Palette -->
+	<SolidColorBrush x:Key="BackgroundBrush" Color="#202020"/>
+	<SolidColorBrush x:Key="SurfaceBrush" Color="#2D2D2D"/>
+	<SolidColorBrush x:Key="PrimaryBrush" Color="#C8C8C8"/>
+	<SolidColorBrush x:Key="AccentBrush" Color="#0078D4"/>
+	<SolidColorBrush x:Key="TextPrimary" Color="#F0F0F0"/>
+	<SolidColorBrush x:Key="TextSecondary" Color="#B4B4B4"/>
+	<SolidColorBrush x:Key="TextMuted" Color="#787878"/>
+	<SolidColorBrush x:Key="BorderBrush" Color="#3C3C3C"/>
+	<SolidColorBrush x:Key="HoverBrush" Color="#373737"/>
+
+	<!-- Dark Theme Specific Colors -->
+	<SolidColorBrush x:Key="CardBrush" Color="#2D2D2D"/>
+	<SolidColorBrush x:Key="ToolbarBrush" Color="#252525"/>
+	<SolidColorBrush x:Key="SidebarBrush" Color="#2D2D2D"/>
+	<SolidColorBrush x:Key="CalendarCellBrush" Color="#2D2D2D"/>
+	<SolidColorBrush x:Key="CalendarHeaderBrush" Color="#252525"/>
+	<SolidColorBrush x:Key="InputBrush" Color="#3C3C3C"/>
+	<SolidColorBrush x:Key="InputBorderBrush" Color="#5A5A5A"/>
+	<SolidColorBrush x:Key="InputFocusBrush" Color="#0078D4"/>
+
+	<!-- Status Colors - Adjusted for Dark Theme -->
+	<SolidColorBrush x:Key="SuccessBrush" Color="#4CAF50"/>
+	<SolidColorBrush x:Key="WarningBrush" Color="#FF9800"/>
+	<SolidColorBrush x:Key="ErrorBrush" Color="#F44336"/>
+	<SolidColorBrush x:Key="InfoBrush" Color="#2196F3"/>
+
+	<!-- Appuntamento Status Colors - Dark Theme -->
+	<SolidColorBrush x:Key="AppuntamentoProgrammato" Color="#2196F3"/>
+	<SolidColorBrush x:Key="AppuntamentoConfermato" Color="#4CAF50"/>
+	<SolidColorBrush x:Key="AppuntamentoCompletato" Color="#757575"/>
+	<SolidColorBrush x:Key="AppuntamentoAnnullato" Color="#F44336"/>
+
+	<!-- Calendar Event Hover Effect - Dark Theme -->
+	<SolidColorBrush x:Key="EventHoverBrush" Color="#1976D2"/>
+	<SolidColorBrush x:Key="EventHoverBorderBrush" Color="#E0E0E0"/>
+
+	<!-- Dark Theme Window Colors -->
+	<SolidColorBrush x:Key="WindowBackgroundBrush" Color="#1A1A1A"/>
+	<SolidColorBrush x:Key="WindowBorderBrush" Color="#3C3C3C"/>
+
+	<!-- Dark Theme Button Colors -->
+	<SolidColorBrush x:Key="ButtonPrimaryBrush" Color="#0078D4"/>
+	<SolidColorBrush x:Key="ButtonPrimaryHoverBrush" Color="#106EBE"/>
+	<SolidColorBrush x:Key="ButtonSecondaryBrush" Color="#3C3C3C"/>
+	<SolidColorBrush x:Key="ButtonSecondaryHoverBrush" Color="#484848"/>
+
+	<!-- Dark Theme Data Grid Colors -->
+	<SolidColorBrush x:Key="DataGridBackgroundBrush" Color="#2D2D2D"/>
+	<SolidColorBrush x:Key="DataGridAlternateBrush" Color="#323232"/>
+	<SolidColorBrush x:Key="DataGridHeaderBrush" Color="#252525"/>
+	<SolidColorBrush x:Key="DataGridBorderBrush" Color="#3C3C3C"/>
+
+	<!-- Dark Theme List Colors -->
+	<SolidColorBrush x:Key="ListItemBrush" Color="#2D2D2D"/>
+	<SolidColorBrush x:Key="ListItemHoverBrush" Color="#373737"/>
+	<SolidColorBrush x:Key="ListItemSelectedBrush" Color="#1E3A5F"/>
+
+	<!-- Dark Theme Shadow Effects -->
+	<DropShadowEffect x:Key="DarkCardShadow"
+                      Color="#000000"
+                      Opacity="0.3"
+                      ShadowDepth="3"
+                      BlurRadius="12"/>
+
+	<DropShadowEffect x:Key="DarkButtonShadow"
+                      Color="#000000"
+                      Opacity="0.4"
+                      ShadowDepth="3"
+                      BlurRadius="12"/>
+
+	<!-- Dark Theme Typography -->
+	<FontFamily x:Key="PrimaryFontFamily">Segoe UI</FontFamily>
+	<FontFamily x:Key="MonospaceFontFamily">Consolas</FontFamily>
+
+	<!-- Dark Theme Icon Colors -->
+	<SolidColorBrush x:Key="IconPrimaryBrush" Color="#F0F0F0"/>
+	<SolidColorBrush x:Key="IconSecondaryBrush" Color="#B4B4B4"/>
+	<SolidColorBrush x:Key="IconAccentBrush" Color="#0078D4"/>
+
+	<!-- Dark Theme Progress Colors -->
+	<SolidColorBrush x:Key="ProgressBackgroundBrush" Color="#3C3C3C"/>
+	<SolidColorBrush x:Key="ProgressForegroundBrush" Color="#0078D4"/>
+
+	<!-- Dark Theme Tooltip Colors -->
+	<SolidColorBrush x:Key="TooltipBackgroundBrush" Color="#484848"/>
+	<SolidColorBrush x:Key="TooltipBorderBrush" Color="#5A5A5A"/>
+	<SolidColorBrush x:Key="TooltipTextBrush" Color="#F0F0F0"/>
+
+	<!-- Dark Theme Menu Colors -->
+	<SolidColorBrush x:Key="MenuBackgroundBrush" Color="#2D2D2D"/>
+	<SolidColorBrush x:Key="MenuBorderBrush" Color="#3C3C3C"/>
+	<SolidColorBrush x:Key="MenuItemHoverBrush" Color="#373737"/>
+	<SolidColorBrush x:Key="MenuSeparatorBrush" Color="#3C3C3C"/>
+
+	<!-- Dark Theme Scrollbar Colors -->
+	<SolidColorBrush x:Key="ScrollbarTrackBrush" Color="#252525"/>
+	<SolidColorBrush x:Key="ScrollbarThumbBrush" Color="#5A5A5A"/>
+	<SolidColorBrush x:Key="ScrollbarThumbHoverBrush" Color="#787878"/>
+
+	<!-- Dark Theme Specific Adjustments -->
+
+	<!-- Calendar specific dark colors -->
+	<SolidColorBrush x:Key="CalendarTodayBrush" Color="#0078D4"/>
+	<SolidColorBrush x:Key="CalendarSelectedBrush" Color="#1E3A5F"/>
+	<SolidColorBrush x:Key="CalendarOtherMonthBrush" Color="#5A5A5A"/>
+
+	<!-- Form controls dark colors -->
+	<SolidColorBrush x:Key="FormLabelBrush" Color="#F0F0F0"/>
+	<SolidColorBrush x:Key="FormInputBrush" Color="#3C3C3C"/>
+	<SolidColorBrush x:Key="FormInputBorderBrush" Color="#5A5A5A"/>
+	<SolidColorBrush x:Key="FormInputFocusBrush" Color="#0078D4"/>
+
+	<!-- Sidebar dark colors -->
+	<SolidColorBrush x:Key="SidebarHeaderBrush" Color="#252525"/>
+	<SolidColorBrush x:Key="SidebarSeparatorBrush" Color="#3C3C3C"/>
+
+	<!-- Status indicators dark colors -->
+	<SolidColorBrush x:Key="StatusOnlineBrush" Color="#4CAF50"/>
+	<SolidColorBrush x:Key="StatusOfflineBrush" Color="#757575"/>
+	<SolidColorBrush x:Key="StatusWarningBrush" Color="#FF9800"/>
+
+</ResourceDictionary>

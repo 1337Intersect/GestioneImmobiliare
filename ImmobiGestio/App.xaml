@@ -8,17 +8,10 @@
 
     <Application.Resources>
         <ResourceDictionary>
-
-            <!-- PALETTE MINIMAL -->
-            <SolidColorBrush x:Key="BackgroundBrush" Color="#FAFAFA"/>
-            <SolidColorBrush x:Key="SurfaceBrush" Color="#FFFFFF"/>
-            <SolidColorBrush x:Key="PrimaryBrush" Color="#333333"/>
-            <SolidColorBrush x:Key="AccentBrush" Color="#0066CC"/>
-            <SolidColorBrush x:Key="TextPrimary" Color="#1A1A1A"/>
-            <SolidColorBrush x:Key="TextSecondary" Color="#666666"/>
-            <SolidColorBrush x:Key="TextMuted" Color="#999999"/>
-            <SolidColorBrush x:Key="BorderBrush" Color="#E5E5E5"/>
-            <SolidColorBrush x:Key="HoverBrush" Color="#F5F5F5"/>
+            <ResourceDictionary.MergedDictionaries>
+                <!-- Il tema verrà caricato dinamicamente dal ThemeService -->
+                <!-- Risorse di base che non dipendono dal tema -->
+            </ResourceDictionary.MergedDictionaries>
 
             <!-- Converters -->
             <converters:BoolToStyleConverter x:Key="BoolToStyleConverter"/>
@@ -28,60 +21,105 @@
             <converters:NullableDecimalToStringConverter x:Key="NullableDecimalToStringConverter"/>
             <converters:NumericStringConverter x:Key="NumericStringConverter"/>
 
-            <!-- TRANSIZIONE MINIMAL -->
+            <!-- ANIMAZIONI RIUTILIZZABILI -->
             <Storyboard x:Key="FadeIn">
                 <DoubleAnimation Storyboard.TargetProperty="Opacity"
                                From="0.8" To="1" Duration="0:0:0.2"/>
             </Storyboard>
 
-            <!-- TIPOGRAFIA MINIMAL -->
+            <Storyboard x:Key="HoverScaleAnimation">
+                <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
+                                 To="1.05" Duration="0:0:0.2">
+                    <DoubleAnimation.EasingFunction>
+                        <CubicEase EasingMode="EaseOut"/>
+                    </DoubleAnimation.EasingFunction>
+                </DoubleAnimation>
+                <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
+                                 To="1.05" Duration="0:0:0.2">
+                    <DoubleAnimation.EasingFunction>
+                        <CubicEase EasingMode="EaseOut"/>
+                    </DoubleAnimation.EasingFunction>
+                </DoubleAnimation>
+            </Storyboard>
+
+            <Storyboard x:Key="HoverScaleBackAnimation">
+                <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
+                                 To="1.0" Duration="0:0:0.2"/>
+                <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
+                                 To="1.0" Duration="0:0:0.2"/>
+            </Storyboard>
+
+            <!-- TIPOGRAFIA CON COLORI DINAMICI -->
             <Style x:Key="H1" TargetType="TextBlock">
                 <Setter Property="FontSize" Value="28"/>
                 <Setter Property="FontWeight" Value="Light"/>
-                <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
+                <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
                 <Setter Property="Margin" Value="0,0,0,20"/>
             </Style>
 
             <Style x:Key="H2" TargetType="TextBlock">
                 <Setter Property="FontSize" Value="20"/>
                 <Setter Property="FontWeight" Value="Normal"/>
-                <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
+                <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
                 <Setter Property="Margin" Value="0,0,0,12"/>
             </Style>
 
             <Style x:Key="Body" TargetType="TextBlock">
                 <Setter Property="FontSize" Value="14"/>
-                <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
+                <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
                 <Setter Property="LineHeight" Value="20"/>
             </Style>
 
             <Style x:Key="Caption" TargetType="TextBlock">
                 <Setter Property="FontSize" Value="12"/>
-                <Setter Property="Foreground" Value="{StaticResource TextSecondary}"/>
+                <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
             </Style>
 
-            <!-- BUTTON MINIMAL -->
-            <Style x:Key="MinimalButton" TargetType="Button">
-                <Setter Property="Background" Value="{StaticResource AccentBrush}"/>
+            <!-- BUTTON MODERNI CON THEME SUPPORT -->
+            <Style x:Key="ModernButton" TargetType="Button">
+                <Setter Property="Background" Value="{DynamicResource AccentBrush}"/>
                 <Setter Property="Foreground" Value="White"/>
                 <Setter Property="BorderThickness" Value="0"/>
                 <Setter Property="Padding" Value="20,10"/>
                 <Setter Property="FontSize" Value="14"/>
                 <Setter Property="Cursor" Value="Hand"/>
+                <Setter Property="RenderTransform">
+                    <Setter.Value>
+                        <ScaleTransform ScaleX="1" ScaleY="1"/>
+                    </Setter.Value>
+                </Setter>
+                <Setter Property="RenderTransformOrigin" Value="0.5,0.5"/>
                 <Setter Property="Template">
                     <Setter.Value>
                         <ControlTemplate TargetType="Button">
                             <Border Background="{TemplateBinding Background}"
+                                    CornerRadius="6"
                                     Padding="{TemplateBinding Padding}">
+                                <Border.Effect>
+                                    <DropShadowEffect Color="{DynamicResource LightShadowColor}" 
+                                                    Opacity="0.2" 
+                                                    ShadowDepth="2" 
+                                                    BlurRadius="8"/>
+                                </Border.Effect>
                                 <ContentPresenter HorizontalAlignment="Center" 
                                                 VerticalAlignment="Center"/>
                             </Border>
                             <ControlTemplate.Triggers>
                                 <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter Property="Background" Value="#0052A3"/>
+                                    <Trigger.EnterActions>
+                                        <BeginStoryboard Storyboard="{StaticResource HoverScaleAnimation}"/>
+                                    </Trigger.EnterActions>
+                                    <Trigger.ExitActions>
+                                        <BeginStoryboard Storyboard="{StaticResource HoverScaleBackAnimation}"/>
+                                    </Trigger.ExitActions>
+                                    <Setter Property="Background" Value="#106EBE"/>
                                 </Trigger>
                                 <Trigger Property="IsPressed" Value="True">
-                                    <Setter Property="Background" Value="#003D7A"/>
+                                    <Setter Property="RenderTransform">
+                                        <Setter.Value>
+                                            <ScaleTransform ScaleX="0.98" ScaleY="0.98"/>
+                                        </Setter.Value>
+                                    </Setter>
                                 </Trigger>
                             </ControlTemplate.Triggers>
                         </ControlTemplate>
@@ -89,11 +127,11 @@
                 </Setter>
             </Style>
 
-            <!-- SIDEBAR BUTTON MINIMAL -->
+            <!-- SIDEBAR BUTTON CON THEME SUPPORT -->
             <Style x:Key="SidebarButtonStyle" TargetType="Button">
                 <Setter Property="Background" Value="Transparent"/>
                 <Setter Property="BorderThickness" Value="0"/>
-                <Setter Property="Foreground" Value="{StaticResource TextSecondary}"/>
+                <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
                 <Setter Property="FontSize" Value="14"/>
                 <Setter Property="Height" Value="44"/>
                 <Setter Property="HorizontalContentAlignment" Value="Left"/>
@@ -103,14 +141,15 @@
                     <Setter.Value>
                         <ControlTemplate TargetType="Button">
                             <Border Background="{TemplateBinding Background}" 
-                                    Margin="8,1">
+                                    Margin="8,1"
+                                    CornerRadius="6">
                                 <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
                                                 VerticalAlignment="Center"/>
                             </Border>
                             <ControlTemplate.Triggers>
                                 <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter Property="Background" Value="{StaticResource HoverBrush}"/>
-                                    <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
+                                    <Setter Property="Background" Value="{DynamicResource HoverBrush}"/>
+                                    <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
                                 </Trigger>
                             </ControlTemplate.Triggers>
                         </ControlTemplate>
@@ -119,16 +158,17 @@
             </Style>
 
             <Style x:Key="SidebarButtonActiveStyle" TargetType="Button" BasedOn="{StaticResource SidebarButtonStyle}">
-                <Setter Property="Background" Value="{StaticResource AccentBrush}"/>
+                <Setter Property="Background" Value="{DynamicResource AccentBrush}"/>
                 <Setter Property="Foreground" Value="White"/>
                 <Setter Property="FontWeight" Value="Medium"/>
             </Style>
 
-            <!-- TEXTBOX MINIMAL -->
-            <Style x:Key="MinimalTextBox" TargetType="TextBox">
-                <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}"/>
+            <!-- TEXTBOX CON THEME SUPPORT -->
+            <Style x:Key="ModernTextBox" TargetType="TextBox">
+                <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
                 <Setter Property="BorderThickness" Value="1"/>
-                <Setter Property="Background" Value="{StaticResource SurfaceBrush}"/>
+                <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
+                <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
                 <Setter Property="Padding" Value="12,8"/>
                 <Setter Property="FontSize" Value="14"/>
                 <Setter Property="Template">
@@ -136,17 +176,19 @@
                         <ControlTemplate TargetType="TextBox">
                             <Border Background="{TemplateBinding Background}"
                                     BorderBrush="{TemplateBinding BorderBrush}"
-                                    BorderThickness="{TemplateBinding BorderThickness}">
+                                    BorderThickness="{TemplateBinding BorderThickness}"
+                                    CornerRadius="4">
                                 <ScrollViewer x:Name="PART_ContentHost" 
                                             Margin="{TemplateBinding Padding}"
                                             VerticalAlignment="Center"/>
                             </Border>
                             <ControlTemplate.Triggers>
                                 <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
+                                    <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
                                 </Trigger>
                                 <Trigger Property="IsFocused" Value="True">
-                                    <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
+                                    <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                                    <Setter Property="BorderThickness" Value="2"/>
                                 </Trigger>
                             </ControlTemplate.Triggers>
                         </ControlTemplate>
@@ -154,10 +196,11 @@
                 </Setter>
             </Style>
 
-            <!-- COMBOBOX MINIMAL -->
-            <Style x:Key="MinimalComboBox" TargetType="ComboBox">
-                <Setter Property="Background" Value="{StaticResource SurfaceBrush}"/>
-                <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}"/>
+            <!-- COMBOBOX CON THEME SUPPORT -->
+            <Style x:Key="ModernComboBox" TargetType="ComboBox">
+                <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
+                <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+                <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
                 <Setter Property="BorderThickness" Value="1"/>
                 <Setter Property="Padding" Value="12,8"/>
                 <Setter Property="FontSize" Value="14"/>
@@ -167,7 +210,8 @@
                             <Grid>
                                 <Border Background="{TemplateBinding Background}"
                                         BorderBrush="{TemplateBinding BorderBrush}"
-                                        BorderThickness="{TemplateBinding BorderThickness}"/>
+                                        BorderThickness="{TemplateBinding BorderThickness}"
+                                        CornerRadius="4"/>
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*"/>
@@ -179,17 +223,24 @@
                                                     Content="{TemplateBinding SelectionBoxItem}"/>
                                     <Path Grid.Column="1" 
                                           Data="M 0 0 L 4 4 L 8 0 Z" 
-                                          Fill="{StaticResource TextSecondary}"
+                                          Fill="{DynamicResource TextSecondaryBrush}"
                                           Margin="0,0,12,0"
                                           VerticalAlignment="Center"/>
                                 </Grid>
                                 <Popup x:Name="PART_Popup" 
                                        Placement="Bottom"
                                        IsOpen="{TemplateBinding IsDropDownOpen}">
-                                    <Border Background="{StaticResource SurfaceBrush}"
-                                            BorderBrush="{StaticResource BorderBrush}"
+                                    <Border Background="{DynamicResource SurfaceBrush}"
+                                            BorderBrush="{DynamicResource BorderBrush}"
                                             BorderThickness="1"
+                                            CornerRadius="4"
                                             MinWidth="{TemplateBinding ActualWidth}">
+                                        <Border.Effect>
+                                            <DropShadowEffect Color="{DynamicResource ShadowColor}" 
+                                                            Opacity="0.3" 
+                                                            ShadowDepth="4" 
+                                                            BlurRadius="16"/>
+                                        </Border.Effect>
                                         <ScrollViewer MaxHeight="200">
                                             <ItemsPresenter/>
                                         </ScrollViewer>
@@ -201,31 +252,43 @@
                 </Setter>
             </Style>
 
-            <!-- CARD MINIMAL -->
-            <Style x:Key="MinimalCard" TargetType="Border">
-                <Setter Property="Background" Value="{StaticResource SurfaceBrush}"/>
-                <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}"/>
+            <!-- CARD CON THEME SUPPORT -->
+            <Style x:Key="ModernCard" TargetType="Border">
+                <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
+                <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
                 <Setter Property="BorderThickness" Value="1"/>
                 <Setter Property="Padding" Value="20"/>
                 <Setter Property="Margin" Value="0,0,0,12"/>
+                <Setter Property="CornerRadius" Value="8"/>
+                <Setter Property="Effect">
+                    <Setter.Value>
+                        <DropShadowEffect Color="{DynamicResource LightShadowColor}" 
+                                        Opacity="0.1" 
+                                        ShadowDepth="2" 
+                                        BlurRadius="8"/>
+                    </Setter.Value>
+                </Setter>
             </Style>
 
-            <!-- DATAGRID MINIMAL -->
-            <Style x:Key="MinimalDataGrid" TargetType="DataGrid">
-                <Setter Property="Background" Value="{StaticResource SurfaceBrush}"/>
-                <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}"/>
+            <!-- DATAGRID CON THEME SUPPORT -->
+            <Style x:Key="ModernDataGrid" TargetType="DataGrid">
+                <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
+                <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+                <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
                 <Setter Property="BorderThickness" Value="1,0,0,0"/>
                 <Setter Property="GridLinesVisibility" Value="Horizontal"/>
-                <Setter Property="HorizontalGridLinesBrush" Value="{StaticResource BorderBrush}"/>
+                <Setter Property="HorizontalGridLinesBrush" Value="{DynamicResource BorderBrush}"/>
                 <Setter Property="HeadersVisibility" Value="Column"/>
                 <Setter Property="AutoGenerateColumns" Value="False"/>
                 <Setter Property="CanUserResizeRows" Value="False"/>
                 <Setter Property="RowHeight" Value="40"/>
                 <Setter Property="FontSize" Value="14"/>
                 <Setter Property="AlternationCount" Value="2"/>
+                <Setter Property="AlternatingRowBackground" Value="{DynamicResource HoverBrush}"/>
+                <Setter Property="RowBackground" Value="{DynamicResource SurfaceBrush}"/>
             </Style>
 
-            <!-- CONTENTCONTROL ANIMATO MINIMAL -->
+            <!-- CONTENTCONTROL ANIMATO -->
             <Style x:Key="AnimatedContentControl" TargetType="ContentControl">
                 <Style.Triggers>
                     <EventTrigger RoutedEvent="Loaded">
