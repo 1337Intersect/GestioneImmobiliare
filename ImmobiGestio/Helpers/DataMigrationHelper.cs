@@ -266,7 +266,7 @@ namespace ImmobiGestio.Helpers
 
                     // Valida e correggi CAP
                     if (!string.IsNullOrEmpty(cliente.CAP) &&
-                        !ItalianValidationHelper.IsValidCAP(cliente.CAP))
+                        !ItalianValidationHelper.IsValidItalianCAP(cliente.CAP))
                     {
                         System.Diagnostics.Debug.WriteLine($"Cliente {cliente.Id}: CAP non valido '{cliente.CAP}'");
                         cliente.CAP = ""; // Rimuovi CAP non valido
@@ -275,7 +275,7 @@ namespace ImmobiGestio.Helpers
 
                     // Valida e correggi provincia
                     if (!string.IsNullOrEmpty(cliente.Provincia) &&
-                        !ItalianValidationHelper.IsValidProvincia(cliente.Provincia))
+                        !ItalianValidationHelper.IsValidItalianProvince(cliente.Provincia))
                     {
                         System.Diagnostics.Debug.WriteLine($"Cliente {cliente.Id}: Provincia non valida '{cliente.Provincia}'");
                         cliente.Provincia = ""; // Rimuovi provincia non valida
@@ -382,7 +382,7 @@ namespace ImmobiGestio.Helpers
 
                     // Valida e correggi CAP
                     if (!string.IsNullOrEmpty(immobile.CAP) &&
-                        !ItalianValidationHelper.IsValidCAP(immobile.CAP))
+                        !ItalianValidationHelper.IsValidItalianCAP(immobile.CAP))
                     {
                         System.Diagnostics.Debug.WriteLine($"Immobile {immobile.Id}: CAP non valido '{immobile.CAP}'");
                         immobile.CAP = "";
@@ -391,7 +391,7 @@ namespace ImmobiGestio.Helpers
 
                     // Valida e correggi provincia
                     if (!string.IsNullOrEmpty(immobile.Provincia) &&
-                        !ItalianValidationHelper.IsValidProvincia(immobile.Provincia))
+                        !ItalianValidationHelper.IsValidItalianProvince(immobile.Provincia))
                     {
                         System.Diagnostics.Debug.WriteLine($"Immobile {immobile.Id}: Provincia non valida '{immobile.Provincia}'");
                         immobile.Provincia = "";

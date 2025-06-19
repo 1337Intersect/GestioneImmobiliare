@@ -581,12 +581,12 @@ namespace ImmobiGestio.ViewModels
             {
                 if (!string.IsNullOrEmpty(SelectedCliente.Telefono))
                 {
-                    SelectedCliente.Telefono = ItalianValidationHelper.FormatTelefono(SelectedCliente.Telefono);
+                    SelectedCliente.Telefono = ItalianValidationHelper.FormatItalianPhone(SelectedCliente.Telefono);
                 }
 
                 if (!string.IsNullOrEmpty(SelectedCliente.Cellulare))
                 {
-                    SelectedCliente.Cellulare = ItalianValidationHelper.FormatTelefono(SelectedCliente.Cellulare);
+                    SelectedCliente.Cellulare = ItalianValidationHelper.FormatItalianPhone(SelectedCliente.Cellulare);
                 }
 
                 OnPropertyChanged(nameof(SelectedCliente));
@@ -604,8 +604,8 @@ namespace ImmobiGestio.ViewModels
         {
             if (parameter is string sigla)
             {
-                var nomeProvincia = ItalianValidationHelper.GetNomeProvincia(sigla);
-                var regione = ItalianValidationHelper.GetRegioneProvincia(sigla);
+                var nomeProvincia = ItalianValidationHelper.GetProvinceFromRegione(sigla);
+                var regione = ItalianValidationHelper.GetRegioneFromProvincia(sigla);
 
                 if (nomeProvincia != null)
                 {

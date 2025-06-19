@@ -6,339 +6,172 @@ using System.Text.RegularExpressions;
 namespace ImmobiGestio.Helpers
 {
     /// <summary>
-    /// Helper per validazioni specifiche del mercato italiano immobiliare
+    /// Helper per validazioni specifiche italiane
     /// </summary>
     public static class ItalianValidationHelper
     {
-        // PROVINCE ITALIANE COMPLETE (aggiornate 2024)
+        // Province italiane con relative regioni
         public static readonly Dictionary<string, string> ProvinceItaliane = new()
         {
-            {"AG", "Agrigento"}, {"AL", "Alessandria"}, {"AN", "Ancona"}, {"AO", "Aosta"},
-            {"AR", "Arezzo"}, {"AP", "Ascoli Piceno"}, {"AT", "Asti"}, {"AV", "Avellino"},
-            {"BA", "Bari"}, {"BT", "Barletta-Andria-Trani"}, {"BL", "Belluno"}, {"BN", "Benevento"},
-            {"BG", "Bergamo"}, {"BI", "Biella"}, {"BO", "Bologna"}, {"BZ", "Bolzano"},
-            {"BS", "Brescia"}, {"BR", "Brindisi"}, {"CA", "Cagliari"}, {"CL", "Caltanissetta"},
-            {"CB", "Campobasso"}, {"CI", "Carbonia-Iglesias"}, {"CE", "Caserta"}, {"CT", "Catania"},
-            {"CZ", "Catanzaro"}, {"CH", "Chieti"}, {"CO", "Como"}, {"CS", "Cosenza"},
-            {"CR", "Cremona"}, {"KR", "Crotone"}, {"CN", "Cuneo"}, {"EN", "Enna"},
-            {"FM", "Fermo"}, {"FE", "Ferrara"}, {"FI", "Firenze"}, {"FG", "Foggia"},
-            {"FC", "Forlì-Cesena"}, {"FR", "Frosinone"}, {"GE", "Genova"}, {"GO", "Gorizia"},
-            {"GR", "Grosseto"}, {"IM", "Imperia"}, {"IS", "Isernia"}, {"SP", "La Spezia"},
-            {"AQ", "L'Aquila"}, {"LT", "Latina"}, {"LE", "Lecce"}, {"LC", "Lecco"},
-            {"LI", "Livorno"}, {"LO", "Lodi"}, {"LU", "Lucca"}, {"MC", "Macerata"},
-            {"MN", "Mantova"}, {"MS", "Massa-Carrara"}, {"MT", "Matera"}, {"VS", "Medio Campidano"},
-            {"ME", "Messina"}, {"MI", "Milano"}, {"MO", "Modena"}, {"MB", "Monza e Brianza"},
-            {"NA", "Napoli"}, {"NO", "Novara"}, {"NU", "Nuoro"}, {"OG", "Ogliastra"},
-            {"OT", "Olbia-Tempio"}, {"OR", "Oristano"}, {"PD", "Padova"}, {"PA", "Palermo"},
-            {"PR", "Parma"}, {"PV", "Pavia"}, {"PG", "Perugia"}, {"PU", "Pesaro e Urbino"},
-            {"PE", "Pescara"}, {"PC", "Piacenza"}, {"PI", "Pisa"}, {"PT", "Pistoia"},
-            {"PN", "Pordenone"}, {"PZ", "Potenza"}, {"PO", "Prato"}, {"RG", "Ragusa"},
-            {"RA", "Ravenna"}, {"RC", "Reggio Calabria"}, {"RE", "Reggio Emilia"}, {"RI", "Rieti"},
-            {"RN", "Rimini"}, {"RM", "Roma"}, {"RO", "Rovigo"}, {"SA", "Salerno"},
-            {"SS", "Sassari"}, {"SV", "Savona"}, {"SI", "Siena"}, {"SR", "Siracusa"},
-            {"SO", "Sondrio"}, {"TA", "Taranto"}, {"TE", "Teramo"}, {"TR", "Terni"},
-            {"TO", "Torino"}, {"TP", "Trapani"}, {"TN", "Trento"}, {"TV", "Treviso"},
-            {"TS", "Trieste"}, {"UD", "Udine"}, {"VA", "Varese"}, {"VE", "Venezia"},
-            {"VB", "Verbano-Cusio-Ossola"}, {"VC", "Vercelli"}, {"VR", "Verona"}, {"VV", "Vibo Valentia"},
-            {"VI", "Vicenza"}, {"VT", "Viterbo"}
+            // Piemonte
+            {"TO", "Piemonte"}, {"VC", "Piemonte"}, {"NO", "Piemonte"}, {"CN", "Piemonte"},
+            {"AT", "Piemonte"}, {"AL", "Piemonte"}, {"BI", "Piemonte"}, {"VB", "Piemonte"},
+            
+            // Valle d'Aosta
+            {"AO", "Valle d'Aosta"},
+            
+            // Lombardia
+            {"MI", "Lombardia"}, {"BG", "Lombardia"}, {"BS", "Lombardia"}, {"PV", "Lombardia"},
+            {"CR", "Lombardia"}, {"MN", "Lombardia"}, {"CO", "Lombardia"}, {"VA", "Lombardia"},
+            {"SO", "Lombardia"}, {"LC", "Lombardia"}, {"LO", "Lombardia"}, {"MB", "Lombardia"},
+            
+            // Trentino-Alto Adige
+            {"TN", "Trentino-Alto Adige"}, {"BZ", "Trentino-Alto Adige"},
+            
+            // Veneto
+            {"VE", "Veneto"}, {"VR", "Veneto"}, {"VI", "Veneto"}, {"BL", "Veneto"},
+            {"PD", "Veneto"}, {"TV", "Veneto"}, {"RO", "Veneto"},
+            
+            // Friuli-Venezia Giulia
+            {"UD", "Friuli-Venezia Giulia"}, {"GO", "Friuli-Venezia Giulia"},
+            {"TS", "Friuli-Venezia Giulia"}, {"PN", "Friuli-Venezia Giulia"},
+            
+            // Liguria
+            {"GE", "Liguria"}, {"SP", "Liguria"}, {"SV", "Liguria"}, {"IM", "Liguria"},
+            
+            // Emilia-Romagna
+            {"BO", "Emilia-Romagna"}, {"FE", "Emilia-Romagna"}, {"FC", "Emilia-Romagna"},
+            {"MO", "Emilia-Romagna"}, {"PR", "Emilia-Romagna"}, {"RA", "Emilia-Romagna"},
+            {"RE", "Emilia-Romagna"}, {"RN", "Emilia-Romagna"}, {"PC", "Emilia-Romagna"},
+            
+            // Toscana
+            {"FI", "Toscana"}, {"AR", "Toscana"}, {"SI", "Toscana"}, {"GR", "Toscana"},
+            {"LI", "Toscana"}, {"LU", "Toscana"}, {"MS", "Toscana"}, {"PI", "Toscana"},
+            {"PT", "Toscana"}, {"PO", "Toscana"},
+            
+            // Umbria
+            {"PG", "Umbria"}, {"TR", "Umbria"},
+            
+            // Marche
+            {"AN", "Marche"}, {"AP", "Marche"}, {"FM", "Marche"}, {"MC", "Marche"}, {"PU", "Marche"},
+            
+            // Lazio
+            {"RM", "Lazio"}, {"VT", "Lazio"}, {"RI", "Lazio"}, {"LT", "Lazio"}, {"FR", "Lazio"},
+            
+            // Abruzzo
+            {"AQ", "Abruzzo"}, {"CH", "Abruzzo"}, {"PE", "Abruzzo"}, {"TE", "Abruzzo"},
+            
+            // Molise
+            {"CB", "Molise"}, {"IS", "Molise"},
+            
+            // Campania
+            {"NA", "Campania"}, {"AV", "Campania"}, {"BN", "Campania"}, {"CE", "Campania"}, {"SA", "Campania"},
+            
+            // Puglia
+            {"BA", "Puglia"}, {"FG", "Puglia"}, {"LE", "Puglia"}, {"BR", "Puglia"}, {"TA", "Puglia"}, {"BT", "Puglia"},
+            
+            // Basilicata
+            {"PZ", "Basilicata"}, {"MT", "Basilicata"},
+            
+            // Calabria
+            {"CS", "Calabria"}, {"CZ", "Calabria"}, {"RC", "Calabria"}, {"KR", "Calabria"}, {"VV", "Calabria"},
+            
+            // Sicilia
+            {"PA", "Sicilia"}, {"AG", "Sicilia"}, {"CL", "Sicilia"}, {"CT", "Sicilia"},
+            {"EN", "Sicilia"}, {"ME", "Sicilia"}, {"RG", "Sicilia"}, {"SR", "Sicilia"}, {"TP", "Sicilia"},
+            
+            // Sardegna
+            {"CA", "Sardegna"}, {"NU", "Sardegna"}, {"OR", "Sardegna"}, {"SS", "Sardegna"},
+            {"OT", "Sardegna"}, {"OG", "Sardegna"}, {"CI", "Sardegna"}, {"VS", "Sardegna"}
         };
 
-        // REGIONI ITALIANE
-        public static readonly Dictionary<string, List<string>> RegioniProvincie = new()
+        // Regioni con le relative province
+        public static readonly Dictionary<string, string[]> RegioniProvincie = new()
         {
-            {"Abruzzo", new List<string> {"AQ", "CH", "PE", "TE"}},
-            {"Basilicata", new List<string> {"MT", "PZ"}},
-            {"Calabria", new List<string> {"CS", "CZ", "KR", "RC", "VV"}},
-            {"Campania", new List<string> {"AV", "BN", "CE", "NA", "SA"}},
-            {"Emilia-Romagna", new List<string> {"BO", "FE", "FC", "MO", "PR", "PC", "RA", "RE", "RN"}},
-            {"Friuli-Venezia Giulia", new List<string> {"GO", "PN", "TS", "UD"}},
-            {"Lazio", new List<string> {"FR", "LT", "RI", "RM", "VT"}},
-            {"Liguria", new List<string> {"GE", "IM", "SP", "SV"}},
-            {"Lombardia", new List<string> {"BG", "BS", "CO", "CR", "LO", "MN", "MI", "MB", "PV", "SO", "VA"}},
-            {"Marche", new List<string> {"AN", "AP", "FM", "MC", "PU"}},
-            {"Molise", new List<string> {"CB", "IS"}},
-            {"Piemonte", new List<string> {"AL", "AT", "BI", "CN", "NO", "TO", "VB", "VC"}},
-            {"Puglia", new List<string> {"BA", "BT", "BR", "FG", "LE", "TA"}},
-            {"Sardegna", new List<string> {"CA", "CI", "VS", "NU", "OG", "OT", "OR", "SS"}},
-            {"Sicilia", new List<string> {"AG", "CL", "CT", "EN", "ME", "PA", "RG", "SR", "TP"}},
-            {"Toscana", new List<string> {"AR", "FI", "GR", "LI", "LU", "MS", "PI", "PO", "PT", "SI"}},
-            {"Trentino-Alto Adige", new List<string> {"BZ", "TN"}},
-            {"Umbria", new List<string> {"PG", "TR"}},
-            {"Valle d'Aosta", new List<string> {"AO"}},
-            {"Veneto", new List<string> {"BL", "PD", "RO", "TV", "VE", "VR", "VI"}}
+            {"Piemonte", new[] {"TO", "VC", "NO", "CN", "AT", "AL", "BI", "VB"}},
+            {"Valle d'Aosta", new[] {"AO"}},
+            {"Lombardia", new[] {"MI", "BG", "BS", "PV", "CR", "MN", "CO", "VA", "SO", "LC", "LO", "MB"}},
+            {"Trentino-Alto Adige", new[] {"TN", "BZ"}},
+            {"Veneto", new[] {"VE", "VR", "VI", "BL", "PD", "TV", "RO"}},
+            {"Friuli-Venezia Giulia", new[] {"UD", "GO", "TS", "PN"}},
+            {"Liguria", new[] {"GE", "SP", "SV", "IM"}},
+            {"Emilia-Romagna", new[] {"BO", "FE", "FC", "MO", "PR", "RA", "RE", "RN", "PC"}},
+            {"Toscana", new[] {"FI", "AR", "SI", "GR", "LI", "LU", "MS", "PI", "PT", "PO"}},
+            {"Umbria", new[] {"PG", "TR"}},
+            {"Marche", new[] {"AN", "AP", "FM", "MC", "PU"}},
+            {"Lazio", new[] {"RM", "VT", "RI", "LT", "FR"}},
+            {"Abruzzo", new[] {"AQ", "CH", "PE", "TE"}},
+            {"Molise", new[] {"CB", "IS"}},
+            {"Campania", new[] {"NA", "AV", "BN", "CE", "SA"}},
+            {"Puglia", new[] {"BA", "FG", "LE", "BR", "TA", "BT"}},
+            {"Basilicata", new[] {"PZ", "MT"}},
+            {"Calabria", new[] {"CS", "CZ", "RC", "KR", "VV"}},
+            {"Sicilia", new[] {"PA", "AG", "CL", "CT", "EN", "ME", "RG", "SR", "TP"}},
+            {"Sardegna", new[] {"CA", "NU", "OR", "SS", "OT", "OG", "CI", "VS"}}
         };
 
         /// <summary>
         /// Valida un codice fiscale italiano
         /// </summary>
-        public static bool IsValidCodiceFiscale(string codiceFiscale)
+        public static bool IsValidCodiceFiscale(string? codiceFiscale)
         {
-            if (string.IsNullOrWhiteSpace(codiceFiscale) || codiceFiscale.Length != 16)
-                return false;
+            if (string.IsNullOrWhiteSpace(codiceFiscale)) return false;
 
-            codiceFiscale = codiceFiscale.ToUpper();
+            codiceFiscale = codiceFiscale.Trim().ToUpper();
 
-            // Controllo formato: 6 lettere + 2 cifre + 1 lettera + 2 cifre + 1 lettera + 3 cifre + 1 lettera
-            if (!Regex.IsMatch(codiceFiscale, @"^[A-Z]{6}[0-9]{2}[A-Z][0-9]{2}[A-Z][0-9]{3}[A-Z]$"))
-                return false;
+            // Verifica lunghezza
+            if (codiceFiscale.Length != 16) return false;
 
-            // Controllo carattere di controllo
-            return ValidateCodiceFiscaleChecksum(codiceFiscale);
+            // Verifica formato con regex
+            var regex = new Regex(@"^[A-Z]{6}[0-9]{2}[A-Z][0-9]{2}[A-Z][0-9]{3}[A-Z]$");
+            if (!regex.IsMatch(codiceFiscale)) return false;
+
+            // Calcola e verifica carattere di controllo
+            return VerifyCodiceFiscaleChecksum(codiceFiscale);
         }
 
-        private static bool ValidateCodiceFiscaleChecksum(string codiceFiscale)
+        private static bool VerifyCodiceFiscaleChecksum(string codiceFiscale)
         {
-            const string oddChars = "BAFHJNPRTVCESULDGIMOQKWZYX";
-            const string evenChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-            const string checkChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-
-            int sum = 0;
-            for (int i = 0; i < 15; i++)
+            try
             {
-                char c = codiceFiscale[i];
-                int value;
+                const string oddChars = "BAFHJNPRTVCESULDGIMOQKWZYX";
+                const string evenChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+                const string controlChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
-                if (char.IsLetter(c))
-                {
-                    value = c - 'A';
-                }
-                else
-                {
-                    value = c - '0';
-                }
+                int sum = 0;
 
-                if (i % 2 == 0) // posizione dispari (1-based)
+                // Somma caratteri in posizione dispari (1-based)
+                for (int i = 0; i < 15; i += 2)
                 {
-                    // Per le posizioni dispari, usa la tabella "odd"
-                    if (char.IsLetter(c))
+                    char c = codiceFiscale[i];
+                    if (char.IsDigit(c))
+                    {
+                        int digit = c - '0';
+                        sum += new[] { 1, 0, 5, 7, 9, 13, 15, 17, 19, 21 }[digit];
+                    }
+                    else
                     {
                         sum += oddChars.IndexOf(c);
                     }
-                    else
-                    {
-                        sum += new int[] { 1, 0, 5, 7, 9, 13, 15, 17, 19, 21 }[c - '0'];
-                    }
                 }
-                else // posizione pari
+
+                // Somma caratteri in posizione pari (1-based)
+                for (int i = 1; i < 15; i += 2)
                 {
-                    // Per le posizioni pari, usa la tabella "even"
-                    if (char.IsLetter(c))
-                    {
-                        sum += c - 'A';
-                    }
-                    else
+                    char c = codiceFiscale[i];
+                    if (char.IsDigit(c))
                     {
                         sum += c - '0';
                     }
-                }
-            }
-
-            char expectedCheck = checkChars[sum % 26];
-            return codiceFiscale[15] == expectedCheck;
-        }
-
-        /// <summary>
-        /// Valida una partita IVA italiana
-        /// </summary>
-        public static bool IsValidPartitaIVA(string partitaIva)
-        {
-            if (string.IsNullOrWhiteSpace(partitaIva) || partitaIva.Length != 11)
-                return false;
-
-            // Deve essere composta solo da cifre
-            if (!partitaIva.All(char.IsDigit))
-                return false;
-
-            // Controllo algoritmo di Luhn modificato
-            int sum = 0;
-            for (int i = 0; i < 10; i++)
-            {
-                int digit = int.Parse(partitaIva[i].ToString());
-                if (i % 2 == 1)
-                {
-                    digit *= 2;
-                    if (digit > 9)
-                        digit = digit / 10 + digit % 10;
-                }
-                sum += digit;
-            }
-
-            int checkDigit = (10 - (sum % 10)) % 10;
-            return checkDigit == int.Parse(partitaIva[10].ToString());
-        }
-
-        /// <summary>
-        /// Valida un CAP italiano
-        /// </summary>
-        public static bool IsValidCAP(string cap)
-        {
-            if (string.IsNullOrWhiteSpace(cap))
-                return true; // CAP non obbligatorio
-
-            return cap.Length == 5 && cap.All(char.IsDigit);
-        }
-
-        /// <summary>
-        /// Valida una sigla provincia italiana
-        /// </summary>
-        public static bool IsValidProvincia(string provincia)
-        {
-            if (string.IsNullOrWhiteSpace(provincia))
-                return true; // Provincia non obbligatoria
-
-            return ProvinceItaliane.ContainsKey(provincia.ToUpper());
-        }
-
-        /// <summary>
-        /// Ottiene il nome completo di una provincia dalla sigla
-        /// </summary>
-        public static string? GetNomeProvincia(string sigla)
-        {
-            return ProvinceItaliane.TryGetValue(sigla?.ToUpper() ?? "", out string? nome) ? nome : null;
-        }
-
-        /// <summary>
-        /// Ottiene la regione di una provincia
-        /// </summary>
-        public static string? GetRegioneProvincia(string sigla)
-        {
-            if (string.IsNullOrWhiteSpace(sigla))
-                return null;
-
-            sigla = sigla.ToUpper();
-            foreach (var regione in RegioniProvincie)
-            {
-                if (regione.Value.Contains(sigla))
-                    return regione.Key;
-            }
-            return null;
-        }
-
-        /// <summary>
-        /// Valida un numero di telefono italiano
-        /// </summary>
-        public static bool IsValidTelefono(string telefono)
-        {
-            if (string.IsNullOrWhiteSpace(telefono))
-                return true; // Telefono non obbligatorio
-
-            // Rimuovi spazi, trattini e parentesi
-            var cleaned = Regex.Replace(telefono, @"[\s\-\(\)]", "");
-
-            // Pattern per numeri italiani
-            // +39 seguito da numero, oppure numero che inizia con 0 o 3
-            var patterns = new[]
-            {
-                @"^\+39[0-9]{6,11}$",           // +39 seguito da 6-11 cifre
-                @"^0[0-9]{5,10}$",              // Fisso: inizia con 0, 6-11 cifre totali
-                @"^3[0-9]{8,9}$",               // Mobile: inizia con 3, 9-10 cifre totali
-                @"^00390[0-9]{5,10}$",          // Formato internazionale alternativo
-                @"^003903[0-9]{8,9}$"           // Formato internazionale mobile alternativo
-            };
-
-            return patterns.Any(pattern => Regex.IsMatch(cleaned, pattern));
-        }
-
-        /// <summary>
-        /// Formatta un numero di telefono italiano
-        /// </summary>
-        public static string FormatTelefono(string telefono)
-        {
-            if (string.IsNullOrWhiteSpace(telefono))
-                return "";
-
-            var cleaned = Regex.Replace(telefono, @"[\s\-\(\)]", "");
-
-            // Rimuove +39 o 0039 se presente
-            if (cleaned.StartsWith("+39"))
-                cleaned = cleaned.Substring(3);
-            else if (cleaned.StartsWith("0039"))
-                cleaned = cleaned.Substring(4);
-
-            // Formattazione basata sul tipo
-            if (cleaned.StartsWith("3") && (cleaned.Length == 9 || cleaned.Length == 10))
-            {
-                // Mobile: 3XX XXX XXXX
-                return $"{cleaned.Substring(0, 3)} {cleaned.Substring(3, 3)} {cleaned.Substring(6)}";
-            }
-            else if (cleaned.StartsWith("0"))
-            {
-                // Fisso: formato varia per città
-                if (cleaned.Length >= 6)
-                {
-                    var prefisso = cleaned.Substring(0, Math.Min(4, cleaned.Length - 4));
-                    var numero = cleaned.Substring(prefisso.Length);
-
-                    if (numero.Length <= 4)
-                        return $"{prefisso} {numero}";
                     else
-                        return $"{prefisso} {numero.Substring(0, numero.Length / 2)} {numero.Substring(numero.Length / 2)}";
+                    {
+                        sum += evenChars.IndexOf(c);
+                    }
                 }
-            }
 
-            return telefono; // Ritorna originale se non riconosciuto
-        }
-
-        /// <summary>
-        /// Valida un IBAN italiano
-        /// </summary>
-        public static bool IsValidIBAN(string iban)
-        {
-            if (string.IsNullOrWhiteSpace(iban))
-                return true; // IBAN non obbligatorio
-
-            // Rimuove spazi
-            iban = iban.Replace(" ", "").ToUpper();
-
-            // IBAN italiano: IT + 2 cifre di controllo + 1 lettera + 10 cifre + 12 caratteri alfanumerici
-            if (!Regex.IsMatch(iban, @"^IT[0-9]{2}[A-Z][0-9]{10}[A-Z0-9]{12}$"))
-                return false;
-
-            // Verifica checksum IBAN
-            return ValidateIBANChecksum(iban);
-        }
-
-        private static bool ValidateIBANChecksum(string iban)
-        {
-            // Sposta i primi 4 caratteri alla fine
-            var rearranged = iban.Substring(4) + iban.Substring(0, 4);
-
-            // Converti lettere in numeri (A=10, B=11, ..., Z=35)
-            var numeric = "";
-            foreach (char c in rearranged)
-            {
-                if (char.IsLetter(c))
-                    numeric += (c - 'A' + 10).ToString();
-                else
-                    numeric += c;
-            }
-
-            // Calcola mod 97
-            return CalculateMod97(numeric) == 1;
-        }
-
-        private static int CalculateMod97(string number)
-        {
-            int remainder = 0;
-            foreach (char digit in number)
-            {
-                remainder = (remainder * 10 + (digit - '0')) % 97;
-            }
-            return remainder;
-        }
-
-        /// <summary>
-        /// Valida un indirizzo email
-        /// </summary>
-        public static bool IsValidEmail(string email)
-        {
-            if (string.IsNullOrWhiteSpace(email))
-                return true; // Email non obbligatoria
-
-            try
-            {
-                var addr = new System.Net.Mail.MailAddress(email);
-                return addr.Address == email;
+                // Carattere di controllo
+                char expectedControl = controlChars[sum % 26];
+                return codiceFiscale[15] == expectedControl;
             }
             catch
             {
@@ -347,143 +180,204 @@ namespace ImmobiGestio.Helpers
         }
 
         /// <summary>
-        /// Estrae il CAP da un indirizzo o restituisce informazioni sulla zona
+        /// Valida un CAP italiano (5 cifre)
         /// </summary>
-        public static (bool IsValid, string? CAP, string? Info) AnalyzeCAP(string cap)
+        public static bool IsValidItalianCAP(string? cap)
         {
-            if (!IsValidCAP(cap))
-                return (false, null, "CAP non valido");
+            if (string.IsNullOrWhiteSpace(cap)) return false;
 
-            if (string.IsNullOrWhiteSpace(cap))
-                return (true, null, null);
-
-            // Analisi zone italiane basata su prime cifre
-            var firstDigit = cap[0];
-            var zone = firstDigit switch
-            {
-                '0' => "Piemonte, Valle d'Aosta, Liguria",
-                '1' => "Lombardia",
-                '2' => "Lombardia, Trentino-Alto Adige",
-                '3' => "Veneto, Friuli-Venezia Giulia",
-                '4' => "Emilia-Romagna",
-                '5' => "Toscana",
-                '6' => "Marche, Umbria",
-                '7' => "Lazio, Abruzzo",
-                '8' => "Campania, Molise, Puglia, Basilicata",
-                '9' => "Calabria, Sicilia, Sardegna",
-                _ => "Zona non riconosciuta"
-            };
-
-            return (true, cap, $"Zona: {zone}");
+            cap = cap.Trim();
+            return Regex.IsMatch(cap, @"^\d{5}$");
         }
 
         /// <summary>
-        /// Valida e formatta un prezzo immobiliare
+        /// Valida un numero di telefono italiano
         /// </summary>
-        public static (bool IsValid, decimal Value, string Formatted) ValidatePrezzo(string prezzo)
+        public static bool IsValidItalianPhone(string? phone)
         {
-            if (string.IsNullOrWhiteSpace(prezzo))
-                return (true, 0, "€ 0");
+            if (string.IsNullOrWhiteSpace(phone)) return false;
 
-            // Rimuove caratteri non numerici eccetto virgola e punto
-            var cleaned = Regex.Replace(prezzo, @"[^0-9,.]", "");
+            // Rimuovi spazi e caratteri speciali
+            phone = Regex.Replace(phone.Trim(), @"[\s\-\(\)\.\/]", "");
 
-            // Sostituisce virgola con punto per parsing
-            cleaned = cleaned.Replace(',', '.');
-
-            if (decimal.TryParse(cleaned, out decimal value))
+            // Patterns per telefoni italiani
+            var patterns = new[]
             {
-                if (value < 0)
-                    return (false, 0, "Il prezzo non può essere negativo");
+                @"^(\+39)?3\d{8,9}$",          // Cellulari (+39 opzionale)
+                @"^(\+39)?0\d{8,10}$",         // Fissi (+39 opzionale)
+                @"^(\+39)?\d{6,11}$"           // Generico (+39 opzionale)
+            };
 
-                if (value > 999999999)
-                    return (false, 0, "Il prezzo è troppo alto");
-
-                var formatted = value > 0 ? $"€ {value:N0}" : "Prezzo da definire";
-                return (true, value, formatted);
-            }
-
-            return (false, 0, "Formato prezzo non valido");
+            return patterns.Any(pattern => Regex.IsMatch(phone, pattern));
         }
 
         /// <summary>
-        /// Calcola e valida il prezzo al metro quadro
+        /// Valida una sigla di provincia italiana
         /// </summary>
-        public static (bool IsValid, decimal PrezzoMq, string Formatted, string Categoria)
-            CalculatePrezzoMetroQuadro(decimal prezzo, int? superficie, string? provincia = null)
+        public static bool IsValidItalianProvince(string? provincia)
         {
-            if (!superficie.HasValue || superficie <= 0 || prezzo <= 0)
-                return (false, 0, "N/D", "Dati insufficienti");
+            if (string.IsNullOrWhiteSpace(provincia)) return false;
 
-            var prezzoMq = prezzo / superficie.Value;
-            var formatted = $"€ {prezzoMq:N0}/mq";
-
-            // Categorizzazione basata su medie italiane (semplificata)
-            var categoria = prezzoMq switch
-            {
-                < 1000 => "Molto conveniente",
-                < 2000 => "Conveniente",
-                < 3000 => "Nella media",
-                < 5000 => "Sopra la media",
-                < 8000 => "Alto",
-                _ => "Molto alto"
-            };
-
-            // Aggiusta per zone specifiche se provincia fornita
-            if (!string.IsNullOrEmpty(provincia))
-            {
-                categoria = AdjustCategoriaByProvincia(prezzoMq, provincia, categoria);
-            }
-
-            return (true, prezzoMq, formatted, categoria);
+            return ProvinceItaliane.ContainsKey(provincia.Trim().ToUpper());
         }
 
-        private static string AdjustCategoriaByProvincia(decimal prezzoMq, string provincia, string categoriaBase)
+        /// <summary>
+        /// Valida un indirizzo email
+        /// </summary>
+        public static bool IsValidEmail(string? email)
         {
-            // Zone ad alto costo (Milano, Roma, Venezia, Firenze, etc.)
-            var zoneAltoValore = new[] { "MI", "RM", "VE", "FI", "BO", "TO", "GE", "NA" };
+            if (string.IsNullOrWhiteSpace(email)) return false;
 
-            if (zoneAltoValore.Contains(provincia.ToUpper()))
+            try
             {
-                return prezzoMq switch
+                var emailRegex = new Regex(@"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$");
+                return emailRegex.IsMatch(email.Trim());
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Formatta un numero di telefono italiano
+        /// </summary>
+        public static string FormatItalianPhone(string? phone)
+        {
+            if (string.IsNullOrWhiteSpace(phone)) return string.Empty;
+
+            // Rimuovi tutto eccetto numeri e +
+            phone = Regex.Replace(phone.Trim(), @"[^\d\+]", "");
+
+            // Se inizia con +39, rimuovilo per la formattazione
+            if (phone.StartsWith("+39"))
+                phone = phone.Substring(3);
+
+            // Formattazione cellulari (3XX XXX XXXX)
+            if (phone.Length == 10 && phone.StartsWith("3"))
+            {
+                return $"{phone.Substring(0, 3)} {phone.Substring(3, 3)} {phone.Substring(6)}";
+            }
+
+            // Formattazione fissi (0XX XXX XXXX)
+            if (phone.Length >= 9 && phone.StartsWith("0"))
+            {
+                if (phone.Length == 9)
+                    return $"{phone.Substring(0, 2)} {phone.Substring(2, 3)} {phone.Substring(5)}";
+                if (phone.Length == 10)
+                    return $"{phone.Substring(0, 3)} {phone.Substring(3, 3)} {phone.Substring(6)}";
+            }
+
+            return phone; // Restituisci il numero originale se non riconosciuto
+        }
+
+        /// <summary>
+        /// Ottiene la regione da una provincia
+        /// </summary>
+        public static string? GetRegioneFromProvincia(string? provincia)
+        {
+            if (string.IsNullOrWhiteSpace(provincia)) return null;
+
+            return ProvinceItaliane.TryGetValue(provincia.Trim().ToUpper(), out var regione)
+                ? regione
+                : null;
+        }
+
+        /// <summary>
+        /// Ottiene tutte le province di una regione
+        /// </summary>
+        public static string[] GetProvinceFromRegione(string? regione)
+        {
+            if (string.IsNullOrWhiteSpace(regione)) return Array.Empty<string>();
+
+            return RegioniProvincie.TryGetValue(regione.Trim(), out var province)
+                ? province
+                : Array.Empty<string>();
+        }
+
+        /// <summary>
+        /// Valida un anno di costruzione ragionevole
+        /// </summary>
+        public static bool IsValidAnnoCostruzione(int? anno)
+        {
+            if (!anno.HasValue) return true; // Opzionale
+
+            return anno >= 1800 && anno <= DateTime.Now.Year + 5; // Permetti costruzioni future planificate
+        }
+
+        /// <summary>
+        /// Valida una superficie in metri quadri
+        /// </summary>
+        public static bool IsValidSuperficie(decimal? superficie)
+        {
+            if (!superficie.HasValue) return true; // Opzionale
+
+            return superficie > 0 && superficie <= 50000; // Max 5 ettari (ragionevole per immobili)
+        }
+
+        /// <summary>
+        /// Valida un prezzo
+        /// </summary>
+        public static bool IsValidPrezzo(decimal? prezzo)
+        {
+            if (!prezzo.HasValue) return true; // Opzionale
+
+            return prezzo > 0 && prezzo <= 100_000_000; // Max 100 milioni (ragionevole)
+        }
+
+        /// <summary>
+        /// Normalizza un CAP (rimuovi spazi e prefissi)
+        /// </summary>
+        public static string NormalizeCAP(string? cap)
+        {
+            if (string.IsNullOrWhiteSpace(cap)) return string.Empty;
+
+            return Regex.Replace(cap.Trim(), @"[^\d]", "");
+        }
+
+        /// <summary>
+        /// Normalizza una provincia (maiuscolo, senza spazi)
+        /// </summary>
+        public static string NormalizeProvincia(string? provincia)
+        {
+            if (string.IsNullOrWhiteSpace(provincia)) return string.Empty;
+
+            return provincia.Trim().ToUpper();
+        }
+
+        /// <summary>
+        /// Valida una partita IVA italiana
+        /// </summary>
+        public static bool IsValidPartitaIVA(string? partitaIva)
+        {
+            if (string.IsNullOrWhiteSpace(partitaIva)) return false;
+
+            partitaIva = Regex.Replace(partitaIva.Trim(), @"[^\d]", "");
+
+            if (partitaIva.Length != 11) return false;
+
+            // Algoritmo di controllo Partita IVA
+            try
+            {
+                int sum = 0;
+                for (int i = 0; i < 10; i++)
                 {
-                    < 2000 => "Molto conveniente",
-                    < 4000 => "Conveniente",
-                    < 6000 => "Nella media",
-                    < 8000 => "Sopra la media",
-                    < 12000 => "Alto",
-                    _ => "Molto alto"
-                };
+                    int digit = int.Parse(partitaIva[i].ToString());
+                    if (i % 2 == 1) // Posizioni pari (0-indexed)
+                    {
+                        digit *= 2;
+                        if (digit > 9) digit = digit / 10 + digit % 10;
+                    }
+                    sum += digit;
+                }
+
+                int checkDigit = (10 - (sum % 10)) % 10;
+                return checkDigit == int.Parse(partitaIva[10].ToString());
             }
-
-            return categoriaBase;
-        }
-
-        /// <summary>
-        /// Genera suggerimenti per migliorare la validazione dei dati
-        /// </summary>
-        public static List<string> GetSuggerimentiValidazione(
-            string? codiceFiscale, string? telefono, string? email,
-            string? cap, string? provincia)
-        {
-            var suggerimenti = new List<string>();
-
-            if (!string.IsNullOrEmpty(codiceFiscale) && !IsValidCodiceFiscale(codiceFiscale))
-                suggerimenti.Add("Il codice fiscale non è corretto. Verificare l'inserimento.");
-
-            if (!string.IsNullOrEmpty(telefono) && !IsValidTelefono(telefono))
-                suggerimenti.Add("Il numero di telefono non sembra valido. Includere il prefisso (es. 02, 06, 347).");
-
-            if (!string.IsNullOrEmpty(email) && !IsValidEmail(email))
-                suggerimenti.Add("L'indirizzo email non è corretto.");
-
-            if (!string.IsNullOrEmpty(cap) && !IsValidCAP(cap))
-                suggerimenti.Add("Il CAP deve essere composto da 5 cifre.");
-
-            if (!string.IsNullOrEmpty(provincia) && !IsValidProvincia(provincia))
-                suggerimenti.Add("La provincia deve essere una sigla italiana valida (es. MI, RM, NA).");
-
-            return suggerimenti;
+            catch
+            {
+                return false;
+            }
         }
     }
 }

@@ -3,6 +3,7 @@ using System.Windows.Input;
 using ImmobiGestio.Commands;
 using ImmobiGestio.Data;
 using ImmobiGestio.Models;
+using ImmobiGestio.Helpers;
 using System;
 using System.Windows;
 using System.Linq;
