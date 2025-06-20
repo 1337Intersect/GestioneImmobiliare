@@ -7,7 +7,7 @@ namespace ImmobiGestio.Models
     {
         // Sezione Generale
         private string _applicationName = "ImmobiGestio";
-        private string _applicationVersion = "0.1.15";
+        private string _applicationVersion = "0.1.16";
         private int _autoSaveInterval = 300; // secondi
         private int _statusRefreshInterval = 60; // secondi
 

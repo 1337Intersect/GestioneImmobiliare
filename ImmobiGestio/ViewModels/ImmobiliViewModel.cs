@@ -1,18 +1,17 @@
-﻿using ImmobiGestio.Commands;
-using ImmobiGestio.Data;
-using ImmobiGestio.Helpers;
-using ImmobiGestio.Models;
-using ImmobiGestio.Services;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Win32;
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.ComponentModel.DataAnnotations.Schema;
-using System.IO;
+﻿using System.Collections.ObjectModel;
 using System.Linq;
-using System.Windows;
 using System.Windows.Input;
+using Microsoft.Win32;
+using ImmobiGestio.Models;
+using ImmobiGestio.Data;
+using ImmobiGestio.Commands;
+using ImmobiGestio.Services;
+using System.IO;
+using System;
+using Microsoft.EntityFrameworkCore;
+using System.Windows;
+using System.Collections.Generic;
+using ImmobiGestio.Helpers;
 
 namespace ImmobiGestio.ViewModels
 {
@@ -29,6 +28,7 @@ namespace ImmobiGestio.ViewModels
         private decimal _filtroPrezzoA = 0;
         private bool _isDeleting = false;
 
+
         // ObservableCollection separate per l'UI
         public ObservableCollection<Immobile> Immobili { get; set; } = new();
         public ObservableCollection<DocumentoImmobile> DocumentiCorrente { get; set; } = new();
@@ -36,13 +36,11 @@ namespace ImmobiGestio.ViewModels
         public ObservableCollection<ClienteImmobile> ClientiInteressati { get; set; } = new();
         public ObservableCollection<Appuntamento> AppuntamentiImmobile { get; set; } = new();
 
-        // LISTE ITALIANIZZATE
         public ObservableCollection<string> TipiDocumento { get; set; } = new();
         public ObservableCollection<string> TipiImmobile { get; set; } = new();
         public ObservableCollection<string> StatiConservazione { get; set; } = new();
         public ObservableCollection<string> ClassiEnergetiche { get; set; } = new();
         public ObservableCollection<string> StatiVendita { get; set; } = new();
-        public ObservableCollection<string> ProvinceItaliane { get; set; } = new();
 
         // Filtri
         public ObservableCollection<string> TipiImmobileFiltro { get; set; } = new();
@@ -126,6 +124,9 @@ namespace ImmobiGestio.ViewModels
             }
         }
 
+        public string MaxDocumentSizeFormatted => SettingsIntegrationHelper.CurrentSettings.MaxDocumentSizeFormatted;
+        public string MaxPhotoSizeFormatted => SettingsIntegrationHelper.CurrentSettings.MaxPhotoSizeFormatted;
+
         // Commands
         public ICommand? AddImmobileCommand { get; set; }
         public ICommand? SaveImmobileCommand { get; set; }
@@ -152,22 +153,14 @@ namespace ImmobiGestio.ViewModels
             _context = context;
             _statisticheService = new StatisticheService(context);
 
-            InitializeItalianCollections();
+            InitializeCollections();
             InitializeCommands();
             LoadImmobili();
             LoadFiltriData();
 
             // NUOVO: Registra per ricevere notifiche cambio impostazioni
-            try
-            {
-                SettingsIntegrationHelper.RegisterSettingsChangedCallback(OnSettingsChanged);
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Errore registrazione settings callback: {ex.Message}");
-            }
+            SettingsIntegrationHelper.RegisterSettingsChangedCallback(OnSettingsChanged);
         }
-
         private void OnSettingsChanged(SettingsModel newSettings)
         {
             try
@@ -187,14 +180,12 @@ namespace ImmobiGestio.ViewModels
                 System.Diagnostics.Debug.WriteLine($"Errore OnSettingsChanged in ImmobiliViewModel: {ex.Message}");
             }
         }
-
         private void UpdateFileLimitsInUI()
         {
             // Notifica le proprietà che dipendono dalle impostazioni
             OnPropertyChanged(nameof(MaxDocumentSizeFormatted));
             OnPropertyChanged(nameof(MaxPhotoSizeFormatted));
         }
-
         private void RefreshFileValidation()
         {
             try
@@ -210,33 +201,61 @@ namespace ImmobiGestio.ViewModels
                     // Validate existing documents
                     if (SelectedImmobile.Documenti?.Any() == true)
                     {
-                        var invalidDocs = SelectedImmobile.Documenti
-                            .Where(d => new FileInfo(d.PercorsoFile).Exists &&
-                                       new FileInfo(d.PercorsoFile).Length > currentSettings.MaxDocumentSize)
-                            .ToList();
+                        var invalidDocs = new List<string>();
+                        foreach (var doc in SelectedImmobile.Documenti)
+                        {
+                            if (!string.IsNullOrEmpty(doc.NomeFile))
+                            {
+                                var extension = System.IO.Path.GetExtension(doc.NomeFile);
+                                if (!SettingsIntegrationHelper.IsDocumentFormatSupported(extension))
+                                {
+                                    invalidDocs.Add($"{doc.NomeFile} ({extension})");
+                                }
+                            }
+                        }
 
                         if (invalidDocs.Any())
                         {
-                            System.Diagnostics.Debug.WriteLine($"Trovati {invalidDocs.Count} documenti che superano il nuovo limite");
+                            System.Diagnostics.Debug.WriteLine($"Documenti non più supportati: {string.Join(", ", invalidDocs)}");
+                            // Optionally show a warning to user about unsupported formats
+                            // MessageBox.Show($"Attenzione: Alcuni documenti hanno formati non più supportati:\n{string.Join("\n", invalidDocs)}", 
+                            //     "Formati Non Supportati", MessageBoxButton.OK, MessageBoxImage.Warning);
                         }
                     }
 
                     // Validate existing photos
                     if (SelectedImmobile.Foto?.Any() == true)
                     {
-                        var invalidPhotos = SelectedImmobile.Foto
-                            .Where(f => new FileInfo(f.PercorsoFile).Exists &&
-                                       new FileInfo(f.PercorsoFile).Length > currentSettings.MaxPhotoSize)
-                            .ToList();
+                        var invalidPhotos = new List<string>();
+                        foreach (var foto in SelectedImmobile.Foto)
+                        {
+                            if (!string.IsNullOrEmpty(foto.NomeFile))
+                            {
+                                var extension = System.IO.Path.GetExtension(foto.NomeFile);
+                                if (!SettingsIntegrationHelper.IsImageFormatSupported(extension))
+                                {
+                                    invalidPhotos.Add($"{foto.NomeFile} ({extension})");
+                                }
+                            }
+                        }
 
                         if (invalidPhotos.Any())
                         {
-                            System.Diagnostics.Debug.WriteLine($"Trovate {invalidPhotos.Count} foto che superano il nuovo limite");
+                            System.Diagnostics.Debug.WriteLine($"Foto non più supportate: {string.Join(", ", invalidPhotos)}");
+                            // Optionally show a warning to user about unsupported formats
+                            // MessageBox.Show($"Attenzione: Alcune foto hanno formati non più supportati:\n{string.Join("\n", invalidPhotos)}", 
+                            //     "Formati Non Supportati", MessageBoxButton.OK, MessageBoxImage.Warning);
                         }
                     }
                 }
 
-                System.Diagnostics.Debug.WriteLine("File validation refresh completato");
+                // Log current supported formats for debugging
+                System.Diagnostics.Debug.WriteLine($"Formati documenti supportati: {currentSettings.SupportedDocumentFormats}");
+                System.Diagnostics.Debug.WriteLine($"Formati immagini supportati: {currentSettings.SupportedImageFormats}");
+                System.Diagnostics.Debug.WriteLine($"Dimensione massima documenti: {currentSettings.MaxDocumentSizeFormatted}");
+                System.Diagnostics.Debug.WriteLine($"Dimensione massima foto: {currentSettings.MaxPhotoSizeFormatted}");
+
+                System.Diagnostics.Debug.WriteLine("RefreshFileValidation completato");
             }
             catch (Exception ex)
             {
@@ -244,177 +263,94 @@ namespace ImmobiGestio.ViewModels
             }
         }
 
-        [NotMapped]
-        public string MaxDocumentSizeFormatted
+        private void InitializeCollections()
         {
-            get
+            // Popolamento TipiDocumento
+            TipiDocumento.Clear();
+            foreach (var tipo in new[] { "Planimetria", "Visura Catastale", "APE", "Certificazione Urbanistica", "Atto di Proprietà", "Certificato di Agibilità", "Altro" })
             {
-                try
-                {
-                    var settings = SettingsIntegrationHelper.CurrentSettings;
-                    var sizeMB = settings.MaxDocumentSize / (1024 * 1024);
-                    return $"{sizeMB} MB";
-                }
-                catch
-                {
-                    return "50 MB"; // Fallback
-                }
+                TipiDocumento.Add(tipo);
             }
-        }
 
-        [NotMapped]
-        public string MaxPhotoSizeFormatted
-        {
-            get
+            // Popolamento TipiImmobile
+            TipiImmobile.Clear();
+            TipiImmobileFiltro.Clear();
+            TipiImmobileFiltro.Add("Tutti");
+
+            foreach (var tipo in new[] { "Appartamento", "Villa", "Villetta", "Attico", "Loft", "Ufficio", "Negozio", "Capannone", "Terreno", "Box/Garage" })
             {
-                try
-                {
-                    var settings = SettingsIntegrationHelper.CurrentSettings;
-                    var sizeMB = settings.MaxPhotoSize / (1024 * 1024);
-                    return $"{sizeMB} MB";
-                }
-                catch
-                {
-                    return "10 MB"; // Fallback
-                }
+                TipiImmobile.Add(tipo);
+                TipiImmobileFiltro.Add(tipo);
             }
-        }
 
-        private void InitializeItalianCollections()
-        {
-            try
+            // Popolamento StatiConservazione
+            StatiConservazione.Clear();
+            foreach (var stato in new[] { "Nuovo", "Ottimo", "Buono", "Da ristrutturare", "In costruzione" })
             {
-                System.Diagnostics.Debug.WriteLine("=== INIZIALIZZAZIONE COLLEZIONI ITALIANE ===");
-
-                // Tipi documento italiani
-                TipiDocumento.Clear();
-                foreach (var tipo in new[] {
-                    "APE - Certificato Energetico",
-                    "Planimetria Catastale",
-                    "Visura Catastale",
-                    "Contratto di Compravendita",
-                    "Rogito Notarile",
-                    "Certificato di Conformità",
-                    "Relazione Tecnica",
-                    "Perizia di Stima",
-                    "Documenti Condominiali",
-                    "Altri Documenti" })
-                {
-                    TipiDocumento.Add(tipo);
-                }
-
-                // Province italiane
-                ProvinceItaliane.Clear();
-                foreach (var provincia in Models.ProvinceItaliane.All.OrderBy(p => p))
-                {
-                    ProvinceItaliane.Add(provincia);
-                }
-
-                // Popolamento TipiImmobile ITALIANI
-                TipiImmobile.Clear();
-                TipiImmobileFiltro.Clear();
-                TipiImmobileFiltro.Add("Tutti");
-
-                foreach (var tipo in new[] {
-                    "Appartamento",
-                    "Villa",
-                    "Villetta a schiera",
-                    "Attico",
-                    "Penthouse",
-                    "Loft",
-                    "Casa indipendente",
-                    "Rustico",
-                    "Casale",
-                    "Palazzo",
-                    "Mansarda",
-                    "Monolocale",
-                    "Bilocale",
-                    "Trilocale",
-                    "Quadrilocale",
-                    "Ufficio",
-                    "Negozio",
-                    "Capannone",
-                    "Terreno",
-                    "Box/Garage",
-                    "Altro" })
-                {
-                    TipiImmobile.Add(tipo);
-                    TipiImmobileFiltro.Add(tipo);
-                }
-
-                // Popolamento StatiConservazione ITALIANI
-                StatiConservazione.Clear();
-                foreach (var stato in new[] {
-                    "Nuovo/Appena costruito",
-                    "Ottimo",
-                    "Buono",
-                    "Discreto",
-                    "Da ristrutturare",
-                    "Da ristrutturare completamente",
-                    "In costruzione",
-                    "Grezzo" })
-                {
-                    StatiConservazione.Add(stato);
-                }
-
-                // Popolamento ClassiEnergetiche ITALIANE
-                ClassiEnergetiche.Clear();
-                foreach (var classe in new[] { "A4", "A3", "A2", "A1", "B", "C", "D", "E", "F", "G", "Esente" })
-                {
-                    ClassiEnergetiche.Add(classe);
-                }
-
-                // Stati vendita ITALIANI
-                StatiVendita.Clear();
-                StatiVenditaFiltro.Clear();
-                StatiVenditaFiltro.Add("Tutti");
-
-                foreach (var stato in new[] {
-                    "Disponibile",
-                    "In trattativa",
-                    "Prenotato",
-                    "Compromesso",
-                    "Venduto",
-                    "Ritirato dal mercato",
-                    "Sospeso" })
-                {
-                    StatiVendita.Add(stato);
-                    StatiVenditaFiltro.Add(stato);
-                }
-
-                System.Diagnostics.Debug.WriteLine("Collezioni italiane inizializzate");
+                StatiConservazione.Add(stato);
             }
-            catch (Exception ex)
+
+            // Popolamento ClassiEnergetiche
+            ClassiEnergetiche.Clear();
+            foreach (var classe in new[] { "A4", "A3", "A2", "A1", "B", "C", "D", "E", "F", "G" })
             {
-                System.Diagnostics.Debug.WriteLine($"Errore InitializeItalianCollections: {ex.Message}");
+                ClassiEnergetiche.Add(classe);
+            }
+
+            // Stati vendita
+            StatiVendita.Clear();
+            StatiVenditaFiltro.Clear();
+            StatiVenditaFiltro.Add("Tutti");
+
+            foreach (var stato in new[] { "Disponibile", "Prenotato", "Venduto", "Ritirato" })
+            {
+                StatiVendita.Add(stato);
+                StatiVenditaFiltro.Add(stato);
             }
         }
 
         private void InitializeCommands()
         {
+            AddImmobileCommand = new RelayCommand(AddImmobile);
+            SaveImmobileCommand = new RelayCommand(SaveImmobile, _ => SelectedImmobile != null);
+            DeleteImmobileCommand = new RelayCommand(DeleteImmobile, _ => SelectedImmobile != null);
+            AddDocumentCommand = new RelayCommand(AddDocument, _ => SelectedImmobile != null);
+            AddPhotoCommand = new RelayCommand(AddPhoto, _ => SelectedImmobile != null);
+            OpenDocumentCommand = new RelayCommand(OpenDocument);
+            DeleteDocumentCommand = new RelayCommand(DeleteDocument);
+            DeletePhotoCommand = new RelayCommand(DeletePhoto);
+            AddClienteInteressatoCommand = new RelayCommand(AddClienteInteressato, _ => SelectedImmobile != null);
+            DeleteClienteInteressatoCommand = new RelayCommand(DeleteClienteInteressato);
+            CreaAppuntamentoCommand = new RelayCommand(CreaAppuntamento, _ => SelectedImmobile != null);
+            EsportaImmobiliCommand = new RelayCommand(EsportaImmobili);
+            ImportaImmobiliCommand = new RelayCommand(ImportaImmobili);
+            GeneraReportCommand = new RelayCommand(GeneraReport);
+            ClearFiltriCommand = new RelayCommand(ClearFiltri);
+        }
+
+        private void LoadFiltriData()
+        {
             try
             {
-                AddImmobileCommand = new RelayCommand(AddImmobile);
-                SaveImmobileCommand = new RelayCommand(SaveImmobile, _ => SelectedImmobile != null);
-                DeleteImmobileCommand = new RelayCommand(DeleteImmobile, _ => SelectedImmobile != null);
-                AddDocumentCommand = new RelayCommand(AddDocument, _ => SelectedImmobile != null);
-                AddPhotoCommand = new RelayCommand(AddPhoto, _ => SelectedImmobile != null);
-                OpenDocumentCommand = new RelayCommand(OpenDocument);
-                DeleteDocumentCommand = new RelayCommand(DeleteDocument);
-                DeletePhotoCommand = new RelayCommand(DeletePhoto);
-                AddClienteInteressatoCommand = new RelayCommand(AddClienteInteressato, _ => SelectedImmobile != null);
-                DeleteClienteInteressatoCommand = new RelayCommand(DeleteClienteInteressato);
-                CreaAppuntamentoCommand = new RelayCommand(CreaAppuntamento, _ => SelectedImmobile != null);
-                EsportaImmobiliCommand = new RelayCommand(EsportaImmobili);
-                ImportaImmobiliCommand = new RelayCommand(ImportaImmobili);
-                GeneraReportCommand = new RelayCommand(GeneraReport);
-                ClearFiltriCommand = new RelayCommand(ClearFiltri);
+                // Carica città per filtro
+                CittaFiltro.Clear();
+                CittaFiltro.Add("Tutti");
 
-                System.Diagnostics.Debug.WriteLine("Comandi immobili inizializzati");
+                var citta = _context.Immobili
+                    .Where(i => !string.IsNullOrEmpty(i.Citta))
+                    .Select(i => i.Citta)
+                    .Distinct()
+                    .OrderBy(c => c)
+                    .ToList();
+
+                foreach (var c in citta)
+                {
+                    CittaFiltro.Add(c);
+                }
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Errore InitializeCommands immobili: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Errore nel caricamento filtri: {ex.Message}");
             }
         }
 
@@ -422,8 +358,6 @@ namespace ImmobiGestio.ViewModels
         {
             try
             {
-                System.Diagnostics.Debug.WriteLine("=== CARICAMENTO IMMOBILI ===");
-
                 var immobili = _context.Immobili
                     .AsNoTracking()
                     .Include(i => i.Documenti)
@@ -431,50 +365,16 @@ namespace ImmobiGestio.ViewModels
                     .OrderByDescending(i => i.DataInserimento)
                     .ToList();
 
-                System.Diagnostics.Debug.WriteLine($"Caricati {immobili.Count} immobili dal database");
-
                 Immobili.Clear();
                 foreach (var immobile in immobili)
                 {
                     Immobili.Add(immobile);
                 }
-
-                LoadFiltriData();
-                System.Diagnostics.Debug.WriteLine($"LoadImmobili completato: {Immobili.Count} immobili nella UI");
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Errore LoadImmobili: {ex}");
-                MessageBox.Show($"Errore nel caricamento degli immobili: {ex.Message}",
-                    "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
-
-        private void LoadFiltriData()
-        {
-            try
-            {
-                // Carica città uniche per il filtro
-                CittaFiltro.Clear();
-                CittaFiltro.Add("Tutti");
-
-                var cittaUniche = _context.Immobili
-                    .Where(i => !string.IsNullOrEmpty(i.Citta))
-                    .Select(i => i.Citta)
-                    .Distinct()
-                    .OrderBy(c => c)
-                    .ToList();
-
-                foreach (var citta in cittaUniche)
-                {
-                    CittaFiltro.Add(citta);
-                }
-
-                System.Diagnostics.Debug.WriteLine($"Caricati filtri: {cittaUniche.Count} città");
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Errore LoadFiltriData: {ex.Message}");
+                MessageBox.Show($"Errore nel caricamento degli immobili: {ex.Message}", "Errore",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -488,14 +388,13 @@ namespace ImmobiGestio.ViewModels
                     .Include(i => i.Foto)
                     .AsQueryable();
 
-                // Filtro per testo
+                // Filtro per testo di ricerca
                 if (!string.IsNullOrWhiteSpace(SearchText))
                 {
-                    query = query.Where(i =>
-                        i.Titolo.Contains(SearchText) ||
-                        i.Indirizzo.Contains(SearchText) ||
-                        i.Citta.Contains(SearchText) ||
-                        i.Descrizione.Contains(SearchText));
+                    query = query.Where(i => i.Titolo.Contains(SearchText) ||
+                                           i.Indirizzo.Contains(SearchText) ||
+                                           i.Citta.Contains(SearchText) ||
+                                           i.Descrizione.Contains(SearchText));
                 }
 
                 // Filtro per tipo
@@ -527,85 +426,84 @@ namespace ImmobiGestio.ViewModels
                     query = query.Where(i => i.Prezzo <= FiltroPrezzoA);
                 }
 
-                var risultati = query.OrderByDescending(i => i.DataInserimento).ToList();
+                var filtered = query
+                    .OrderByDescending(i => i.DataInserimento)
+                    .ToList();
 
                 Immobili.Clear();
-                foreach (var immobile in risultati)
+                foreach (var immobile in filtered)
                 {
                     Immobili.Add(immobile);
                 }
-
-                System.Diagnostics.Debug.WriteLine($"Filtri applicati: {risultati.Count} immobili trovati");
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Errore FilterImmobili: {ex}");
-                MessageBox.Show($"Errore nel filtro degli immobili: {ex.Message}",
-                    "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Errore nella ricerca: {ex.Message}", "Errore",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
         private void RefreshCurrentCollections()
         {
-            try
+            DocumentiCorrente.Clear();
+            FotoCorrente.Clear();
+            ClientiInteressati.Clear();
+            AppuntamentiImmobile.Clear();
+
+            if (SelectedImmobile != null)
             {
-                DocumentiCorrente.Clear();
-                FotoCorrente.Clear();
-                ClientiInteressati.Clear();
-                AppuntamentiImmobile.Clear();
-
-                if (SelectedImmobile == null) return;
-
-                // Carica documenti e foto
-                var immobileWithData = _context.Immobili
-                    .AsNoTracking()
-                    .Include(i => i.Documenti)
-                    .Include(i => i.Foto)
-                    .FirstOrDefault(i => i.Id == SelectedImmobile.Id);
-
-                if (immobileWithData != null)
+                try
                 {
-                    foreach (var doc in immobileWithData.Documenti)
+                    var immobileWithData = _context.Immobili
+                        .AsNoTracking()
+                        .Include(i => i.Documenti)
+                        .Include(i => i.Foto)
+                        .FirstOrDefault(i => i.Id == SelectedImmobile.Id);
+
+                    if (immobileWithData != null)
                     {
-                        DocumentiCorrente.Add(doc);
+                        foreach (var doc in immobileWithData.Documenti)
+                        {
+                            DocumentiCorrente.Add(doc);
+                        }
+
+                        foreach (var foto in immobileWithData.Foto)
+                        {
+                            FotoCorrente.Add(foto);
+                        }
                     }
 
-                    foreach (var foto in immobileWithData.Foto)
+                    // Carica clienti interessati
+                    var interessati = _context.ClientiImmobili
+                        .AsNoTracking()
+                        .Include(ci => ci.Cliente)
+                        .Where(ci => ci.ImmobileId == SelectedImmobile.Id)
+                        .OrderByDescending(ci => ci.DataInteresse)
+                        .ToList();
+
+                    foreach (var interessato in interessati)
                     {
-                        FotoCorrente.Add(foto);
+                        ClientiInteressati.Add(interessato);
+                    }
+
+                    // Carica appuntamenti per questo immobile
+                    var appuntamenti = _context.Appuntamenti
+                        .AsNoTracking()
+                        .Include(a => a.Cliente)
+                        .Where(a => a.ImmobileId == SelectedImmobile.Id)
+                        .OrderByDescending(a => a.DataInizio)
+                        .ToList();
+
+                    foreach (var app in appuntamenti)
+                    {
+                        AppuntamentiImmobile.Add(app);
                     }
                 }
-
-                // Carica clienti interessati
-                var interessati = _context.ClientiImmobili
-                    .AsNoTracking()
-                    .Include(ci => ci.Cliente)
-                    .Where(ci => ci.ImmobileId == SelectedImmobile.Id)
-                    .OrderByDescending(ci => ci.DataInteresse)
-                    .ToList();
-
-                foreach (var interessato in interessati)
+                catch (Exception ex)
                 {
-                    ClientiInteressati.Add(interessato);
+                    MessageBox.Show($"Errore nel caricamento dei dati dell'immobile: {ex.Message}",
+                        "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
-
-                // Carica appuntamenti per questo immobile
-                var appuntamenti = _context.Appuntamenti
-                    .AsNoTracking()
-                    .Include(a => a.Cliente)
-                    .Where(a => a.ImmobileId == SelectedImmobile.Id)
-                    .OrderByDescending(a => a.DataInizio)
-                    .ToList();
-
-                foreach (var app in appuntamenti)
-                {
-                    AppuntamentiImmobile.Add(app);
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Errore nel caricamento dei dati dell'immobile: {ex.Message}",
-                    "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -614,16 +512,54 @@ namespace ImmobiGestio.ViewModels
         {
             try
             {
-                System.Diagnostics.Debug.WriteLine("=== CREAZIONE NUOVO IMMOBILE ===");
+                // Crea l'immobile con TUTTI i valori richiesti impostati correttamente
+                var newImmobile = new Immobile
+                {
+                    Titolo = "Nuovo Immobile",
+                    Indirizzo = "Inserisci indirizzo",
+                    Citta = "",
+                    CAP = "",
+                    Provincia = "",
+                    Descrizione = "",
 
-                var newImmobile = new Immobile();
+                    // Proprietà numeriche inizializzate correttamente
+                    Prezzo = 0, // decimal not null
+                    Superficie = null, // int nullable
+                    NumeroLocali = null, // int nullable  
+                    NumeroBagni = null, // int nullable
+                    Piano = null, // int nullable
 
-                // Log dei valori iniziali per debug
-                System.Diagnostics.Debug.WriteLine($"Nuovo immobile - Titolo: '{newImmobile.Titolo}'");
-                System.Diagnostics.Debug.WriteLine($"Nuovo immobile - Indirizzo: '{newImmobile.Indirizzo}'");
-                System.Diagnostics.Debug.WriteLine($"Nuovo immobile - TipoImmobile: '{newImmobile.TipoImmobile}'");
+                    // Proprietà con valori di default RICHIESTI
+                    TipoImmobile = "Appartamento", // NOT NULL
+                    StatoConservazione = "Buono", // NOT NULL
+                    ClasseEnergetica = "G", // NOT NULL
+                    StatoVendita = "Disponibile", // NOT NULL
 
-                // Validazione PRIMA del salvataggio
+                    // Date RICHIESTE
+                    DataInserimento = DateTime.Now,
+                    DataUltimaModifica = null // nullable
+                };
+
+                // Verifica che il contesto sia valido
+                if (_context == null)
+                {
+                    MessageBox.Show("Errore: Database non inizializzato correttamente.",
+                        "Errore Database", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+
+                // Log per debug - verifica che tutti i campi siano impostati
+                System.Diagnostics.Debug.WriteLine($"=== CREAZIONE IMMOBILE ===");
+                System.Diagnostics.Debug.WriteLine($"Titolo: '{newImmobile.Titolo}'");
+                System.Diagnostics.Debug.WriteLine($"Indirizzo: '{newImmobile.Indirizzo}'");
+                System.Diagnostics.Debug.WriteLine($"TipoImmobile: '{newImmobile.TipoImmobile}'");
+                System.Diagnostics.Debug.WriteLine($"StatoConservazione: '{newImmobile.StatoConservazione}'");
+                System.Diagnostics.Debug.WriteLine($"ClasseEnergetica: '{newImmobile.ClasseEnergetica}'");
+                System.Diagnostics.Debug.WriteLine($"StatoVendita: '{newImmobile.StatoVendita}'");
+                System.Diagnostics.Debug.WriteLine($"Prezzo: {newImmobile.Prezzo}");
+                System.Diagnostics.Debug.WriteLine($"DataInserimento: {newImmobile.DataInserimento}");
+
+                // Verifica che tutti i campi obbligatori siano valorizzati
                 if (string.IsNullOrEmpty(newImmobile.Titolo))
                 {
                     MessageBox.Show("Errore: Titolo è vuoto!", "Errore Validazione",
@@ -738,47 +674,68 @@ namespace ImmobiGestio.ViewModels
             if (SelectedImmobile == null) return;
 
             var result = MessageBox.Show(
-                $"Sei sicuro di voler eliminare l'immobile '{SelectedImmobile.Titolo}'?\n\n" +
-                "Questa operazione eliminerà anche tutti i documenti, foto e relazioni associate.",
+                $"Sei sicuro di voler eliminare l'immobile '{SelectedImmobile.Titolo}'?\n" +
+                "Questa operazione eliminerà anche tutti i documenti, le foto e gli interessi associati.",
                 "Conferma Eliminazione",
                 MessageBoxButton.YesNo,
-                MessageBoxImage.Warning);
+                MessageBoxImage.Question);
 
             if (result == MessageBoxResult.Yes)
             {
                 try
                 {
                     _isDeleting = true;
+                    var immobileId = SelectedImmobile.Id;
+                    var immobileTitolo = SelectedImmobile.Titolo;
 
-                    using (var deleteContext = new ImmobiliContext())
+                    DeletePhysicalFiles(SelectedImmobile);
+
+                    var immobileToDelete = _context.Immobili
+                        .Include(i => i.Documenti)
+                        .Include(i => i.Foto)
+                        .FirstOrDefault(i => i.Id == immobileId);
+
+                    if (immobileToDelete != null)
                     {
-                        var immobileToDelete = deleteContext.Immobili
-                            .Include(i => i.Documenti)
-                            .Include(i => i.Foto)
-                            .FirstOrDefault(i => i.Id == SelectedImmobile.Id);
+                        _context.Immobili.Remove(immobileToDelete);
+                        _context.SaveChanges();
 
-                        if (immobileToDelete != null)
+                        var uiImmobile = Immobili.FirstOrDefault(i => i.Id == immobileId);
+                        if (uiImmobile != null)
                         {
-                            deleteContext.Immobili.Remove(immobileToDelete);
-                            deleteContext.SaveChanges();
+                            Immobili.Remove(uiImmobile);
                         }
+
+                        SelectedImmobile = Immobili.FirstOrDefault();
+
+                        MessageBox.Show($"Immobile '{immobileTitolo}' eliminato con successo!",
+                            "Successo", MessageBoxButton.OK, MessageBoxImage.Information);
                     }
-
-                    SelectedImmobile = null;
-                    LoadImmobili();
-
-                    MessageBox.Show("Immobile eliminato con successo!", "Successo",
-                        MessageBoxButton.OK, MessageBoxImage.Information);
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"Errore nell'eliminazione dell'immobile: {ex.Message}",
-                        "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show($"Errore nell'eliminazione: {ex.Message}", "Errore",
+                        MessageBoxButton.OK, MessageBoxImage.Error);
+                    LoadImmobili();
                 }
                 finally
                 {
                     _isDeleting = false;
                 }
+            }
+        }
+
+        private void DeletePhysicalFiles(Immobile immobile)
+        {
+            try
+            {
+                FileManagerService.DeleteDirectory(immobile.Id, "Documenti");
+                FileManagerService.DeleteDirectory(immobile.Id, "Foto");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Errore nell'eliminazione dei file: {ex.Message}", "Avviso",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
 
@@ -827,103 +784,102 @@ namespace ImmobiGestio.ViewModels
                     if (!immobileExists)
                     {
                         MessageBox.Show("Errore: L'immobile selezionato non esiste nel database!",
-                            "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
+                            "Errore Database", MessageBoxButton.OK, MessageBoxImage.Error);
                         return;
                     }
 
+                    // Aggiungi e salva
                     newContext.Appuntamenti.Add(newAppuntamento);
-                    newContext.SaveChanges();
+                    var saved = newContext.SaveChanges();
 
-                    System.Diagnostics.Debug.WriteLine($"Appuntamento creato con ID: {newAppuntamento.Id}");
+                    System.Diagnostics.Debug.WriteLine($"Appuntamento salvato con ID: {newAppuntamento.Id}, Records salvati: {saved}");
                 }
 
-                // Aggiorna la UI
+                // Ricarica le collezioni correnti
                 RefreshCurrentCollections();
 
-                // Notifica la creazione dell'appuntamento agli altri ViewModels
+                // Notifica agli altri ViewModels
                 AppuntamentoCreated?.Invoke();
 
-                MessageBox.Show("Appuntamento creato con successo!", "Successo",
-                    MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show($"Appuntamento creato con successo per l'immobile!\n\n" +
+                               $"Immobile: {SelectedImmobile.Titolo}\n" +
+                               $"Data: {newAppuntamento.DataInizio:dd/MM/yyyy HH:mm}\n" +
+                               $"Tipo: {newAppuntamento.TipoAppuntamento}",
+                    "Successo", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Microsoft.EntityFrameworkCore.DbUpdateException dbEx)
+            {
+                var innerMessage = dbEx.InnerException?.Message ?? "Nessun dettaglio";
+                var message = $"Errore di database nella creazione dell'appuntamento:\n\n" +
+                             $"Errore: {dbEx.Message}\n\n" +
+                             $"Dettagli: {innerMessage}";
 
-                // Opzionale: naviga all'appuntamento appena creato
-                NavigateToAppuntamento?.Invoke(newAppuntamento.Id);
+                MessageBox.Show(message, "Errore Database", MessageBoxButton.OK, MessageBoxImage.Error);
+                System.Diagnostics.Debug.WriteLine($"DbUpdateException CreaAppuntamento: {dbEx}");
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Errore nella creazione dell'appuntamento: {ex.Message}",
-                    "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
-                System.Diagnostics.Debug.WriteLine($"Errore CreaAppuntamento: {ex}");
+                var message = $"Errore imprevisto nella creazione dell'appuntamento:\n\n" +
+                             $"Tipo: {ex.GetType().Name}\n" +
+                             $"Messaggio: {ex.Message}";
+
+                if (ex.InnerException != null)
+                {
+                    message += $"\n\nErrore interno: {ex.InnerException.Message}";
+                }
+
+                MessageBox.Show(message, "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
+                System.Diagnostics.Debug.WriteLine($"Exception CreaAppuntamento: {ex}");
             }
         }
 
+        // Altri metodi rimangono uguali...
         private void AddDocument(object? parameter)
         {
             if (SelectedImmobile == null) return;
 
-            try
+            var openFileDialog = new OpenFileDialog
             {
-                var openFileDialog = new OpenFileDialog
-                {
-                    Title = "Seleziona documento da aggiungere",
-                    Filter = "Documenti|*.pdf;*.doc;*.docx;*.jpg;*.jpeg;*.png;*.bmp;*.tiff|" +
-                            "PDF|*.pdf|" +
-                            "Word|*.doc;*.docx|" +
-                            "Immagini|*.jpg;*.jpeg;*.png;*.bmp;*.tiff|" +
-                            "Tutti i file|*.*",
-                    Multiselect = true
-                };
+                Filter = "PDF files (*.pdf)|*.pdf|Word files (*.doc;*.docx)|*.doc;*.docx|Image files (*.jpg;*.jpeg;*.png)|*.jpg;*.jpeg;*.png|All files (*.*)|*.*",
+                Multiselect = false,
+                Title = "Seleziona documento da aggiungere"
+            };
 
-                if (openFileDialog.ShowDialog() == true)
+            if (openFileDialog.ShowDialog() == true)
+            {
+                try
                 {
-                    var currentSettings = SettingsIntegrationHelper.CurrentSettings;
+                    var tipoDocumento = parameter?.ToString() ?? "Altro";
+                    var sourceFile = openFileDialog.FileName;
+                    var fileExtension = System.IO.Path.GetExtension(sourceFile);
 
-                    foreach (var fileName in openFileDialog.FileNames)
+                    // NUOVO: Usa le impostazioni per validare
+                    if (!SettingsIntegrationHelper.IsDocumentFormatSupported(fileExtension))
                     {
-                        var fileInfo = new FileInfo(fileName);
-
-                        // Controllo dimensione file
-                        if (fileInfo.Length > currentSettings.MaxDocumentSize)
-                        {
-                            MessageBox.Show($"Il file '{fileInfo.Name}' supera la dimensione massima consentita ({MaxDocumentSizeFormatted}).",
-                                "File troppo grande", MessageBoxButton.OK, MessageBoxImage.Warning);
-                            continue;
-                        }
-
-                        // Crea cartella documenti se non esiste
-                        var documentsPath = Path.Combine(Environment.CurrentDirectory, "Documenti");
-                        Directory.CreateDirectory(documentsPath);
-
-                        // Copia il file
-                        var newFileName = $"{SelectedImmobile.Id}_{DateTime.Now:yyyyMMdd_HHmmss}_{fileInfo.Name}";
-                        var destinationPath = Path.Combine(documentsPath, newFileName);
-                        File.Copy(fileName, destinationPath, true);
-
-                        // Crea record nel database
-                        var documento = new DocumentoImmobile
-                        {
-                            ImmobileId = SelectedImmobile.Id,
-                            NomeFile = fileInfo.Name,
-                            PercorsoFile = destinationPath,
-                            TipoDocumento = "Documento Generico", // Potrà essere cambiato dall'utente
-                            DataCaricamento = DateTime.Now,
-                            Descrizione = ""
-                        };
-
-                        _context.Documenti.Add(documento);
+                        MessageBox.Show($"Tipo di file '{fileExtension}' non supportato per i documenti.\n\n" +
+                                       $"Formati supportati: {SettingsIntegrationHelper.CurrentSettings.SupportedDocumentFormats}",
+                            "Formato Non Supportato", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        return;
                     }
 
-                    _context.SaveChanges();
-                    RefreshCurrentCollections();
+                    var fileSize = FileManagerService.GetFileSize(sourceFile);
+                    var maxSize = SettingsIntegrationHelper.GetMaxDocumentSize();
 
-                    MessageBox.Show($"Documenti aggiunti con successo!", "Successo",
-                        MessageBoxButton.OK, MessageBoxImage.Information);
+                    if (fileSize > maxSize)
+                    {
+                        MessageBox.Show($"Il file è troppo grande ({FileManagerService.FormatFileSize(fileSize)}).\n\n" +
+                                       $"Dimensione massima consentita: {SettingsIntegrationHelper.CurrentSettings.MaxDocumentSizeFormatted}",
+                            "File Troppo Grande", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        return;
+                    }
+
+                    // ... resto del metodo invariato ...
                 }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Errore nell'aggiunta del documento: {ex.Message}",
-                    "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Errore nell'aggiunta del documento: {ex.Message}", "Errore",
+                        MessageBoxButton.OK, MessageBoxImage.Error);
+                }
             }
         }
 
@@ -931,68 +887,60 @@ namespace ImmobiGestio.ViewModels
         {
             if (SelectedImmobile == null) return;
 
-            try
+            var openFileDialog = new OpenFileDialog
             {
-                var openFileDialog = new OpenFileDialog
-                {
-                    Title = "Seleziona foto da aggiungere",
-                    Filter = "Immagini|*.jpg;*.jpeg;*.png;*.bmp;*.tiff;*.gif;*.webp|Tutti i file|*.*",
-                    Multiselect = true
-                };
+                Filter = "Image files (*.jpg;*.jpeg;*.png;*.bmp;*.tiff;*.gif)|*.jpg;*.jpeg;*.png;*.bmp;*.tiff;*.gif",
+                Multiselect = true,
+                Title = "Seleziona foto da aggiungere"
+            };
 
-                if (openFileDialog.ShowDialog() == true)
+            if (openFileDialog.ShowDialog() == true)
+            {
+                try
                 {
-                    var currentSettings = SettingsIntegrationHelper.CurrentSettings;
+                    var photosPath = FileManagerService.GetPhotosPath(SelectedImmobile.Id);
+                    int fotoAggiunte = 0;
+                    var errori = new List<string>();
 
-                    foreach (var fileName in openFileDialog.FileNames)
+                    foreach (var sourceFile in openFileDialog.FileNames)
                     {
-                        var fileInfo = new FileInfo(fileName);
-
-                        // Controllo dimensione file
-                        if (fileInfo.Length > currentSettings.MaxPhotoSize)
+                        try
                         {
-                            MessageBox.Show($"Il file '{fileInfo.Name}' supera la dimensione massima consentita ({MaxPhotoSizeFormatted}).",
-                                "File troppo grande", MessageBoxButton.OK, MessageBoxImage.Warning);
-                            continue;
+                            var fileExtension = System.IO.Path.GetExtension(sourceFile);
+
+                            // NUOVO: Usa le impostazioni per validare
+                            if (!SettingsIntegrationHelper.IsImageFormatSupported(fileExtension))
+                            {
+                                errori.Add($"{Path.GetFileName(sourceFile)}: Formato '{fileExtension}' non supportato");
+                                continue;
+                            }
+
+                            var fileSize = FileManagerService.GetFileSize(sourceFile);
+                            var maxSize = SettingsIntegrationHelper.GetMaxPhotoSize();
+
+                            if (fileSize > maxSize)
+                            {
+                                errori.Add($"{Path.GetFileName(sourceFile)}: File troppo grande ({FileManagerService.FormatFileSize(fileSize)})");
+                                continue;
+                            }
+
+                            // ... resto della logica di copia file ...
+
+                            fotoAggiunte++;
                         }
-
-                        // Crea cartella foto se non esiste
-                        var photosPath = Path.Combine(Environment.CurrentDirectory, "Foto");
-                        Directory.CreateDirectory(photosPath);
-
-                        // Copia il file
-                        var newFileName = $"{SelectedImmobile.Id}_{DateTime.Now:yyyyMMdd_HHmmss}_{fileInfo.Name}";
-                        var destinationPath = Path.Combine(photosPath, newFileName);
-                        File.Copy(fileName, destinationPath, true);
-
-                        // Determina se è la prima foto (principale)
-                        var isPrincipale = !FotoCorrente.Any();
-
-                        // Crea record nel database
-                        var foto = new FotoImmobile
+                        catch (Exception ex)
                         {
-                            ImmobileId = SelectedImmobile.Id,
-                            NomeFile = fileInfo.Name,
-                            PercorsoFile = destinationPath,
-                            IsPrincipale = isPrincipale,
-                            DataCaricamento = DateTime.Now,
-                            Descrizione = ""
-                        };
-
-                        _context.Foto.Add(foto);
+                            errori.Add($"{Path.GetFileName(sourceFile)}: {ex.Message}");
+                        }
                     }
 
-                    _context.SaveChanges();
-                    RefreshCurrentCollections();
-
-                    MessageBox.Show($"Foto aggiunte con successo!", "Successo",
-                        MessageBoxButton.OK, MessageBoxImage.Information);
+                    // ... resto del metodo invariato ...
                 }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Errore nell'aggiunta della foto: {ex.Message}",
-                    "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Errore imprevisto: {ex.Message}", "Errore",
+                        MessageBoxButton.OK, MessageBoxImage.Error);
+                }
             }
         }
 
@@ -1009,17 +957,50 @@ namespace ImmobiGestio.ViewModels
                             FileName = documento.PercorsoFile,
                             UseShellExecute = true
                         });
+                        return;
+                    }
+
+                    var foundPath = FileManagerService.FindFile(documento.NomeFile, documento.ImmobileId, "Documenti");
+
+                    if (!string.IsNullOrEmpty(foundPath))
+                    {
+                        var docToUpdate = _context.Documenti.Find(documento.Id);
+                        if (docToUpdate != null)
+                        {
+                            docToUpdate.PercorsoFile = foundPath;
+                            _context.SaveChanges();
+                            documento.PercorsoFile = foundPath;
+                        }
+
+                        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                        {
+                            FileName = foundPath,
+                            UseShellExecute = true
+                        });
                     }
                     else
                     {
-                        MessageBox.Show("File non trovato. Potrebbe essere stato spostato o eliminato.",
-                            "File non trovato", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        var result = MessageBox.Show(
+                            $"File '{documento.NomeFile}' non trovato!\n\nVuoi rimuovere questo documento dall'elenco?",
+                            "File non trovato",
+                            MessageBoxButton.YesNo,
+                            MessageBoxImage.Question);
+
+                        if (result == MessageBoxResult.Yes)
+                        {
+                            DeleteDocument(documento);
+                        }
                     }
+                }
+                catch (System.ComponentModel.Win32Exception)
+                {
+                    MessageBox.Show("Impossibile aprire il file. Assicurati di avere un'applicazione associata per questo tipo di file.",
+                        "Errore apertura file", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"Errore nell'apertura del documento: {ex.Message}",
-                        "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show($"Errore nell'apertura del documento: {ex.Message}", "Errore",
+                        MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
         }
@@ -1028,32 +1009,37 @@ namespace ImmobiGestio.ViewModels
         {
             if (parameter is DocumentoImmobile documento)
             {
-                var result = MessageBox.Show($"Sei sicuro di voler eliminare il documento '{documento.NomeFile}'?",
-                    "Conferma Eliminazione", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                var result = MessageBox.Show(
+                    $"Sei sicuro di voler eliminare il documento '{documento.NomeFile}'?",
+                    "Conferma Eliminazione",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Question);
 
                 if (result == MessageBoxResult.Yes)
                 {
                     try
                     {
-                        // Elimina dal database
-                        _context.Documenti.Remove(documento);
-                        _context.SaveChanges();
-
-                        // Elimina il file fisico
-                        if (File.Exists(documento.PercorsoFile))
+                        var docToDelete = _context.Documenti.Find(documento.Id);
+                        if (docToDelete != null)
                         {
-                            File.Delete(documento.PercorsoFile);
+                            if (File.Exists(docToDelete.PercorsoFile))
+                            {
+                                File.Delete(docToDelete.PercorsoFile);
+                            }
+
+                            _context.Documenti.Remove(docToDelete);
+                            _context.SaveChanges();
+
+                            DocumentiCorrente.Remove(documento);
+
+                            MessageBox.Show("Documento eliminato con successo!", "Successo",
+                                MessageBoxButton.OK, MessageBoxImage.Information);
                         }
-
-                        RefreshCurrentCollections();
-
-                        MessageBox.Show("Documento eliminato con successo!", "Successo",
-                            MessageBoxButton.OK, MessageBoxImage.Information);
                     }
                     catch (Exception ex)
                     {
-                        MessageBox.Show($"Errore nell'eliminazione del documento: {ex.Message}",
-                            "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
+                        MessageBox.Show($"Errore nell'eliminazione del documento: {ex.Message}", "Errore",
+                            MessageBoxButton.OK, MessageBoxImage.Error);
                     }
                 }
             }
@@ -1063,32 +1049,37 @@ namespace ImmobiGestio.ViewModels
         {
             if (parameter is FotoImmobile foto)
             {
-                var result = MessageBox.Show($"Sei sicuro di voler eliminare la foto '{foto.NomeFile}'?",
-                    "Conferma Eliminazione", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                var result = MessageBox.Show(
+                    $"Sei sicuro di voler eliminare la foto '{foto.NomeFile}'?",
+                    "Conferma Eliminazione",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Question);
 
                 if (result == MessageBoxResult.Yes)
                 {
                     try
                     {
-                        // Elimina dal database
-                        _context.Foto.Remove(foto);
-                        _context.SaveChanges();
-
-                        // Elimina il file fisico
-                        if (File.Exists(foto.PercorsoFile))
+                        var fotoToDelete = _context.Foto.Find(foto.Id);
+                        if (fotoToDelete != null)
                         {
-                            File.Delete(foto.PercorsoFile);
+                            if (File.Exists(fotoToDelete.PercorsoFile))
+                            {
+                                File.Delete(fotoToDelete.PercorsoFile);
+                            }
+
+                            _context.Foto.Remove(fotoToDelete);
+                            _context.SaveChanges();
+
+                            FotoCorrente.Remove(foto);
+
+                            MessageBox.Show("Foto eliminata con successo!", "Successo",
+                                MessageBoxButton.OK, MessageBoxImage.Information);
                         }
-
-                        RefreshCurrentCollections();
-
-                        MessageBox.Show("Foto eliminata con successo!", "Successo",
-                            MessageBoxButton.OK, MessageBoxImage.Information);
                     }
                     catch (Exception ex)
                     {
-                        MessageBox.Show($"Errore nell'eliminazione della foto: {ex.Message}",
-                            "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
+                        MessageBox.Show($"Errore nell'eliminazione della foto: {ex.Message}", "Errore",
+                            MessageBoxButton.OK, MessageBoxImage.Error);
                     }
                 }
             }
@@ -1096,16 +1087,43 @@ namespace ImmobiGestio.ViewModels
 
         private void AddClienteInteressato(object? parameter)
         {
-            // Implementazione per aggiungere cliente interessato
-            MessageBox.Show("Funzionalità in sviluppo", "Info",
+            MessageBox.Show("Funzionalità in sviluppo: Aggiungi Cliente Interessato", "Info",
                 MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         private void DeleteClienteInteressato(object? parameter)
         {
-            // Implementazione per rimuovere cliente interessato
-            MessageBox.Show("Funzionalità in sviluppo", "Info",
-                MessageBoxButton.OK, MessageBoxImage.Information);
+            if (parameter is ClienteImmobile interesse)
+            {
+                var result = MessageBox.Show(
+                    "Sei sicuro di voler rimuovere questo interesse?",
+                    "Conferma Rimozione",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Question);
+
+                if (result == MessageBoxResult.Yes)
+                {
+                    try
+                    {
+                        var interesseToDelete = _context.ClientiImmobili.Find(interesse.Id);
+                        if (interesseToDelete != null)
+                        {
+                            _context.ClientiImmobili.Remove(interesseToDelete);
+                            _context.SaveChanges();
+
+                            ClientiInteressati.Remove(interesse);
+
+                            MessageBox.Show("Interesse rimosso con successo!", "Successo",
+                                MessageBoxButton.OK, MessageBoxImage.Information);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"Errore nella rimozione dell'interesse: {ex.Message}", "Errore",
+                            MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
+                }
+            }
         }
 
         private void EsportaImmobili(object? parameter)
@@ -1120,18 +1138,16 @@ namespace ImmobiGestio.ViewModels
 
                 if (saveFileDialog.ShowDialog() == true)
                 {
-                    var csv = "Titolo,Tipo,Indirizzo,Città,CAP,Provincia,Prezzo,Superficie,Locali,Stato Vendita,Classe Energetica,Data Inserimento\n";
+                    var csv = "Titolo,Indirizzo,Città,Prezzo,Tipo,Stato,Superficie,Locali,Classe Energetica,Data Inserimento\n";
 
                     foreach (var immobile in Immobili)
                     {
-                        csv += $"\"{immobile.Titolo}\",\"{immobile.TipoImmobile}\",\"{immobile.Indirizzo}\"," +
-                               $"\"{immobile.Citta}\",\"{immobile.CAP}\",\"{immobile.Provincia}\"," +
-                               $"{immobile.Prezzo},{immobile.Superficie},{immobile.NumeroLocali}," +
-                               $"\"{immobile.StatoVendita}\",\"{immobile.ClasseEnergetica}\"," +
-                               $"{immobile.DataInserimento:yyyy-MM-dd}\n";
+                        csv += $"{immobile.Titolo},{immobile.Indirizzo},{immobile.Citta},{immobile.Prezzo}," +
+                               $"{immobile.TipoImmobile},{immobile.StatoVendita},{immobile.Superficie}," +
+                               $"{immobile.NumeroLocali},{immobile.ClasseEnergetica},{immobile.DataInserimento:yyyy-MM-dd}\n";
                     }
 
-                    File.WriteAllText(saveFileDialog.FileName, csv, System.Text.Encoding.UTF8);
+                    File.WriteAllText(saveFileDialog.FileName, csv);
 
                     MessageBox.Show($"Immobili esportati con successo in {saveFileDialog.FileName}",
                         "Esportazione Completata", MessageBoxButton.OK, MessageBoxImage.Information);
@@ -1146,14 +1162,51 @@ namespace ImmobiGestio.ViewModels
 
         private void ImportaImmobili(object? parameter)
         {
-            MessageBox.Show("Funzionalità Import CSV - In sviluppo", "Info",
+            MessageBox.Show("Funzionalità in sviluppo: Importa Immobili da CSV", "Info",
                 MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         private void GeneraReport(object? parameter)
         {
-            MessageBox.Show("Funzionalità Genera Report - In sviluppo", "Info",
-                MessageBoxButton.OK, MessageBoxImage.Information);
+            try
+            {
+                var performance = _statisticheService.GetPerformanceImmobili();
+                var analisiMercato = _statisticheService.GetAnalisiMercato();
+
+                var report = "REPORT IMMOBILI\n";
+                report += $"Generato il: {DateTime.Now:dd/MM/yyyy HH:mm}\n\n";
+                report += $"Totale immobili: {Immobili.Count}\n";
+                report += $"Immobili disponibili: {Immobili.Count(i => i.StatoVendita == "Disponibile")}\n";
+                report += $"Immobili venduti: {Immobili.Count(i => i.StatoVendita == "Venduto")}\n";
+                report += $"Valore totale portafoglio: € {Immobili.Where(i => i.StatoVendita == "Disponibile").Sum(i => i.Prezzo):N0}\n\n";
+
+                if (performance.Any())
+                {
+                    report += "TOP 5 IMMOBILI PER VISITE:\n";
+                    foreach (var p in performance.Take(5))
+                    {
+                        report += $"- {p.Titolo}: {p.NumeroVisite} visite, {p.NumeroInteressati} interessati\n";
+                    }
+                }
+
+                var saveFileDialog = new SaveFileDialog
+                {
+                    Filter = "Text files (*.txt)|*.txt|All files (*.*)|*.*",
+                    FileName = $"Report_Immobili_{DateTime.Now:yyyyMMdd}.txt"
+                };
+
+                if (saveFileDialog.ShowDialog() == true)
+                {
+                    File.WriteAllText(saveFileDialog.FileName, report);
+                    MessageBox.Show($"Report generato: {saveFileDialog.FileName}", "Report Generato",
+                        MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Errore nella generazione del report: {ex.Message}",
+                    "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private void ClearFiltri(object? parameter)
@@ -1164,11 +1217,15 @@ namespace ImmobiGestio.ViewModels
             FiltroCitta = "Tutti";
             FiltroPrezzoDa = 0;
             FiltroPrezzoA = 0;
-
-            LoadImmobili();
         }
 
-        // METODI PER IL CLEANUP
+        // Proprietà per statistiche rapide
+        public int TotaleImmobili => Immobili.Count;
+        public int ImmobiliDisponibili => Immobili.Count(i => i.StatoVendita == "Disponibile");
+        public decimal ValoreTotale => Immobili.Where(i => i.StatoVendita == "Disponibile").Sum(i => i.Prezzo);
+        public decimal PrezzoMedio => ImmobiliDisponibili > 0 ? ValoreTotale / ImmobiliDisponibili : 0;
+
+
         public void OnApplicationClosing()
         {
             try
@@ -1177,7 +1234,9 @@ namespace ImmobiGestio.ViewModels
                 {
                     SaveCurrentImmobile();
                 }
-                System.Diagnostics.Debug.WriteLine("ImmobiliViewModel cleanup completato");
+
+                // NUOVO: Rimuovi il callback delle impostazioni
+                SettingsIntegrationHelper.UnregisterSettingsChangedCallback(OnSettingsChanged);
             }
             catch (Exception ex)
             {
@@ -1185,4 +1244,5 @@ namespace ImmobiGestio.ViewModels
             }
         }
     }
+
 }

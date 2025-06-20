@@ -1,15 +1,12 @@
-﻿using ImmobiGestio.Commands;
-using ImmobiGestio.Data;
-using ImmobiGestio.Helpers;
-using ImmobiGestio.Models;
-using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Input;
+using Microsoft.EntityFrameworkCore;
+using ImmobiGestio.Commands;
+using ImmobiGestio.Data;
+using ImmobiGestio.Models;
+using System.Windows;
 
 namespace ImmobiGestio.ViewModels
 {
@@ -20,23 +17,18 @@ namespace ImmobiGestio.ViewModels
         private string _searchText = string.Empty;
         private string _filtroTipoCliente = "Tutti";
         private string _filtroStato = "Tutti";
-        private string _filtroRegione = "Tutti";
         private bool _isDeleting = false;
 
         public ObservableCollection<Cliente> Clienti { get; set; } = new();
         public ObservableCollection<Appuntamento> AppuntamentiCliente { get; set; } = new();
         public ObservableCollection<ClienteImmobile> ImmobiliInteresse { get; set; } = new();
-        public ObservableCollection<Immobile> ImmobiliDisponibili { get; set; } = new();
 
-        // LISTE ITALIANIZZATE
+        // Combo boxes data SOLO per i clienti
         public ObservableCollection<string> TipiCliente { get; set; } = new();
         public ObservableCollection<string> StatiCliente { get; set; } = new();
         public ObservableCollection<string> FontiContatto { get; set; } = new();
-        public ObservableCollection<string> ProvinceItaliane { get; set; } = new();
-        public ObservableCollection<string> RegioniItaliane { get; set; } = new();
         public ObservableCollection<string> TipiClienteFiltro { get; set; } = new();
         public ObservableCollection<string> StatiClienteFiltro { get; set; } = new();
-        public ObservableCollection<string> RegioniFiltro { get; set; } = new();
 
         // Eventi per comunicare con altri ViewModels
         public event Action? AppuntamentoCreated;
@@ -85,99 +77,64 @@ namespace ImmobiGestio.ViewModels
             }
         }
 
-        public string FiltroRegione
-        {
-            get => _filtroRegione;
-            set
-            {
-                SetProperty(ref _filtroRegione, value);
-                FilterClienti();
-            }
-        }
-
         // Commands
         public ICommand? AddClienteCommand { get; set; }
         public ICommand? SaveClienteCommand { get; set; }
         public ICommand? DeleteClienteCommand { get; set; }
         public ICommand? AddAppuntamentoCommand { get; set; }
         public ICommand? AddInteresseImmobileCommand { get; set; }
-        public ICommand? DeleteInteresseImmobileCommand { get; set; }
-        public ICommand? ValidateClienteCommand { get; set; }
-        public ICommand? FormatTelefonoCommand { get; set; }
-        public ICommand? CercaProvinciaCommand { get; set; }
+        public ICommand? DeleteAppuntamentoCommand { get; set; }
+        public ICommand? DeleteInteresseCommand { get; set; }
+        public ICommand? InviaEmailCommand { get; set; }
+        public ICommand? ChiamaClienteCommand { get; set; }
         public ICommand? EsportaClientiCommand { get; set; }
-        public ICommand? ImportaClientiCommand { get; set; }
-        public ICommand? ClearFiltriCommand { get; set; }
-        public ICommand? CreaAppuntamentoCommand { get; set; }
 
         public ClientiViewModel(ImmobiliContext context)
         {
             _context = context;
-
-            InitializeItalianCollections();
+            InitializeCollections();
             InitializeCommands();
             LoadClienti();
-            LoadImmobiliDisponibili();
         }
 
-        private void InitializeItalianCollections()
+        private void InitializeCollections()
         {
             try
             {
-                System.Diagnostics.Debug.WriteLine("=== INIZIALIZZAZIONE COLLEZIONI CLIENTI ITALIANE ===");
-
-                // Tipi Cliente
+                // Tipi cliente
                 TipiCliente.Clear();
                 TipiClienteFiltro.Clear();
                 TipiClienteFiltro.Add("Tutti");
 
-                foreach (var tipo in Models.TipiCliente.All)
+                foreach (var tipo in new[] { "Acquirente", "Venditore", "Locatario", "Locatore" })
                 {
                     TipiCliente.Add(tipo);
                     TipiClienteFiltro.Add(tipo);
                 }
 
-                // Stati Cliente
+                // Stati cliente
                 StatiCliente.Clear();
                 StatiClienteFiltro.Clear();
                 StatiClienteFiltro.Add("Tutti");
 
-                foreach (var stato in Models.StatiCliente.All)
+                foreach (var stato in new[] { "Attivo", "Inattivo", "Prospect", "Concluso" })
                 {
                     StatiCliente.Add(stato);
                     StatiClienteFiltro.Add(stato);
                 }
 
-                // Fonti Contatto
+                // Fonti contatto
                 FontiContatto.Clear();
-                foreach (var fonte in Models.FontiContatto.All)
+                foreach (var fonte in new[] { "Web", "Telefono", "Email", "Referral", "Social Media", "Cartellone", "Passaparola", "Altro" })
                 {
                     FontiContatto.Add(fonte);
                 }
 
-                // Province italiane
-                ProvinceItaliane.Clear();
-                foreach (var provincia in ItalianValidationHelper.ProvinceItaliane.Keys.OrderBy(p => p))
-                {
-                    ProvinceItaliane.Add(provincia);
-                }
-
-                // Regioni italiane
-                RegioniItaliane.Clear();
-                RegioniFiltro.Clear();
-                RegioniFiltro.Add("Tutti");
-
-                foreach (var regione in ItalianValidationHelper.RegioniProvincie.Keys.OrderBy(r => r))
-                {
-                    RegioniItaliane.Add(regione);
-                    RegioniFiltro.Add(regione);
-                }
-
-                System.Diagnostics.Debug.WriteLine("Collezioni clienti italiane inizializzate");
+                System.Diagnostics.Debug.WriteLine($"Collezioni clienti inizializzate: Tipi={TipiCliente.Count}, Stati={StatiCliente.Count}, Fonti={FontiContatto.Count}");
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Errore InitializeItalianCollections clienti: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Errore InitializeCollections clienti: {ex.Message}");
             }
         }
 
@@ -190,14 +147,11 @@ namespace ImmobiGestio.ViewModels
                 DeleteClienteCommand = new RelayCommand(DeleteCliente, _ => SelectedCliente != null);
                 AddAppuntamentoCommand = new RelayCommand(AddAppuntamento, _ => SelectedCliente != null);
                 AddInteresseImmobileCommand = new RelayCommand(AddInteresseImmobile, _ => SelectedCliente != null);
-                DeleteInteresseImmobileCommand = new RelayCommand(DeleteInteresseImmobile);
-                ValidateClienteCommand = new RelayCommand(ValidateCliente, _ => SelectedCliente != null);
-                FormatTelefonoCommand = new RelayCommand(FormatTelefono, _ => SelectedCliente != null);
-                CercaProvinciaCommand = new RelayCommand(CercaProvincia);
+                DeleteAppuntamentoCommand = new RelayCommand(DeleteAppuntamento);
+                DeleteInteresseCommand = new RelayCommand(DeleteInteresse);
+                InviaEmailCommand = new RelayCommand(InviaEmail, _ => SelectedCliente != null && !string.IsNullOrEmpty(SelectedCliente.Email));
+                ChiamaClienteCommand = new RelayCommand(ChiamaCliente, _ => SelectedCliente != null && (!string.IsNullOrEmpty(SelectedCliente.Telefono) || !string.IsNullOrEmpty(SelectedCliente.Cellulare)));
                 EsportaClientiCommand = new RelayCommand(EsportaClienti);
-                ImportaClientiCommand = new RelayCommand(ImportaClienti);
-                ClearFiltriCommand = new RelayCommand(ClearFiltri);
-                CreaAppuntamentoCommand = new RelayCommand(CreaAppuntamento, _ => SelectedCliente != null);
 
                 System.Diagnostics.Debug.WriteLine("Comandi clienti inizializzati");
             }
@@ -238,30 +192,6 @@ namespace ImmobiGestio.ViewModels
             }
         }
 
-        private void LoadImmobiliDisponibili()
-        {
-            try
-            {
-                var immobili = _context.Immobili
-                    .AsNoTracking()
-                    .Where(i => i.StatoVendita == "Disponibile")
-                    .OrderBy(i => i.Titolo)
-                    .ToList();
-
-                ImmobiliDisponibili.Clear();
-                foreach (var immobile in immobili)
-                {
-                    ImmobiliDisponibili.Add(immobile);
-                }
-
-                System.Diagnostics.Debug.WriteLine($"Caricati {ImmobiliDisponibili.Count} immobili disponibili");
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Errore LoadImmobiliDisponibili: {ex.Message}");
-            }
-        }
-
         private void FilterClienti()
         {
             try
@@ -272,7 +202,6 @@ namespace ImmobiGestio.ViewModels
                     .Include(c => c.ImmobiliDiInteresse)
                     .AsQueryable();
 
-                // Filtro per testo
                 if (!string.IsNullOrWhiteSpace(SearchText))
                 {
                     query = query.Where(c =>
@@ -280,48 +209,35 @@ namespace ImmobiGestio.ViewModels
                         c.Cognome.Contains(SearchText) ||
                         c.Email.Contains(SearchText) ||
                         c.Telefono.Contains(SearchText) ||
-                        c.Cellulare.Contains(SearchText) ||
-                        c.CodiceFiscale.Contains(SearchText) ||
-                        c.Citta.Contains(SearchText));
+                        c.Cellulare.Contains(SearchText));
                 }
 
-                // Filtro per tipo cliente
                 if (FiltroTipoCliente != "Tutti")
                 {
                     query = query.Where(c => c.TipoCliente == FiltroTipoCliente);
                 }
 
-                // Filtro per stato
                 if (FiltroStato != "Tutti")
                 {
                     query = query.Where(c => c.StatoCliente == FiltroStato);
                 }
 
-                // Filtro per regione
-                if (FiltroRegione != "Tutti")
-                {
-                    var provinceRegione = ItalianValidationHelper.RegioniProvincie
-                        .Where(r => r.Key == FiltroRegione)
-                        .SelectMany(r => r.Value)
-                        .ToList();
-
-                    query = query.Where(c => provinceRegione.Contains(c.Provincia));
-                }
-
-                var risultati = query.OrderByDescending(c => c.DataInserimento).ToList();
+                var filtered = query
+                    .OrderByDescending(c => c.DataInserimento)
+                    .ToList();
 
                 Clienti.Clear();
-                foreach (var cliente in risultati)
+                foreach (var cliente in filtered)
                 {
                     Clienti.Add(cliente);
                 }
 
-                System.Diagnostics.Debug.WriteLine($"Filtri applicati: {risultati.Count} clienti trovati");
+                System.Diagnostics.Debug.WriteLine($"Filtro clienti applicato: {Clienti.Count} risultati");
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Errore FilterClienti: {ex}");
-                MessageBox.Show($"Errore nel filtro dei clienti: {ex.Message}",
+                MessageBox.Show($"Errore nella ricerca clienti: {ex.Message}",
                     "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
@@ -330,81 +246,109 @@ namespace ImmobiGestio.ViewModels
         {
             try
             {
-                System.Diagnostics.Debug.WriteLine("=== REFRESH COLLEZIONI CLIENTI ===");
+                AppuntamentiCliente.Clear();
+                ImmobiliInteresse.Clear();
 
-                // Ricarica le collezioni italiane
-                InitializeItalianCollections();
+                if (SelectedCliente != null)
+                {
+                    System.Diagnostics.Debug.WriteLine($"=== REFRESH COLLEZIONI CLIENTE ID {SelectedCliente.Id} ===");
 
-                // Ricarica i dati
-                LoadClienti();
-                LoadImmobiliDisponibili();
+                    using (var refreshContext = new ImmobiliContext())
+                    {
+                        // Carica appuntamenti del cliente
+                        var appuntamenti = refreshContext.Appuntamenti
+                            .AsNoTracking()
+                            .Include(a => a.Immobile)
+                            .Where(a => a.ClienteId == SelectedCliente.Id)
+                            .OrderByDescending(a => a.DataInizio)
+                            .ToList();
 
-                // Aggiorna le proprietà
-                OnPropertyChanged(nameof(Clienti));
-                OnPropertyChanged(nameof(TipiCliente));
-                OnPropertyChanged(nameof(StatiCliente));
-                OnPropertyChanged(nameof(ProvinceItaliane));
-                OnPropertyChanged(nameof(RegioniItaliane));
+                        foreach (var app in appuntamenti)
+                        {
+                            AppuntamentiCliente.Add(app);
+                        }
+                        System.Diagnostics.Debug.WriteLine($"Caricati {AppuntamentiCliente.Count} appuntamenti per il cliente");
 
-                System.Diagnostics.Debug.WriteLine("Collezioni clienti aggiornate");
+                        // Carica immobili di interesse
+                        var interessi = refreshContext.ClientiImmobili
+                            .AsNoTracking()
+                            .Include(ci => ci.Immobile)
+                            .Where(ci => ci.ClienteId == SelectedCliente.Id)
+                            .OrderByDescending(ci => ci.DataInteresse)
+                            .ToList();
+
+                        foreach (var interesse in interessi)
+                        {
+                            ImmobiliInteresse.Add(interesse);
+                        }
+                        System.Diagnostics.Debug.WriteLine($"Caricati {ImmobiliInteresse.Count} immobili di interesse");
+                    }
+
+                    OnPropertyChanged(nameof(AppuntamentiCliente));
+                    OnPropertyChanged(nameof(ImmobiliInteresse));
+                }
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Errore RefreshCurrentCollections: {ex.Message}");
-                MessageBox.Show($"Errore nell'aggiornamento delle collezioni: {ex.Message}",
+                MessageBox.Show($"Errore nel caricamento dei dati del cliente: {ex.Message}",
                     "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
-        // METODI CRUD
         private void AddCliente(object? parameter)
         {
             try
             {
                 System.Diagnostics.Debug.WriteLine("=== CREAZIONE NUOVO CLIENTE ===");
 
-                var newCliente = new Cliente();
-
-                // Log per debug
-                System.Diagnostics.Debug.WriteLine($"Nuovo cliente - Nome: '{newCliente.Nome}'");
-                System.Diagnostics.Debug.WriteLine($"Nuovo cliente - TipoCliente: '{newCliente.TipoCliente}'");
-                System.Diagnostics.Debug.WriteLine($"Nuovo cliente - StatoCliente: '{newCliente.StatoCliente}'");
-
-                // Validazione base
-                if (!newCliente.IsValid())
+                var newCliente = new Cliente
                 {
-                    var errors = newCliente.GetValidationErrors();
-                    MessageBox.Show($"Errore nella validazione del cliente:\n\n{string.Join("\n", errors)}",
-                        "Errore Validazione", MessageBoxButton.OK, MessageBoxImage.Error);
-                    return;
-                }
+                    Nome = "Nuovo",
+                    Cognome = "Cliente",
+                    TipoCliente = "Acquirente",
+                    StatoCliente = "Prospect",
+                    FonteContatto = "Web",
+                    Email = "",
+                    Telefono = "",
+                    Cellulare = "",
+                    CodiceFiscale = "",
+                    Indirizzo = "",
+                    Citta = "",
+                    CAP = "",
+                    Provincia = "",
+                    Note = "",
+                    PreferenzeTipologia = "",
+                    PreferenzeZone = "",
+                    BudgetMin = 0,
+                    BudgetMax = 0,
+                    DataNascita = DateTime.Today.AddYears(-30),
+                    DataInserimento = DateTime.Now
+                };
 
-                // Usa un nuovo contesto per evitare conflitti
                 using (var newContext = new ImmobiliContext())
                 {
                     newContext.Clienti.Add(newCliente);
-                    newContext.SaveChanges();
-
-                    System.Diagnostics.Debug.WriteLine($"Cliente creato con ID: {newCliente.Id}");
+                    var saved = newContext.SaveChanges();
+                    System.Diagnostics.Debug.WriteLine($"Cliente creato con ID: {newCliente.Id}, Records salvati: {saved}");
                 }
 
-                // Ricarica e seleziona il nuovo cliente
                 LoadClienti();
+
                 var createdCliente = Clienti.FirstOrDefault(c => c.Id == newCliente.Id);
                 if (createdCliente != null)
                 {
                     SelectedCliente = createdCliente;
-                    System.Diagnostics.Debug.WriteLine($"Cliente selezionato: ID {createdCliente.Id}");
                 }
 
-                MessageBox.Show("Nuovo cliente creato con successo!", "Successo",
-                    MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show("Nuovo cliente creato con successo!",
+                    "Successo", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
+                System.Diagnostics.Debug.WriteLine($"Errore AddCliente: {ex}");
                 MessageBox.Show($"Errore nella creazione del cliente: {ex.Message}",
                     "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
-                System.Diagnostics.Debug.WriteLine($"Errore AddCliente: {ex}");
             }
         }
 
@@ -414,66 +358,83 @@ namespace ImmobiGestio.ViewModels
 
             try
             {
-                if (!SelectedCliente.IsValid())
-                {
-                    System.Diagnostics.Debug.WriteLine("Cliente non valido, salto il salvataggio");
-                    return;
-                }
-
                 SelectedCliente.DataUltimaModifica = DateTime.Now;
 
                 using (var saveContext = new ImmobiliContext())
                 {
+                    var clienteId = SelectedCliente.Id;
                     var existingCliente = saveContext.Clienti
-                        .FirstOrDefault(c => c.Id == SelectedCliente.Id);
+                        .FirstOrDefault(c => c.Id == clienteId);
 
                     if (existingCliente != null)
                     {
-                        // AGGIORNAMENTO SICURO
+                        // AGGIORNAMENTO
                         existingCliente.Nome = SelectedCliente.Nome;
                         existingCliente.Cognome = SelectedCliente.Cognome;
-                        existingCliente.CodiceFiscale = SelectedCliente.CodiceFiscale;
+                        existingCliente.Email = SelectedCliente.Email;
                         existingCliente.Telefono = SelectedCliente.Telefono;
                         existingCliente.Cellulare = SelectedCliente.Cellulare;
-                        existingCliente.Email = SelectedCliente.Email;
+                        existingCliente.TipoCliente = SelectedCliente.TipoCliente;
+                        existingCliente.StatoCliente = SelectedCliente.StatoCliente;
+                        existingCliente.BudgetMin = SelectedCliente.BudgetMin;
+                        existingCliente.BudgetMax = SelectedCliente.BudgetMax;
+                        existingCliente.PreferenzeZone = SelectedCliente.PreferenzeZone;
+                        existingCliente.PreferenzeTipologia = SelectedCliente.PreferenzeTipologia;
+                        existingCliente.Note = SelectedCliente.Note;
+                        existingCliente.CodiceFiscale = SelectedCliente.CodiceFiscale;
                         existingCliente.Indirizzo = SelectedCliente.Indirizzo;
                         existingCliente.Citta = SelectedCliente.Citta;
                         existingCliente.CAP = SelectedCliente.CAP;
                         existingCliente.Provincia = SelectedCliente.Provincia;
                         existingCliente.DataNascita = SelectedCliente.DataNascita;
-                        existingCliente.TipoCliente = SelectedCliente.TipoCliente;
-                        existingCliente.BudgetMin = SelectedCliente.BudgetMin;
-                        existingCliente.BudgetMax = SelectedCliente.BudgetMax;
-                        existingCliente.PreferenzeTipologia = SelectedCliente.PreferenzeTipologia;
-                        existingCliente.PreferenzeZone = SelectedCliente.PreferenzeZone;
-                        existingCliente.Note = SelectedCliente.Note;
-                        existingCliente.StatoCliente = SelectedCliente.StatoCliente;
                         existingCliente.FonteContatto = SelectedCliente.FonteContatto;
                         existingCliente.DataUltimaModifica = DateTime.Now;
 
                         saveContext.Update(existingCliente);
-                        saveContext.SaveChanges();
-
-                        System.Diagnostics.Debug.WriteLine($"Cliente ID {SelectedCliente.Id} salvato");
+                        System.Diagnostics.Debug.WriteLine($"Aggiornamento cliente ID {clienteId}");
                     }
+                    else
+                    {
+                        saveContext.Clienti.Add(SelectedCliente);
+                        System.Diagnostics.Debug.WriteLine($"Nuovo cliente in creazione");
+                    }
+
+                    var saved = saveContext.SaveChanges();
+                    System.Diagnostics.Debug.WriteLine($"SaveCurrentCliente completato: {saved} record salvati");
                 }
             }
             catch (Exception ex)
             {
                 if (!_isDeleting)
                 {
+                    System.Diagnostics.Debug.WriteLine($"Errore SaveCurrentCliente: {ex}");
                     MessageBox.Show($"Errore nel salvataggio del cliente: {ex.Message}",
                         "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
-                System.Diagnostics.Debug.WriteLine($"Errore SaveCurrentCliente: {ex}");
             }
         }
 
         private void SaveCliente(object? parameter)
         {
-            SaveCurrentCliente();
-            MessageBox.Show("Cliente salvato con successo!", "Successo",
-                MessageBoxButton.OK, MessageBoxImage.Information);
+            try
+            {
+                if (SelectedCliente == null)
+                {
+                    MessageBox.Show("Nessun cliente selezionato da salvare.",
+                        "Attenzione", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                SaveCurrentCliente();
+                MessageBox.Show("Cliente salvato con successo!",
+                    "Successo", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Errore SaveCliente: {ex}");
+                MessageBox.Show($"Errore nel salvataggio: {ex.Message}",
+                    "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private void DeleteCliente(object? parameter)
@@ -481,42 +442,52 @@ namespace ImmobiGestio.ViewModels
             if (SelectedCliente == null) return;
 
             var result = MessageBox.Show(
-                $"Sei sicuro di voler eliminare il cliente '{SelectedCliente.NomeCompleto}'?\n\n" +
-                "Questa operazione eliminerà anche tutti gli appuntamenti e interessi associati.",
+                $"Sei sicuro di voler eliminare il cliente '{SelectedCliente.NomeCompleto}'?\n" +
+                "Questa operazione eliminerà anche tutti gli appuntamenti associati.",
                 "Conferma Eliminazione",
                 MessageBoxButton.YesNo,
-                MessageBoxImage.Warning);
+                MessageBoxImage.Question);
 
             if (result == MessageBoxResult.Yes)
             {
                 try
                 {
                     _isDeleting = true;
+                    var clienteId = SelectedCliente.Id;
+                    var clienteNome = SelectedCliente.NomeCompleto;
 
                     using (var deleteContext = new ImmobiliContext())
                     {
                         var clienteToDelete = deleteContext.Clienti
                             .Include(c => c.Appuntamenti)
                             .Include(c => c.ImmobiliDiInteresse)
-                            .FirstOrDefault(c => c.Id == SelectedCliente.Id);
+                            .FirstOrDefault(c => c.Id == clienteId);
 
                         if (clienteToDelete != null)
                         {
                             deleteContext.Clienti.Remove(clienteToDelete);
-                            deleteContext.SaveChanges();
+                            var deletedRecords = deleteContext.SaveChanges();
+                            System.Diagnostics.Debug.WriteLine($"Cliente eliminato: {deletedRecords} record interessati");
                         }
                     }
 
-                    SelectedCliente = null;
-                    LoadClienti();
+                    var uiCliente = Clienti.FirstOrDefault(c => c.Id == clienteId);
+                    if (uiCliente != null)
+                    {
+                        Clienti.Remove(uiCliente);
+                    }
 
-                    MessageBox.Show("Cliente eliminato con successo!", "Successo",
-                        MessageBoxButton.OK, MessageBoxImage.Information);
+                    SelectedCliente = Clienti.FirstOrDefault();
+
+                    MessageBox.Show($"Cliente '{clienteNome}' eliminato con successo!",
+                        "Successo", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
                 catch (Exception ex)
                 {
+                    System.Diagnostics.Debug.WriteLine($"Errore DeleteCliente: {ex}");
                     MessageBox.Show($"Errore nell'eliminazione del cliente: {ex.Message}",
                         "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
+                    LoadClienti();
                 }
                 finally
                 {
@@ -525,95 +496,29 @@ namespace ImmobiGestio.ViewModels
             }
         }
 
-        // METODI DI VALIDAZIONE E FORMATTAZIONE ITALIANA
-        private void ValidateCliente(object? parameter)
-        {
-            if (SelectedCliente == null) return;
-
-            try
-            {
-                var suggerimenti = ItalianValidationHelper.GetSuggerimentoValidazione(
-                    SelectedCliente.CodiceFiscale,
-                    SelectedCliente.Telefono,
-                    SelectedCliente.Email,
-                    SelectedCliente.CAP,
-                    SelectedCliente.Provincia
-                );
-
-                if (suggerimenti.Any())
-                {
-                    var message = "Suggerimenti per migliorare i dati:\n\n" + string.Join("\n• ", suggerimenti);
-                    MessageBox.Show(message, "Validazione Dati", MessageBoxButton.OK, MessageBoxImage.Information);
-                }
-                else
-                {
-                    MessageBox.Show("Tutti i dati del cliente sono corretti!", "Validazione Dati",
-                        MessageBoxButton.OK, MessageBoxImage.Information);
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Errore nella validazione: {ex.Message}", "Errore",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
-
-        private void FormatTelefono(object? parameter)
-        {
-            if (SelectedCliente == null) return;
-
-            try
-            {
-                if (!string.IsNullOrEmpty(SelectedCliente.Telefono))
-                {
-                    SelectedCliente.Telefono = ItalianValidationHelper.FormatItalianPhone(SelectedCliente.Telefono);
-                }
-
-                if (!string.IsNullOrEmpty(SelectedCliente.Cellulare))
-                {
-                    SelectedCliente.Cellulare = ItalianValidationHelper.FormatItalianPhone(SelectedCliente.Cellulare);
-                }
-
-                OnPropertyChanged(nameof(SelectedCliente));
-                MessageBox.Show("Numeri di telefono formattati!", "Formattazione",
-                    MessageBoxButton.OK, MessageBoxImage.Information);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Errore nella formattazione: {ex.Message}", "Errore",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
-
-        private void CercaProvincia(object? parameter)
-        {
-            if (parameter is string sigla)
-            {
-                var nomeProvincia = ItalianValidationHelper.GetProvinceFromRegione(sigla);
-                var regione = ItalianValidationHelper.GetRegioneFromProvincia(sigla);
-
-                if (nomeProvincia != null)
-                {
-                    MessageBox.Show($"Provincia: {nomeProvincia}\nRegione: {regione}",
-                        "Informazioni Provincia", MessageBoxButton.OK, MessageBoxImage.Information);
-                }
-                else
-                {
-                    MessageBox.Show("Sigla provincia non riconosciuta.",
-                        "Provincia", MessageBoxButton.OK, MessageBoxImage.Warning);
-                }
-            }
-        }
-
-        // GESTIONE APPUNTAMENTI E INTERESSI
         private void AddAppuntamento(object? parameter)
         {
-            if (SelectedCliente == null) return;
+            if (SelectedCliente == null)
+            {
+                MessageBox.Show("Nessun cliente selezionato per creare l'appuntamento.",
+                    "Attenzione", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
 
             try
             {
-                // Salva prima il cliente corrente
-                SaveCurrentCliente();
+                // Verifica che il cliente esista
+                using (var checkContext = new ImmobiliContext())
+                {
+                    var clienteExists = checkContext.Clienti.Any(c => c.Id == SelectedCliente.Id);
+                    if (!clienteExists)
+                    {
+                        MessageBox.Show("Errore: Il cliente selezionato non esiste nel database!\n" +
+                                       "Salva prima il cliente, poi crea l'appuntamento.",
+                            "Errore Database", MessageBoxButton.OK, MessageBoxImage.Error);
+                        return;
+                    }
+                }
 
                 // USA IL FACTORY METHOD
                 var newAppuntamento = Appuntamento.CreaPerCliente(
@@ -621,7 +526,12 @@ namespace ImmobiGestio.ViewModels
                     SelectedCliente.NomeCompleto
                 );
 
-                // Validazione
+                newAppuntamento.NotePrivate = $"Appuntamento creato dalla scheda cliente: {SelectedCliente.NomeCompleto}";
+
+                System.Diagnostics.Debug.WriteLine($"=== CREAZIONE APPUNTAMENTO DA CLIENTE ===");
+                System.Diagnostics.Debug.WriteLine($"ClienteId: {newAppuntamento.ClienteId}");
+                System.Diagnostics.Debug.WriteLine($"Cliente: {SelectedCliente.NomeCompleto}");
+
                 if (!newAppuntamento.IsValid())
                 {
                     MessageBox.Show("Errore: L'appuntamento creato non è valido.",
@@ -632,25 +542,24 @@ namespace ImmobiGestio.ViewModels
                 using (var newContext = new ImmobiliContext())
                 {
                     newContext.Appuntamenti.Add(newAppuntamento);
-                    newContext.SaveChanges();
+                    var saved = newContext.SaveChanges();
+                    System.Diagnostics.Debug.WriteLine($"Appuntamento salvato con ID: {newAppuntamento.Id}");
                 }
 
                 RefreshCurrentCollections();
                 AppuntamentoCreated?.Invoke();
 
-                MessageBox.Show("Appuntamento creato con successo!", "Successo",
-                    MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show($"Appuntamento creato con successo per {SelectedCliente.NomeCompleto}!\n\n" +
+                               $"Data: {newAppuntamento.DataInizio:dd/MM/yyyy HH:mm}\n" +
+                               $"Tipo: {newAppuntamento.TipoAppuntamento}",
+                    "Successo", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
+                System.Diagnostics.Debug.WriteLine($"Errore AddAppuntamento: {ex}");
                 MessageBox.Show($"Errore nella creazione dell'appuntamento: {ex.Message}",
                     "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
             }
-        }
-
-        private void CreaAppuntamento(object? parameter)
-        {
-            AddAppuntamento(parameter);
         }
 
         private void AddInteresseImmobile(object? parameter)
@@ -659,31 +568,18 @@ namespace ImmobiGestio.ViewModels
 
             try
             {
-                // Mostra dialog per selezione immobile
-                var immobiliWindow = new ImmobiliSelectionWindow(ImmobiliDisponibili.ToList());
-                if (immobiliWindow.ShowDialog() == true && immobiliWindow.SelectedImmobile != null)
+                var immobile = _context.Immobili
+                    .FirstOrDefault(i => i.StatoVendita == "Disponibile");
+
+                if (immobile != null)
                 {
-                    var selectedImmobile = immobiliWindow.SelectedImmobile;
-
-                    // Verifica che non esista già questo interesse
-                    var esisteGia = _context.ClientiImmobili
-                        .Any(ci => ci.ClienteId == SelectedCliente.Id && ci.ImmobileId == selectedImmobile.Id);
-
-                    if (esisteGia)
-                    {
-                        MessageBox.Show("Il cliente ha già mostrato interesse per questo immobile.",
-                            "Interesse Esistente", MessageBoxButton.OK, MessageBoxImage.Information);
-                        return;
-                    }
-
-                    // Crea nuovo interesse
                     var interesse = new ClienteImmobile
                     {
                         ClienteId = SelectedCliente.Id,
-                        ImmobileId = selectedImmobile.Id,
-                        DataInteresse = DateTime.Now,
+                        ImmobileId = immobile.Id,
                         StatoInteresse = "Interessato",
-                        Note = ""
+                        Note = "Interesse aggiunto manualmente",
+                        DataInteresse = DateTime.Now
                     };
 
                     _context.ClientiImmobili.Add(interesse);
@@ -691,8 +587,13 @@ namespace ImmobiGestio.ViewModels
 
                     RefreshCurrentCollections();
 
-                    MessageBox.Show("Interesse per l'immobile aggiunto con successo!", "Successo",
-                        MessageBoxButton.OK, MessageBoxImage.Information);
+                    MessageBox.Show($"Interesse per l'immobile '{immobile.Titolo}' aggiunto!",
+                        "Successo", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                else
+                {
+                    MessageBox.Show("Nessun immobile disponibile per aggiungere interesse.",
+                        "Avviso", MessageBoxButton.OK, MessageBoxImage.Warning);
                 }
             }
             catch (Exception ex)
@@ -702,12 +603,48 @@ namespace ImmobiGestio.ViewModels
             }
         }
 
-        private void DeleteInteresseImmobile(object? parameter)
+        private void DeleteAppuntamento(object? parameter)
+        {
+            if (parameter is Appuntamento appuntamento)
+            {
+                var result = MessageBox.Show(
+                    $"Sei sicuro di voler eliminare l'appuntamento '{appuntamento.Titolo}'?",
+                    "Conferma Eliminazione",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Question);
+
+                if (result == MessageBoxResult.Yes)
+                {
+                    try
+                    {
+                        var appToDelete = _context.Appuntamenti.Find(appuntamento.Id);
+                        if (appToDelete != null)
+                        {
+                            _context.Appuntamenti.Remove(appToDelete);
+                            _context.SaveChanges();
+
+                            AppuntamentiCliente.Remove(appuntamento);
+                            AppuntamentoCreated?.Invoke();
+
+                            MessageBox.Show("Appuntamento eliminato con successo!",
+                                "Successo", MessageBoxButton.OK, MessageBoxImage.Information);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"Errore nell'eliminazione dell'appuntamento: {ex.Message}",
+                            "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
+                }
+            }
+        }
+
+        private void DeleteInteresse(object? parameter)
         {
             if (parameter is ClienteImmobile interesse)
             {
                 var result = MessageBox.Show(
-                    $"Sei sicuro di voler rimuovere l'interesse per '{interesse.Immobile?.Titolo}'?",
+                    "Sei sicuro di voler rimuovere questo interesse?",
                     "Conferma Rimozione",
                     MessageBoxButton.YesNo,
                     MessageBoxImage.Question);
@@ -716,13 +653,17 @@ namespace ImmobiGestio.ViewModels
                 {
                     try
                     {
-                        _context.ClientiImmobili.Remove(interesse);
-                        _context.SaveChanges();
+                        var interesseToDelete = _context.ClientiImmobili.Find(interesse.Id);
+                        if (interesseToDelete != null)
+                        {
+                            _context.ClientiImmobili.Remove(interesseToDelete);
+                            _context.SaveChanges();
 
-                        RefreshCurrentCollections();
+                            ImmobiliInteresse.Remove(interesse);
 
-                        MessageBox.Show("Interesse rimosso con successo!", "Successo",
-                            MessageBoxButton.OK, MessageBoxImage.Information);
+                            MessageBox.Show("Interesse rimosso con successo!",
+                                "Successo", MessageBoxButton.OK, MessageBoxImage.Information);
+                        }
                     }
                     catch (Exception ex)
                     {
@@ -733,7 +674,55 @@ namespace ImmobiGestio.ViewModels
             }
         }
 
-        // EXPORT/IMPORT
+        private void InviaEmail(object? parameter)
+        {
+            if (SelectedCliente != null && !string.IsNullOrEmpty(SelectedCliente.Email))
+            {
+                try
+                {
+                    var mailto = $"mailto:{SelectedCliente.Email}?subject=Contatto da ImmobiGestio";
+                    System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                    {
+                        FileName = mailto,
+                        UseShellExecute = true
+                    });
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Errore nell'apertura del client email: {ex.Message}",
+                        "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
+
+        private void ChiamaCliente(object? parameter)
+        {
+            if (SelectedCliente != null)
+            {
+                var telefono = !string.IsNullOrEmpty(SelectedCliente.Cellulare)
+                    ? SelectedCliente.Cellulare
+                    : SelectedCliente.Telefono;
+
+                if (!string.IsNullOrEmpty(telefono))
+                {
+                    try
+                    {
+                        var telUri = $"tel:{telefono}";
+                        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                        {
+                            FileName = telUri,
+                            UseShellExecute = true
+                        });
+                    }
+                    catch
+                    {
+                        MessageBox.Show($"Numero di telefono: {telefono}",
+                            "Chiama Cliente", MessageBoxButton.OK, MessageBoxImage.Information);
+                    }
+                }
+            }
+        }
+
         private void EsportaClienti(object? parameter)
         {
             try
@@ -746,17 +735,16 @@ namespace ImmobiGestio.ViewModels
 
                 if (saveFileDialog.ShowDialog() == true)
                 {
-                    var csv = "Nome,Cognome,Email,Telefono,Cellulare,TipoCliente,StatoCliente,Budget Min,Budget Max,Città,Provincia,Data Inserimento\n";
+                    var csv = "Nome,Cognome,Email,Telefono,TipoCliente,StatoCliente,Budget Min,Budget Max,Data Inserimento\n";
 
                     foreach (var cliente in Clienti)
                     {
-                        csv += $"\"{cliente.Nome}\",\"{cliente.Cognome}\",\"{cliente.Email}\"," +
-                               $"\"{cliente.Telefono}\",\"{cliente.Cellulare}\",\"{cliente.TipoCliente}\"," +
-                               $"\"{cliente.StatoCliente}\",{cliente.BudgetMin},{cliente.BudgetMax}," +
-                               $"\"{cliente.Citta}\",\"{cliente.Provincia}\",{cliente.DataInserimento:yyyy-MM-dd}\n";
+                        csv += $"{cliente.Nome},{cliente.Cognome},{cliente.Email},{cliente.Telefono}," +
+                               $"{cliente.TipoCliente},{cliente.StatoCliente},{cliente.BudgetMin},{cliente.BudgetMax}," +
+                               $"{cliente.DataInserimento:yyyy-MM-dd}\n";
                     }
 
-                    System.IO.File.WriteAllText(saveFileDialog.FileName, csv, System.Text.Encoding.UTF8);
+                    System.IO.File.WriteAllText(saveFileDialog.FileName, csv);
 
                     MessageBox.Show($"Clienti esportati con successo in {saveFileDialog.FileName}",
                         "Esportazione Completata", MessageBoxButton.OK, MessageBoxImage.Information);
@@ -769,23 +757,36 @@ namespace ImmobiGestio.ViewModels
             }
         }
 
-        private void ImportaClienti(object? parameter)
+        public void RefreshSelectedCliente()
         {
-            MessageBox.Show("Funzionalità Import CSV - In sviluppo", "Info",
-                MessageBoxButton.OK, MessageBoxImage.Information);
+            if (SelectedCliente != null)
+            {
+                try
+                {
+                    var clienteId = SelectedCliente.Id;
+
+                    using (var refreshContext = new ImmobiliContext())
+                    {
+                        var updatedCliente = refreshContext.Clienti
+                            .AsNoTracking()
+                            .FirstOrDefault(c => c.Id == clienteId);
+
+                        if (updatedCliente != null)
+                        {
+                            SelectedCliente = updatedCliente;
+                            System.Diagnostics.Debug.WriteLine($"Cliente ID {clienteId} ricaricato dal database");
+                        }
+                    }
+
+                    RefreshCurrentCollections();
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Errore RefreshSelectedCliente: {ex.Message}");
+                }
+            }
         }
 
-        private void ClearFiltri(object? parameter)
-        {
-            SearchText = string.Empty;
-            FiltroTipoCliente = "Tutti";
-            FiltroStato = "Tutti";
-            FiltroRegione = "Tutti";
-
-            LoadClienti();
-        }
-
-        // CLEANUP
         public void OnApplicationClosing()
         {
             try
@@ -800,69 +801,6 @@ namespace ImmobiGestio.ViewModels
             {
                 System.Diagnostics.Debug.WriteLine($"Errore nel salvataggio finale cliente: {ex.Message}");
             }
-        }
-    }
-
-    // CLASSE HELPER PER SELEZIONE IMMOBILI
-    public class ImmobiliSelectionWindow : Window
-    {
-        public Immobile? SelectedImmobile { get; private set; }
-
-        public ImmobiliSelectionWindow(List<Immobile> immobili)
-        {
-            Title = "Seleziona Immobile";
-            Width = 600;
-            Height = 400;
-            WindowStartupLocation = WindowStartupLocation.CenterOwner;
-
-            var listBox = new ListBox
-            {
-                ItemsSource = immobili,
-                DisplayMemberPath = "Titolo"
-            };
-
-            var okButton = new Button
-            {
-                Content = "OK",
-                Width = 75,
-                Height = 25,
-                Margin = new Thickness(5)
-            };
-
-            var cancelButton = new Button
-            {
-                Content = "Annulla",
-                Width = 75,
-                Height = 25,
-                Margin = new Thickness(5)
-            };
-
-            okButton.Click += (s, e) =>
-            {
-                SelectedImmobile = listBox.SelectedItem as Immobile;
-                DialogResult = SelectedImmobile != null;
-            };
-
-            cancelButton.Click += (s, e) =>
-            {
-                DialogResult = false;
-            };
-
-            var buttonPanel = new StackPanel
-            {
-                Orientation = Orientation.Horizontal,
-                HorizontalAlignment = HorizontalAlignment.Right,
-                Margin = new Thickness(10)
-            };
-            buttonPanel.Children.Add(okButton);
-            buttonPanel.Children.Add(cancelButton);
-
-            var mainPanel = new DockPanel();
-            DockPanel.SetDock(buttonPanel, Dock.Bottom);
-            mainPanel.Children.Add(buttonPanel);
-            mainPanel.Children.Add(listBox);
-
-            Content = mainPanel;
         }
     }
 }

@@ -1,47 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ImmobiGestio.Models
 {
-    // COSTANTI STATICHE per garantire coerenza
-    public static class TipiAppuntamento
-    {
-        public const string Visita = "Visita";
-        public const string Incontro = "Incontro";
-        public const string Chiamata = "Chiamata";
-        public const string Valutazione = "Valutazione";
-        public const string Firma = "Firma";
-        public const string Sopralluogo = "Sopralluogo";
-        public const string Altro = "Altro";
-
-        public static readonly string[] All = { Visita, Incontro, Chiamata, Valutazione, Firma, Sopralluogo, Altro };
-    }
-
-    public static class StatiAppuntamento
-    {
-        public const string Programmato = "Programmato";
-        public const string Confermato = "Confermato";
-        public const string InCorso = "In Corso";
-        public const string Completato = "Completato";
-        public const string Cancellato = "Cancellato";
-        public const string Rimandato = "Rimandato";
-        public const string NonPresentato = "Non Presentato";
-
-        public static readonly string[] All = { Programmato, Confermato, InCorso, Completato, Cancellato, Rimandato, NonPresentato };
-    }
-
-    public static class PrioritaAppuntamento
-    {
-        public const string Bassa = "Bassa";
-        public const string Media = "Media";
-        public const string Alta = "Alta";
-        public const string Urgente = "Urgente";
-
-        public static readonly string[] All = { Bassa, Media, Alta, Urgente };
-    }
-
     public class Appuntamento
     {
         [Key]
@@ -110,13 +72,13 @@ namespace ImmobiGestio.Models
         public TimeSpan Durata => DataFine - DataInizio;
 
         [NotMapped]
-        public bool InPassato => DateTime.Now > DataFine;
+        public bool IsOggi => DataInizio.Date == DateTime.Today;
 
         [NotMapped]
-        public bool OggiODomani => DataInizio.Date == DateTime.Today || DataInizio.Date == DateTime.Today.AddDays(1);
+        public bool IsProssimo => DataInizio.Date > DateTime.Today && DataInizio.Date <= DateTime.Today.AddDays(7);
 
         [NotMapped]
-        public string DataOraFormattata => $"{DataInizio:dd/MM/yyyy HH:mm} - {DataFine:HH:mm}";
+        public bool IsScaduto => DataInizio < DateTime.Now && StatoAppuntamento == StatiAppuntamento.Programmato;
 
         [NotMapped]
         public string DurataFormattata
@@ -124,24 +86,12 @@ namespace ImmobiGestio.Models
             get
             {
                 var durata = Durata;
-                if (durata.TotalHours >= 1)
+                if (durata.TotalDays >= 1)
+                    return $"{durata.Days}g {durata.Hours}h {durata.Minutes}m";
+                else if (durata.TotalHours >= 1)
                     return $"{durata.Hours}h {durata.Minutes}m";
                 else
                     return $"{durata.Minutes}m";
-            }
-        }
-
-        [NotMapped]
-        public string DescrizioneCompleta
-        {
-            get
-            {
-                var desc = Titolo;
-                if (Cliente != null)
-                    desc += $" - {Cliente.NomeCompleto}";
-                if (Immobile != null)
-                    desc += $" - {Immobile.Titolo}";
-                return desc;
             }
         }
 
@@ -152,30 +102,11 @@ namespace ImmobiGestio.Models
             {
                 return StatoAppuntamento switch
                 {
-                    StatiAppuntamento.Programmato => "#2196F3",
-                    StatiAppuntamento.Confermato => "#4CAF50",
-                    StatiAppuntamento.InCorso => "#FF9800",
-                    StatiAppuntamento.Completato => "#8BC34A",
-                    StatiAppuntamento.Cancellato => "#F44336",
-                    StatiAppuntamento.Rimandato => "#9C27B0",
-                    StatiAppuntamento.NonPresentato => "#607D8B",
-                    _ => "#2196F3"
-                };
-            }
-        }
-
-        [NotMapped]
-        public string PrioritaColore
-        {
-            get
-            {
-                return Priorita switch
-                {
-                    PrioritaAppuntamento.Bassa => "#4CAF50",
-                    PrioritaAppuntamento.Media => "#FF9800",
-                    PrioritaAppuntamento.Alta => "#F44336",
-                    PrioritaAppuntamento.Urgente => "#9C27B0",
-                    _ => "#FF9800"
+                    "Programmato" => "#FF2196F3", // Blu
+                    "Confermato" => "#FF4CAF50",  // Verde
+                    "Completato" => "#FF9E9E9E",  // Grigio
+                    "Annullato" => "#FFF44336",   // Rosso
+                    _ => "#FF2196F3"
                 };
             }
         }
@@ -217,64 +148,7 @@ namespace ImmobiGestio.Models
             OutlookEventId = string.Empty;
         }
 
-        // METODI DI VALIDAZIONE
-        public bool IsValid()
-        {
-            // Controlla campi obbligatori
-            if (string.IsNullOrWhiteSpace(Titolo)) return false;
-            if (string.IsNullOrWhiteSpace(TipoAppuntamento)) return false;
-            if (string.IsNullOrWhiteSpace(StatoAppuntamento)) return false;
-            if (string.IsNullOrWhiteSpace(Priorita)) return false;
-            if (string.IsNullOrWhiteSpace(Luogo)) return false;
-            if (string.IsNullOrWhiteSpace(CreatoDa)) return false;
-
-            // Controlla date logiche
-            if (DataInizio >= DataFine) return false;
-            if (DataCreazione > DateTime.Now.AddMinutes(5)) return false; // Permette piccolo scarto per timezone
-
-            // Controlla valori validi
-            if (!Array.Exists(TipiAppuntamento.All, t => t == TipoAppuntamento)) return false;
-            if (!Array.Exists(StatiAppuntamento.All, s => s == StatoAppuntamento)) return false;
-            if (!Array.Exists(PrioritaAppuntamento.All, p => p == Priorita)) return false;
-
-            return true;
-        }
-
-        public string GetValidationErrors()
-        {
-            var errors = new List<string>();
-
-            if (string.IsNullOrWhiteSpace(Titolo))
-                errors.Add("Il titolo è obbligatorio");
-
-            if (string.IsNullOrWhiteSpace(TipoAppuntamento))
-                errors.Add("Il tipo di appuntamento è obbligatorio");
-            else if (!Array.Exists(TipiAppuntamento.All, t => t == TipoAppuntamento))
-                errors.Add($"Tipo appuntamento '{TipoAppuntamento}' non valido");
-
-            if (string.IsNullOrWhiteSpace(StatoAppuntamento))
-                errors.Add("Lo stato dell'appuntamento è obbligatorio");
-            else if (!Array.Exists(StatiAppuntamento.All, s => s == StatoAppuntamento))
-                errors.Add($"Stato appuntamento '{StatoAppuntamento}' non valido");
-
-            if (string.IsNullOrWhiteSpace(Priorita))
-                errors.Add("La priorità è obbligatoria");
-            else if (!Array.Exists(PrioritaAppuntamento.All, p => p == Priorita))
-                errors.Add($"Priorità '{Priorita}' non valida");
-
-            if (string.IsNullOrWhiteSpace(Luogo))
-                errors.Add("Il luogo è obbligatorio");
-
-            if (DataInizio >= DataFine)
-                errors.Add("La data di inizio deve essere precedente alla data di fine");
-
-            if (DataCreazione > DateTime.Now.AddMinutes(5))
-                errors.Add("La data di creazione non può essere nel futuro");
-
-            return string.Join("; ", errors);
-        }
-
-        // FACTORY METHODS per creare appuntamenti corretti
+        // FACTORY METHOD per creare appuntamenti corretti
         public static Appuntamento CreaPerCliente(int clienteId, string nomeCliente)
         {
             return new Appuntamento
@@ -311,59 +185,99 @@ namespace ImmobiGestio.Models
             };
         }
 
-        public static Appuntamento CreaPerClienteEImmobile(int clienteId, string nomeCliente, int immobileId, string titoloImmobile, string indirizzo)
+        // Metodi di utilità
+        public bool PuoEssereModificato()
         {
-            return new Appuntamento
-            {
-                ClienteId = clienteId,
-                ImmobileId = immobileId,
-                Titolo = $"Visita con {nomeCliente} - {titoloImmobile}",
-                Descrizione = $"Visita dell'immobile {titoloImmobile} con il cliente {nomeCliente}",
-                DataInizio = DateTime.Now.AddDays(1),
-                DataFine = DateTime.Now.AddDays(1).AddHours(1),
-                TipoAppuntamento = TipiAppuntamento.Visita,
-                StatoAppuntamento = StatiAppuntamento.Programmato,
-                Priorita = PrioritaAppuntamento.Media,
-                Luogo = indirizzo,
-                CreatoDa = "Sistema",
-                DataCreazione = DateTime.Now
-            };
+            return StatoAppuntamento == StatiAppuntamento.Programmato ||
+                   StatoAppuntamento == StatiAppuntamento.Confermato;
         }
 
-        // METODI DI UTILITÀ
-        public void MarkAsCompleted(string esito = "")
+        public bool PuoEssereCancellato()
+        {
+            return StatoAppuntamento != StatiAppuntamento.Completato;
+        }
+
+        public void Conferma()
+        {
+            if (StatoAppuntamento == StatiAppuntamento.Programmato)
+            {
+                StatoAppuntamento = StatiAppuntamento.Confermato;
+                DataConferma = DateTime.Now;
+                DataUltimaModifica = DateTime.Now;
+            }
+        }
+
+        public void Completa(string? esito = null)
         {
             StatoAppuntamento = StatiAppuntamento.Completato;
-            EsitoIncontro = esito;
+            if (!string.IsNullOrEmpty(esito))
+                EsitoIncontro = esito;
             DataUltimaModifica = DateTime.Now;
         }
 
-        public void MarkAsConfirmed()
+        public void Annulla()
         {
-            StatoAppuntamento = StatiAppuntamento.Confermato;
-            DataConferma = DateTime.Now;
-            DataUltimaModifica = DateTime.Now;
+            if (PuoEssereCancellato())
+            {
+                StatoAppuntamento = StatiAppuntamento.Annullato;
+                DataUltimaModifica = DateTime.Now;
+            }
         }
 
-        public void Cancel(string motivo = "")
+        // Metodo per validare che tutti i campi obbligatori siano impostati
+        public bool IsValid()
         {
-            StatoAppuntamento = StatiAppuntamento.Cancellato;
-            NotePrivate = string.IsNullOrEmpty(NotePrivate) ? motivo : $"{NotePrivate}; {motivo}";
-            DataUltimaModifica = DateTime.Now;
+            return !string.IsNullOrEmpty(Titolo) &&
+                   !string.IsNullOrEmpty(TipoAppuntamento) &&
+                   !string.IsNullOrEmpty(StatoAppuntamento) &&
+                   !string.IsNullOrEmpty(Priorita) &&
+                   !string.IsNullOrEmpty(Luogo) &&
+                   !string.IsNullOrEmpty(CreatoDa) &&
+                   DataInizio != default &&
+                   DataFine != default &&
+                   DataCreazione != default &&
+                   DataFine > DataInizio;
         }
+    }
 
-        public void Reschedule(DateTime nuovaDataInizio, DateTime nuovaDataFine)
-        {
-            DataInizio = nuovaDataInizio;
-            DataFine = nuovaDataFine;
-            StatoAppuntamento = StatiAppuntamento.Rimandato;
-            DataUltimaModifica = DateTime.Now;
-        }
+    // Enum helper per migliorare l'usabilità - CORRETTI E FUNZIONANTI
+    public static class TipiAppuntamento
+    {
+        public const string Visita = "Visita";
+        public const string Incontro = "Incontro";
+        public const string Chiamata = "Chiamata";
+        public const string Firma = "Firma";
+        public const string Valutazione = "Valutazione";
+        public const string Sopralluogo = "Sopralluogo";
 
-        // OVERRIDE PER DEBUG
-        public override string ToString()
+        public static string[] GetAll() => new[]
         {
-            return $"Appuntamento {Id}: {Titolo} - {DataInizio:dd/MM/yyyy HH:mm} ({StatoAppuntamento})";
-        }
+            Visita, Incontro, Chiamata, Firma, Valutazione, Sopralluogo
+        };
+    }
+
+    public static class StatiAppuntamento
+    {
+        public const string Programmato = "Programmato";
+        public const string Confermato = "Confermato";
+        public const string Completato = "Completato";
+        public const string Annullato = "Annullato";
+
+        public static string[] GetAll() => new[]
+        {
+            Programmato, Confermato, Completato, Annullato
+        };
+    }
+
+    public static class PrioritaAppuntamento
+    {
+        public const string Bassa = "Bassa";
+        public const string Media = "Media";
+        public const string Alta = "Alta";
+
+        public static string[] GetAll() => new[]
+        {
+            Bassa, Media, Alta
+        };
     }
 }

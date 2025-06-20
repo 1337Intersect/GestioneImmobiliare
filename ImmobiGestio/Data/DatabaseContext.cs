@@ -104,13 +104,6 @@ namespace ImmobiGestio.Data
                 entity.Property(e => e.Piano).IsRequired(false);
                 entity.Property(e => e.DataUltimaModifica).IsRequired(false);
 
-                // Indici per performance
-                entity.HasIndex(e => e.StatoVendita);
-                entity.HasIndex(e => e.TipoImmobile);
-                entity.HasIndex(e => e.Citta);
-                entity.HasIndex(e => e.Prezzo);
-                entity.HasIndex(e => e.DataInserimento);
-
                 // Relazioni
                 entity.HasMany(i => i.Documenti)
                       .WithOne(d => d.Immobile)
@@ -163,8 +156,6 @@ namespace ImmobiGestio.Data
                 entity.HasIndex(e => e.Email).IsUnique(false);
                 entity.HasIndex(e => e.CodiceFiscale).IsUnique(false);
                 entity.HasIndex(e => new { e.Nome, e.Cognome });
-                entity.HasIndex(e => e.StatoCliente);
-                entity.HasIndex(e => e.TipoCliente);
 
                 // Relazioni
                 entity.HasMany(c => c.Appuntamenti)
@@ -249,12 +240,6 @@ namespace ImmobiGestio.Data
 
                 // Indice per performance
                 entity.HasIndex(e => e.ImmobileId);
-
-                // Relazione
-                entity.HasOne(d => d.Immobile)
-                      .WithMany(i => i.Documenti)
-                      .HasForeignKey(d => d.ImmobileId)
-                      .OnDelete(DeleteBehavior.Cascade);
             });
         }
 
@@ -271,12 +256,6 @@ namespace ImmobiGestio.Data
 
                 // Indice per performance
                 entity.HasIndex(e => e.ImmobileId);
-
-                // Relazione
-                entity.HasOne(f => f.Immobile)
-                      .WithMany(i => i.Foto)
-                      .HasForeignKey(f => f.ImmobileId)
-                      .OnDelete(DeleteBehavior.Cascade);
             });
         }
 
@@ -304,7 +283,7 @@ namespace ImmobiGestio.Data
 
                 // Indici per performance
                 entity.HasIndex(e => e.ClienteId);
-                entity.Property(e => e.ImmobileId);
+                entity.HasIndex(e => e.ImmobileId);
                 entity.HasIndex(e => new { e.ClienteId, e.ImmobileId }).IsUnique();
             });
         }
@@ -318,18 +297,21 @@ namespace ImmobiGestio.Data
                 // Preprocessing delle entità
                 PreprocessEntities();
 
-                // Log delle modifiche per debug
+                // Log delle entità che stanno per essere salvate
                 LogEntityChanges();
 
                 var result = base.SaveChanges();
 
-                System.Diagnostics.Debug.WriteLine($"=== SAVECHANGES COMPLETATO: {result} modifiche ===");
+                System.Diagnostics.Debug.WriteLine($"SaveChanges completato: {result} record interessati");
                 return result;
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"=== ERRORE SAVECHANGES ===");
+                System.Diagnostics.Debug.WriteLine($"ERRORE in SaveChanges: {ex}");
+
+                // Log dettagliato per debug
                 LogErrorDetails(ex);
+
                 throw;
             }
         }
@@ -343,17 +325,14 @@ namespace ImmobiGestio.Data
                 // Preprocessing delle entità
                 PreprocessEntities();
 
-                // Log delle modifiche per debug
-                LogEntityChanges();
-
                 var result = await base.SaveChangesAsync(cancellationToken);
 
-                System.Diagnostics.Debug.WriteLine($"=== SAVECHANGES ASYNC COMPLETATO: {result} modifiche ===");
+                System.Diagnostics.Debug.WriteLine($"SaveChangesAsync completato: {result} record interessati");
                 return result;
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"=== ERRORE SAVECHANGES ASYNC ===");
+                System.Diagnostics.Debug.WriteLine($"ERRORE in SaveChangesAsync: {ex}");
                 LogErrorDetails(ex);
                 throw;
             }
@@ -364,24 +343,27 @@ namespace ImmobiGestio.Data
             var now = DateTime.Now;
 
             // Preprocessing per entità aggiunte
-            var addedEntries = ChangeTracker.Entries()
+            var addedEntities = ChangeTracker.Entries()
                 .Where(e => e.State == EntityState.Added)
                 .ToList();
 
-            foreach (var entry in addedEntries)
+            foreach (var entry in addedEntities)
             {
-                // Imposta DataInserimento per le nuove entità
-                if (entry.Entity is Cliente cliente)
+                // Imposta DataInserimento per nuove entità
+                if (entry.Entity is Cliente cliente && cliente.DataInserimento == default)
                 {
                     cliente.DataInserimento = now;
                 }
-                else if (entry.Entity is Immobile immobile)
+                else if (entry.Entity is Immobile immobile && immobile.DataInserimento == default)
                 {
                     immobile.DataInserimento = now;
                 }
                 else if (entry.Entity is Appuntamento appuntamento)
                 {
-                    appuntamento.DataCreazione = now;
+                    if (appuntamento.DataCreazione == default)
+                        appuntamento.DataCreazione = now;
+
+                    // VALIDAZIONE CRITICA dei campi obbligatori
                     ValidateAppuntamento(appuntamento);
                 }
             }
@@ -496,5 +478,8 @@ namespace ImmobiGestio.Data
                 System.Diagnostics.Debug.WriteLine($"  - {entry.Entity.GetType().Name}: {entry.State}");
             }
         }
+
+        // RIMOSSO: override Dispose(bool) che causava errore
+        // Il DbContext gestisce già correttamente il dispose
     }
 }
