@@ -326,47 +326,32 @@ namespace ImmobiGestio.ViewModels
             }
         }
 
-        private void RefreshCurrentCollections()
+        public void RefreshCurrentCollections()
         {
             try
             {
-                AppuntamentiCliente.Clear();
-                ImmobiliInteresse.Clear();
+                System.Diagnostics.Debug.WriteLine("=== REFRESH COLLEZIONI CLIENTI ===");
 
-                if (SelectedCliente == null) return;
+                // Ricarica le collezioni italiane
+                InitializeItalianCollections();
 
-                // Carica appuntamenti del cliente
-                var appuntamenti = _context.Appuntamenti
-                    .AsNoTracking()
-                    .Include(a => a.Immobile)
-                    .Where(a => a.ClienteId == SelectedCliente.Id)
-                    .OrderByDescending(a => a.DataInizio)
-                    .ToList();
+                // Ricarica i dati
+                LoadClienti();
+                LoadImmobiliDisponibili();
 
-                foreach (var app in appuntamenti)
-                {
-                    AppuntamentiCliente.Add(app);
-                }
+                // Aggiorna le proprietà
+                OnPropertyChanged(nameof(Clienti));
+                OnPropertyChanged(nameof(TipiCliente));
+                OnPropertyChanged(nameof(StatiCliente));
+                OnPropertyChanged(nameof(ProvinceItaliane));
+                OnPropertyChanged(nameof(RegioniItaliane));
 
-                // Carica immobili di interesse
-                var interessi = _context.ClientiImmobili
-                    .AsNoTracking()
-                    .Include(ci => ci.Immobile)
-                    .Where(ci => ci.ClienteId == SelectedCliente.Id)
-                    .OrderByDescending(ci => ci.DataInteresse)
-                    .ToList();
-
-                foreach (var interesse in interessi)
-                {
-                    ImmobiliInteresse.Add(interesse);
-                }
-
-                System.Diagnostics.Debug.WriteLine($"Caricati {appuntamenti.Count} appuntamenti e {interessi.Count} interessi per cliente {SelectedCliente.Id}");
+                System.Diagnostics.Debug.WriteLine("Collezioni clienti aggiornate");
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Errore RefreshCurrentCollections: {ex.Message}");
-                MessageBox.Show($"Errore nel caricamento dei dati del cliente: {ex.Message}",
+                MessageBox.Show($"Errore nell'aggiornamento delle collezioni: {ex.Message}",
                     "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
@@ -547,7 +532,7 @@ namespace ImmobiGestio.ViewModels
 
             try
             {
-                var suggerimenti = ItalianValidationHelper.GetSuggerimentiValidazione(
+                var suggerimenti = ItalianValidationHelper.GetSuggerimentoValidazione(
                     SelectedCliente.CodiceFiscale,
                     SelectedCliente.Telefono,
                     SelectedCliente.Email,

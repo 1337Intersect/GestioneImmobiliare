@@ -379,5 +379,70 @@ namespace ImmobiGestio.Helpers
                 return false;
             }
         }
+        /// <summary>
+        /// Fornisce suggerimenti di validazione per campi specifici
+        /// </summary>
+        /// <summary>
+        /// Fornisce suggerimenti di validazione per più campi cliente
+        /// </summary>
+        public static string GetSuggerimentoValidazione(string? codiceFiscale, string? telefono, string? email, string? cap, string? provincia)
+        {
+            var suggerimenti = new List<string>();
+
+            // Validazione Codice Fiscale
+            if (!string.IsNullOrEmpty(codiceFiscale) && !IsValidCodiceFiscale(codiceFiscale))
+            {
+                suggerimenti.Add("• Codice Fiscale: Inserisci nel formato RSSMRA85M01H501Z");
+            }
+
+            // Validazione Telefono
+            if (!string.IsNullOrEmpty(telefono) && !IsValidItalianPhone(telefono))
+            {
+                suggerimenti.Add("• Telefono: Formato italiano (es: 06 1234567 o 333 1234567)");
+            }
+
+            // Validazione Email
+            if (!string.IsNullOrEmpty(email) && !IsValidEmail(email))
+            {
+                suggerimenti.Add("• Email: Formato valido (es: nome@dominio.it)");
+            }
+
+            // Validazione CAP
+            if (!string.IsNullOrEmpty(cap) && !IsValidItalianCAP(cap))
+            {
+                suggerimenti.Add("• CAP: 5 cifre (es: 00100)");
+            }
+
+            // Validazione Provincia
+            if (!string.IsNullOrEmpty(provincia) && !IsValidItalianProvince(provincia))
+            {
+                suggerimenti.Add("• Provincia: Sigla italiana valida (es: RM, MI, NA)");
+            }
+
+            return suggerimenti.Count > 0
+                ? $"Correzioni suggerite:\n{string.Join("\n", suggerimenti)}"
+                : "✅ Tutti i campi sono validi!";
+        }
+
+        /// <summary>
+        /// Fornisce suggerimento per un singolo campo
+        /// </summary>
+        public static string GetSuggerimentoValidazione(string fieldName)
+        {
+            return fieldName.ToLower() switch
+            {
+                "codicefiscale" => "Inserisci il codice fiscale nel formato: RSSMRA85M01H501Z",
+                "cap" => "Inserisci un CAP valido di 5 cifre (es: 00100)",
+                "provincia" => "Seleziona una provincia italiana valida (es: RM, MI, NA)",
+                "telefono" => "Inserisci un numero di telefono italiano (es: 06 1234567 o 333 1234567)",
+                "cellulare" => "Inserisci un numero di cellulare italiano (es: 333 1234567)",
+                "email" => "Inserisci un indirizzo email valido (es: nome@dominio.it)",
+                "partitaiva" => "Inserisci una partita IVA italiana di 11 cifre",
+                "prezzo" => "Inserisci un prezzo valido (massimo €100.000.000)",
+                "superficie" => "Inserisci una superficie in mq (massimo 50.000 mq)",
+                "annocostruzione" => "Inserisci un anno tra 1800 e " + (DateTime.Now.Year + 5),
+                _ => "Verifica che il valore inserito sia corretto"
+            };
+        }
     }
 }

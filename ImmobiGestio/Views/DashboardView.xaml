@@ -8,25 +8,51 @@
 
     <ScrollViewer VerticalScrollBarVisibility="Auto" 
                   Padding="0" 
-                  Background="{StaticResource BackgroundBrush}">
+                  Background="{DynamicResource BackgroundBrush}">
         <StackPanel Margin="0,0,0,40">
 
             <!-- HEADER SECTION -->
-            <Border Background="{StaticResource SurfaceBrush}" 
+            <Border Background="{DynamicResource SurfaceBrush}" 
                     Padding="32,24" 
                     Margin="0,0,0,24"
-                    Effect="{StaticResource CardShadow}">
+                    Effect="{DynamicResource CardShadow}">
                 <StackPanel>
                     <TextBlock Text="Dashboard" 
                                FontSize="28" 
                                FontWeight="SemiBold" 
-                               Foreground="{StaticResource TextPrimaryBrush}"
+                               Foreground="{DynamicResource TextPrimary}"
                                Margin="0,0,0,8"/>
                     <TextBlock Text="Panoramica delle tue attività immobiliari" 
                                FontSize="16" 
-                               Foreground="{StaticResource TextSecondaryBrush}"/>
+                               Foreground="{DynamicResource TextSecondary}"/>
                 </StackPanel>
             </Border>
+
+            <!-- QUICK ACTIONS -->
+            <StackPanel Orientation="Horizontal" 
+                        HorizontalAlignment="Center" 
+                        Margin="0,0,0,32">
+                <Button Content="+ Nuovo Immobile" 
+                        Command="{Binding NuovoImmobileCommand}" 
+                        Style="{DynamicResource ModernButtonPrimary}" 
+                        Margin="0,0,15,0"
+                        Padding="20,12"
+                        FontSize="14"
+                        FontWeight="SemiBold"/>
+                <Button Content="+ Nuovo Cliente" 
+                        Command="{Binding NuovoClienteCommand}" 
+                        Style="{DynamicResource ModernButtonPrimary}" 
+                        Margin="0,0,15,0"
+                        Padding="20,12"
+                        FontSize="14"
+                        FontWeight="SemiBold"/>
+                <Button Content="+ Nuovo Appuntamento" 
+                        Command="{Binding NuovoAppuntamentoCommand}" 
+                        Style="{DynamicResource ModernButtonPrimary}"
+                        Padding="20,12"
+                        FontSize="14"
+                        FontWeight="SemiBold"/>
+            </StackPanel>
 
             <!-- STATISTICHE PRINCIPALI -->
             <StackPanel Margin="0,0,0,32">
@@ -34,9 +60,9 @@
                            FontSize="20" 
                            FontWeight="SemiBold" 
                            Margin="16,0,0,16"
-                           Foreground="{StaticResource TextPrimaryBrush}"/>
+                           Foreground="{DynamicResource TextPrimary}"/>
 
-                <Grid Margin="0,0,0,0">
+                <Grid Margin="16,0">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="*"/>
@@ -45,66 +71,154 @@
                     </Grid.ColumnDefinitions>
 
                     <!-- IMMOBILI CARD -->
-                    <Border Grid.Column="0" Style="{StaticResource StatCardProperties}">
+                    <Border Grid.Column="0" 
+                            Background="{DynamicResource SurfaceBrush}"
+                            CornerRadius="12"
+                            Padding="24,20"
+                            Margin="8"
+                            BorderThickness="0,0,0,4"
+                            BorderBrush="{DynamicResource PrimaryBrush}"
+                            Effect="{DynamicResource CardShadow}">
                         <StackPanel>
-                            <Border Style="{StaticResource StatIconContainerProperties}">
-                                <TextBlock Style="{StaticResource StatIconProperties}"/>
+                            <Border Width="48" Height="48" 
+                                    CornerRadius="12" 
+                                    Background="{DynamicResource PrimaryLightBrush}"
+                                    HorizontalAlignment="Center"
+                                    Margin="0,0,0,16">
+                                <TextBlock Text="🏠" 
+                                           FontSize="24" 
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center"/>
                             </Border>
-                            <TextBlock Text="{Binding Statistiche.TotaleImmobili, Mode=OneWay}" 
-                                       Style="{StaticResource StatNumberStyle}"
-                                       Foreground="{StaticResource PrimaryBrush}"/>
+                            <TextBlock Text="{Binding Statistiche.TotaleImmobili}" 
+                                       FontSize="32" 
+                                       FontWeight="Bold" 
+                                       HorizontalAlignment="Center" 
+                                       Foreground="{DynamicResource PrimaryBrush}"
+                                       Margin="0,0,0,4"/>
                             <TextBlock Text="Immobili Totali" 
-                                       Style="{StaticResource StatLabelStyle}"/>
-                            <TextBlock Text="{Binding Statistiche.ImmobiliDisponibili, StringFormat='{}{0} Disponibili', Mode=OneWay}" 
-                                       Style="{StaticResource StatSubtitleStyle}"/>
+                                       FontSize="14" 
+                                       HorizontalAlignment="Center" 
+                                       Foreground="{DynamicResource TextSecondary}"
+                                       Margin="0,0,0,8"/>
+                            <TextBlock Text="{Binding Statistiche.ImmobiliDisponibili, StringFormat='{}{0} disponibili'}" 
+                                       FontSize="12" 
+                                       HorizontalAlignment="Center" 
+                                       Foreground="{DynamicResource SuccessBrush}"/>
                         </StackPanel>
                     </Border>
 
                     <!-- CLIENTI CARD -->
-                    <Border Grid.Column="1" Style="{StaticResource StatCardClients}">
+                    <Border Grid.Column="1" 
+                            Background="{DynamicResource SurfaceBrush}"
+                            CornerRadius="12"
+                            Padding="24,20"
+                            Margin="8"
+                            BorderThickness="0,0,0,4"
+                            BorderBrush="{DynamicResource SuccessBrush}"
+                            Effect="{DynamicResource CardShadow}">
                         <StackPanel>
-                            <Border Style="{StaticResource StatIconContainerClients}">
-                                <TextBlock Style="{StaticResource StatIconClients}"/>
+                            <Border Width="48" Height="48" 
+                                    CornerRadius="12" 
+                                    Background="{DynamicResource SuccessLightBrush}"
+                                    HorizontalAlignment="Center"
+                                    Margin="0,0,0,16">
+                                <TextBlock Text="👥" 
+                                           FontSize="24" 
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center"/>
                             </Border>
-                            <TextBlock Text="{Binding Statistiche.TotaleClienti, Mode=OneWay}" 
-                                       Style="{StaticResource StatNumberStyle}"
-                                       Foreground="{StaticResource SuccessBrush}"/>
+                            <TextBlock Text="{Binding Statistiche.TotaleClienti}" 
+                                       FontSize="32" 
+                                       FontWeight="Bold" 
+                                       HorizontalAlignment="Center" 
+                                       Foreground="{DynamicResource SuccessBrush}"
+                                       Margin="0,0,0,4"/>
                             <TextBlock Text="Clienti Totali" 
-                                       Style="{StaticResource StatLabelStyle}"/>
-                            <TextBlock Text="{Binding Statistiche.ClientiAttivi, StringFormat='{}{0} Attivi', Mode=OneWay}" 
-                                       Style="{StaticResource StatSubtitleStyle}"/>
+                                       FontSize="14" 
+                                       HorizontalAlignment="Center" 
+                                       Foreground="{DynamicResource TextSecondary}"
+                                       Margin="0,0,0,8"/>
+                            <TextBlock Text="{Binding Statistiche.ClientiAttivi, StringFormat='{}{0} attivi'}" 
+                                       FontSize="12" 
+                                       HorizontalAlignment="Center" 
+                                       Foreground="{DynamicResource SuccessBrush}"/>
                         </StackPanel>
                     </Border>
 
                     <!-- APPUNTAMENTI CARD -->
-                    <Border Grid.Column="2" Style="{StaticResource StatCardAppointments}">
+                    <Border Grid.Column="2" 
+                            Background="{DynamicResource SurfaceBrush}"
+                            CornerRadius="12"
+                            Padding="24,20"
+                            Margin="8"
+                            BorderThickness="0,0,0,4"
+                            BorderBrush="{DynamicResource WarningBrush}"
+                            Effect="{DynamicResource CardShadow}">
                         <StackPanel>
-                            <Border Style="{StaticResource StatIconContainerAppointments}">
-                                <TextBlock Style="{StaticResource StatIconAppointments}"/>
+                            <Border Width="48" Height="48" 
+                                    CornerRadius="12" 
+                                    Background="{DynamicResource WarningLightBrush}"
+                                    HorizontalAlignment="Center"
+                                    Margin="0,0,0,16">
+                                <TextBlock Text="📅" 
+                                           FontSize="24" 
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center"/>
                             </Border>
-                            <TextBlock Text="{Binding Statistiche.AppuntamentiOggi, Mode=OneWay}" 
-                                       Style="{StaticResource StatNumberStyle}"
-                                       Foreground="{StaticResource WarningBrush}"/>
-                            <TextBlock Text="Appuntamenti Oggi" 
-                                       Style="{StaticResource StatLabelStyle}"/>
-                            <TextBlock Text="{Binding Statistiche.AppuntamentiSettimana, StringFormat='{}{0} Questa Settimana', Mode=OneWay}" 
-                                       Style="{StaticResource StatSubtitleStyle}"/>
+                            <TextBlock Text="{Binding Statistiche.AppuntamentiOggi}" 
+                                       FontSize="32" 
+                                       FontWeight="Bold" 
+                                       HorizontalAlignment="Center" 
+                                       Foreground="{DynamicResource WarningBrush}"
+                                       Margin="0,0,0,4"/>
+                            <TextBlock Text="Oggi" 
+                                       FontSize="14" 
+                                       HorizontalAlignment="Center" 
+                                       Foreground="{DynamicResource TextSecondary}"
+                                       Margin="0,0,0,8"/>
+                            <TextBlock Text="{Binding Statistiche.AppuntamentiProssimaSettimana, StringFormat='{}{0} questa settimana'}" 
+                                       FontSize="12" 
+                                       HorizontalAlignment="Center" 
+                                       Foreground="{DynamicResource WarningBrush}"/>
                         </StackPanel>
                     </Border>
 
-                    <!-- VALORE PORTFOLIO CARD -->
-                    <Border Grid.Column="3" Style="{StaticResource StatCardRevenue}">
+                    <!-- VENDITE CARD -->
+                    <Border Grid.Column="3" 
+                            Background="{DynamicResource SurfaceBrush}"
+                            CornerRadius="12"
+                            Padding="24,20"
+                            Margin="8"
+                            BorderThickness="0,0,0,4"
+                            BorderBrush="{DynamicResource PurpleBrush}"
+                            Effect="{DynamicResource CardShadow}">
                         <StackPanel>
-                            <Border Style="{StaticResource StatIconContainerRevenue}">
-                                <TextBlock Style="{StaticResource StatIconRevenue}"/>
+                            <Border Width="48" Height="48" 
+                                    CornerRadius="12" 
+                                    Background="{DynamicResource PurpleLightBrush}"
+                                    HorizontalAlignment="Center"
+                                    Margin="0,0,0,16">
+                                <TextBlock Text="💰" 
+                                           FontSize="24" 
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center"/>
                             </Border>
-                            <TextBlock Text="{Binding Statistiche.ValorePortfolio, StringFormat='€{0:N0}', Mode=OneWay}" 
-                                       Style="{StaticResource StatNumberStyle}"
-                                       Foreground="{StaticResource PurpleBrush}"/>
-                            <TextBlock Text="Valore Portfolio" 
-                                       Style="{StaticResource StatLabelStyle}"/>
-                            <TextBlock Text="{Binding Statistiche.ValoreVenditeUltimoMese, StringFormat='+€{0:N0} Questo Mese', Mode=OneWay}" 
-                                       Style="{StaticResource StatSubtitleStyle}"/>
+                            <TextBlock Text="{Binding Statistiche.ValoreVenditeUltimoMese, StringFormat='{}{0:C0}'}" 
+                                       FontSize="20" 
+                                       FontWeight="Bold" 
+                                       HorizontalAlignment="Center" 
+                                       Foreground="{DynamicResource PurpleBrush}"
+                                       Margin="0,0,0,4"/>
+                            <TextBlock Text="Incassi Mese" 
+                                       FontSize="14" 
+                                       HorizontalAlignment="Center" 
+                                       Foreground="{DynamicResource TextSecondary}"
+                                       Margin="0,0,0,8"/>
+                            <TextBlock Text="{Binding Statistiche.ImmobiliVenduti, StringFormat='{}{0} venduti'}" 
+                                       FontSize="12" 
+                                       HorizontalAlignment="Center" 
+                                       Foreground="{DynamicResource PurpleBrush}"/>
                         </StackPanel>
                     </Border>
                 </Grid>
@@ -117,206 +231,130 @@
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
 
-                <!-- TOP IMMOBILI -->
-                <Border Grid.Column="0" Style="{StaticResource ContentCardStyle}" Margin="0,0,12,0">
+                <!-- PANNELLO SINISTRO - ATTIVITÀ RECENTI -->
+                <Border Grid.Column="0" 
+                        Background="{DynamicResource SurfaceBrush}"
+                        CornerRadius="12"
+                        Padding="24"
+                        Margin="0,0,16,0"
+                        Effect="{DynamicResource CardShadow}">
                     <StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,20">
-                            <TextBlock Text="🏆" FontSize="20" Margin="0,0,8,0"/>
-                            <TextBlock Text="Top Immobili per Performance" 
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
+                            <TextBlock Text="📈" FontSize="18" Margin="0,0,8,0"/>
+                            <TextBlock Text="Attività Recenti" 
                                        FontSize="18" 
                                        FontWeight="SemiBold"
                                        VerticalAlignment="Center"
-                                       Foreground="{StaticResource TextPrimaryBrush}"/>
+                                       Foreground="{DynamicResource TextPrimary}"/>
                         </StackPanel>
 
-                        <Border Background="{StaticResource BackgroundBrush}" 
-                                CornerRadius="8" 
-                                Padding="16">
-                            <DataGrid ItemsSource="{Binding TopImmobili}"
-                                      AutoGenerateColumns="False"
-                                      IsReadOnly="True"
-                                      GridLinesVisibility="None"
-                                      HeadersVisibility="Column"
-                                      Background="Transparent"
-                                      BorderThickness="0"
-                                      RowBackground="Transparent"
-                                      AlternatingRowBackground="#FAFAFA"
-                                      MaxHeight="250">
-                                <DataGrid.ColumnHeaderStyle>
-                                    <Style TargetType="DataGridColumnHeader">
-                                        <Setter Property="Background" Value="Transparent"/>
-                                        <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}"/>
-                                        <Setter Property="FontWeight" Value="SemiBold"/>
-                                        <Setter Property="FontSize" Value="12"/>
-                                        <Setter Property="Padding" Value="8,12"/>
-                                        <Setter Property="BorderThickness" Value="0,0,0,1"/>
-                                        <Setter Property="BorderBrush" Value="{StaticResource DividerBrush}"/>
-                                    </Style>
-                                </DataGrid.ColumnHeaderStyle>
-                                <DataGrid.CellStyle>
-                                    <Style TargetType="DataGridCell">
-                                        <Setter Property="Background" Value="Transparent"/>
-                                        <Setter Property="BorderThickness" Value="0"/>
-                                        <Setter Property="Padding" Value="8,8"/>
-                                        <Setter Property="FontSize" Value="13"/>
-                                    </Style>
-                                </DataGrid.CellStyle>
-                                <DataGrid.Columns>
-                                    <DataGridTextColumn Header="Immobile" 
-                                                        Binding="{Binding Titolo}"
-                                                        Width="*">
-                                        <DataGridTextColumn.ElementStyle>
-                                            <Style TargetType="TextBlock">
-                                                <Setter Property="FontWeight" Value="Medium"/>
-                                                <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
-                                            </Style>
-                                        </DataGridTextColumn.ElementStyle>
-                                    </DataGridTextColumn>
-                                    <DataGridTextColumn Header="Prezzo" 
-                                                        Binding="{Binding Prezzo, StringFormat='€ {0:N0}'}"
-                                                        Width="100">
-                                        <DataGridTextColumn.ElementStyle>
-                                            <Style TargetType="TextBlock">
-                                                <Setter Property="FontWeight" Value="SemiBold"/>
-                                                <Setter Property="Foreground" Value="{StaticResource PrimaryBrush}"/>
-                                            </Style>
-                                        </DataGridTextColumn.ElementStyle>
-                                    </DataGridTextColumn>
-                                    <DataGridTextColumn Header="Visite" 
-                                                        Binding="{Binding NumeroVisite}"
-                                                        Width="60"/>
-                                    <DataGridTextColumn Header="Interessati" 
-                                                        Binding="{Binding NumeroInteressati}"
-                                                        Width="80"/>
-                                </DataGrid.Columns>
-                            </DataGrid>
-                        </Border>
+                        <ItemsControl ItemsSource="{Binding AttivitaRecenti}" MaxHeight="400">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="{DynamicResource BackgroundBrush}" 
+                                            CornerRadius="8" 
+                                            Padding="16,12" 
+                                            Margin="0,0,0,8">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
 
-                        <Button Content="🏠 Vai agli Immobili" 
-                                Command="{Binding VaiAImmobiliCommand}"
-                                Style="{StaticResource ModernButtonPrimary}"
-                                HorizontalAlignment="Left"
-                                Margin="0,16,0,0"/>
+                                            <Border Grid.Column="0" 
+                                                    Background="{DynamicResource PrimaryLightBrush}"
+                                                    CornerRadius="6"
+                                                    Width="32" Height="32"
+                                                    Margin="0,0,12,0">
+                                                <TextBlock Text="{Binding Icona}" 
+                                                           FontSize="14" 
+                                                           HorizontalAlignment="Center"
+                                                           VerticalAlignment="Center"/>
+                                            </Border>
+
+                                            <StackPanel Grid.Column="1">
+                                                <TextBlock Text="{Binding Descrizione}" 
+                                                           FontWeight="Medium"
+                                                           Foreground="{DynamicResource TextPrimary}"
+                                                           TextWrapping="Wrap"
+                                                           Margin="0,0,0,4"/>
+                                                <TextBlock Text="{Binding Tipo}" 
+                                                           FontSize="12"
+                                                           Foreground="{DynamicResource TextSecondary}"/>
+                                            </StackPanel>
+
+                                            <TextBlock Grid.Column="2" 
+                                                       Text="{Binding Data, StringFormat='{}{0:dd/MM HH:mm}'}" 
+                                                       FontSize="11"
+                                                       Foreground="{DynamicResource TextMuted}"
+                                                       VerticalAlignment="Top"/>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
                     </StackPanel>
                 </Border>
 
-                <!-- SIDEBAR CONTENT -->
-                <StackPanel Grid.Column="1" Margin="12,0,0,0">
+                <!-- PANNELLO DESTRO - PROSSIMI APPUNTAMENTI -->
+                <Border Grid.Column="1" 
+                        Background="{DynamicResource SurfaceBrush}"
+                        CornerRadius="12"
+                        Padding="24"
+                        Effect="{DynamicResource CardShadow}">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
+                            <TextBlock Text="📅" FontSize="18" Margin="0,0,8,0"/>
+                            <TextBlock Text="Prossimi Appuntamenti" 
+                                       FontSize="18" 
+                                       FontWeight="SemiBold"
+                                       VerticalAlignment="Center"
+                                       Foreground="{DynamicResource TextPrimary}"/>
+                        </StackPanel>
 
-                    <!-- ATTIVITÀ RECENTI -->
-                    <Border Style="{StaticResource ContentCardStyle}" Margin="0,0,0,16">
-                        <StackPanel>
-                            <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
-                                <TextBlock Text="📈" FontSize="18" Margin="0,0,8,0"/>
-                                <TextBlock Text="Attività Recenti" 
-                                           FontSize="16" 
-                                           FontWeight="SemiBold"
-                                           VerticalAlignment="Center"
-                                           Foreground="{StaticResource TextPrimaryBrush}"/>
-                            </StackPanel>
-
-                            <ItemsControl ItemsSource="{Binding AttivitaRecenti}" MaxHeight="300">
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <Border Background="{StaticResource BackgroundBrush}" 
-                                                CornerRadius="8" 
-                                                Padding="12,10" 
-                                                Margin="0,0,0,8">
+                        <ItemsControl ItemsSource="{Binding ProssimiAppuntamenti}" MaxHeight="400">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="{DynamicResource BackgroundBrush}" 
+                                            CornerRadius="8" 
+                                            Padding="16,12" 
+                                            Margin="0,0,0,8">
+                                        <StackPanel>
                                             <Grid>
                                                 <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="Auto"/>
                                                     <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
                                                 </Grid.ColumnDefinitions>
-
-                                                <Border Grid.Column="0" 
-                                                        Background="{StaticResource PrimaryLightBrush}"
-                                                        CornerRadius="6"
-                                                        Width="32" Height="32"
-                                                        Margin="0,0,12,0">
-                                                    <TextBlock Text="{Binding Icona}" 
-                                                               FontSize="14" 
-                                                               HorizontalAlignment="Center"
-                                                               VerticalAlignment="Center"/>
-                                                </Border>
-
-                                                <StackPanel Grid.Column="1">
-                                                    <TextBlock Text="{Binding Descrizione}" 
-                                                               FontWeight="Medium"
-                                                               FontSize="13"
-                                                               TextWrapping="Wrap"
-                                                               Foreground="{StaticResource TextPrimaryBrush}"
-                                                               Margin="0,0,0,2"/>
-                                                    <TextBlock Text="{Binding DataOra, StringFormat='{}{0:dd/MM/yyyy HH:mm}'}" 
-                                                               FontSize="11"
-                                                               Foreground="{StaticResource TextMutedBrush}"/>
-                                                </StackPanel>
+                                                <TextBlock Grid.Column="0" 
+                                                           Text="{Binding Titolo}" 
+                                                           FontWeight="SemiBold" 
+                                                           Foreground="{DynamicResource TextPrimary}"
+                                                           TextWrapping="Wrap"/>
+                                                <TextBlock Grid.Column="1" 
+                                                           Text="{Binding Inizio, StringFormat='{}{0:HH:mm}'}" 
+                                                           FontSize="12" 
+                                                           Foreground="{DynamicResource AccentBrush}"
+                                                           FontWeight="SemiBold"/>
                                             </Grid>
-                                        </Border>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-                        </StackPanel>
-                    </Border>
+                                            <TextBlock Text="{Binding ClienteNome}" 
+                                                       FontSize="12" 
+                                                       Foreground="{DynamicResource TextSecondary}"
+                                                       Margin="0,4,0,0"/>
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
 
-                    <!-- PROSSIMI APPUNTAMENTI -->
-                    <Border Style="{StaticResource ContentCardStyle}">
-                        <StackPanel>
-                            <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
-                                <TextBlock Text="📅" FontSize="18" Margin="0,0,8,0"/>
-                                <TextBlock Text="Prossimi Appuntamenti" 
-                                           FontSize="16" 
-                                           FontWeight="SemiBold"
-                                           VerticalAlignment="Center"
-                                           Foreground="{StaticResource TextPrimaryBrush}"/>
-                            </StackPanel>
-
-                            <ItemsControl ItemsSource="{Binding ProssimiAppuntamenti}" MaxHeight="250">
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <Border Background="{StaticResource WarningLightBrush}" 
-                                                CornerRadius="8" 
-                                                Padding="12,10" 
-                                                Margin="0,0,0,8">
-                                            <StackPanel>
-                                                <TextBlock Text="{Binding Titolo}" 
-                                                           FontWeight="Medium"
-                                                           FontSize="13"
-                                                           Foreground="{StaticResource TextPrimaryBrush}"
-                                                           Margin="0,0,0,4"/>
-                                                <Grid>
-                                                    <Grid.ColumnDefinitions>
-                                                        <ColumnDefinition Width="*"/>
-                                                        <ColumnDefinition Width="Auto"/>
-                                                    </Grid.ColumnDefinitions>
-                                                    <TextBlock Grid.Column="0"
-                                                               Text="{Binding DataOra, StringFormat='{}{0:dd/MM HH:mm}'}" 
-                                                               FontSize="11"
-                                                               Foreground="{StaticResource TextMutedBrush}"/>
-                                                    <Border Grid.Column="1"
-                                                            Background="{StaticResource WarningBrush}"
-                                                            CornerRadius="4"
-                                                            Padding="6,2">
-                                                        <TextBlock Text="{Binding Tipo}" 
-                                                                   FontSize="10"
-                                                                   FontWeight="Medium"
-                                                                   Foreground="White"/>
-                                                    </Border>
-                                                </Grid>
-                                            </StackPanel>
-                                        </Border>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-
-                            <Button Content="📅 Vai agli Appuntamenti" 
-                                    Command="{Binding VaiAAppuntamentiCommand}"
-                                    Style="{StaticResource ModernButtonPrimary}"
-                                    HorizontalAlignment="Stretch"
-                                    Margin="0,12,0,0"/>
-                        </StackPanel>
-                    </Border>
-
-                </StackPanel>
+                        <Button Content="📅 Vai agli Appuntamenti" 
+                                Command="{Binding VaiAAppuntamentiCommand}"
+                                Style="{DynamicResource ModernButtonSecondary}"
+                                HorizontalAlignment="Stretch"
+                                Margin="0,16,0,0"
+                                Padding="12,8"/>
+                    </StackPanel>
+                </Border>
             </Grid>
 
         </StackPanel>

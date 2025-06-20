@@ -115,7 +115,7 @@ namespace ImmobiGestio.ViewModels
         }
 
         // Proprietà calcolate
-        public int AppuntamentiCompletati => Appuntamenti.Count(a => a.StatoAppuntamento == StatiAppuntamento.Completato);
+        public int AppuntamentiCompletati => Appuntamenti.Count(a => a.StatoAppuntamento == Models.StatiAppuntamento.Completato);
         public int AppuntamentiOggi => Appuntamenti.Count(a => a.DataInizio.Date == DateTime.Today);
         public ObservableCollection<Appuntamento> AppuntamentiOggiCollection =>
             new(Appuntamenti.Where(a => a.DataInizio.Date == DateTime.Today).OrderBy(a => a.DataInizio));
@@ -787,6 +787,87 @@ namespace ImmobiGestio.ViewModels
             catch (Exception ex)
             {
                 MessageBox.Show($"Errore nell'esportazione: {ex.Message}",
+                    "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void MarkAsCompletedInternal(object? parameter)
+        {
+            try
+            {
+                if (SelectedAppuntamento == null) return;
+
+                // Use the correct static constant reference
+                SelectedAppuntamento.StatoAppuntamento = Models.StatiAppuntamento.Completato;
+                SelectedAppuntamento.DataUltimaModifica = DateTime.Now;
+
+                // Save changes
+                _context.SaveChanges();
+
+                // Refresh the collections
+                LoadAppuntamenti();
+                GenerateMainCalendar();
+
+                System.Diagnostics.Debug.WriteLine($"Appuntamento {SelectedAppuntamento.Id} marcato come completato");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Errore MarkAsCompleted: {ex.Message}");
+                MessageBox.Show($"Errore nel marcare l'appuntamento come completato: {ex.Message}",
+                    "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        // ALSO ADD THESE HELPER METHODS FOR OTHER STATUS CHANGES:
+
+        private void MarkAsConfirmedInternal(object? parameter)
+        {
+            try
+            {
+                if (SelectedAppuntamento == null) return;
+
+                SelectedAppuntamento.StatoAppuntamento = Models.StatiAppuntamento.Confermato;
+                SelectedAppuntamento.DataUltimaModifica = DateTime.Now;
+
+                _context.SaveChanges();
+                LoadAppuntamenti();
+                GenerateMainCalendar();
+
+                System.Diagnostics.Debug.WriteLine($"Appuntamento {SelectedAppuntamento.Id} confermato");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Errore MarkAsConfirmed: {ex.Message}");
+                MessageBox.Show($"Errore nella conferma dell'appuntamento: {ex.Message}",
+                    "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void CancelAppuntamentoInternal(object? parameter)
+        {
+            try
+            {
+                if (SelectedAppuntamento == null) return;
+
+                var result = MessageBox.Show($"Sei sicuro di voler annullare l'appuntamento '{SelectedAppuntamento.Titolo}'?",
+                    "Conferma Annullamento", MessageBoxButton.YesNo, MessageBoxImage.Question);
+
+                if (result == MessageBoxResult.Yes)
+                {
+                    SelectedAppuntamento.StatoAppuntamento = Models.StatiAppuntamento.Cancellato;
+                    SelectedAppuntamento.DataUltimaModifica = DateTime.Now;
+
+                    _context.SaveChanges();
+                    LoadAppuntamenti();
+                    GenerateMainCalendar();
+
+                    System.Diagnostics.Debug.WriteLine($"Appuntamento {SelectedAppuntamento.Id} annullato");
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Errore CancelAppuntamento: {ex.Message}");
+                MessageBox.Show($"Errore nell'annullamento dell'appuntamento: {ex.Message}",
                     "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
